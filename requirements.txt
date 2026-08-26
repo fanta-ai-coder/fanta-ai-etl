@@ -1,0 +1,4 @@
+soccerdata
+supabase
+pandas
+requests
