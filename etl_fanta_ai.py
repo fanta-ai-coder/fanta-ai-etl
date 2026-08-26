@@ -13,53 +13,41 @@ if not SUPABASE_URL or not SUPABASE_KEY:
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 
-def fetch_and_process_data(seasons=["2024-2025"]):
-    """Scarica le statistiche dei giocatori da FBref con soccerdata e le trasforma."""
-    print(f"Scaricamento dati FBref per le stagioni: {seasons}...")
+def fetch_and_process_data(seasons=["2024"]):
+    """Scarica le statistiche dei giocatori da Understat con soccerdata e le trasforma.
+    Nota: Understat definisce la stagione '2024-2025' semplicemente con l'anno di partenza ('2024').
+    """
+    print(f"Scaricamento dati Understat per la stagione: {seasons}...")
     
-    # Inizializza lo scraper di soccerdata per la Serie A
-    fbref = sd.FBref(leagues="ITA-Serie A", seasons=seasons)
-
     try:
-        # Scarica le statistiche standard e di tiro
-        df_standard = fbref.read_player_season_stats(stat_type="standard")
-        df_shooting = fbref.read_player_season_stats(stat_type="shooting")
+        # Usiamo Understat al posto di FBref per bypassare i blocchi CAPTCHA di Cloudflare
+        understat = sd.Understat(leagues="ITA-Serie A", seasons=seasons)
+        df_player = understat.read_player_season_stats()
     except Exception as e:
-        print(f"Errore durante il download dei dati da FBref: {e}")
+        print(f"Errore durante il download dei dati da Understat: {e}")
         return None
 
-    # Appiattisci le colonne MultiIndex (es. ('Performance', 'Gls') -> 'Gls')
-    df_standard.columns = [
-        col[1] if isinstance(col, tuple) and col[1] != "" else col[0] 
-        for col in df_standard.columns
-    ]
-    df_shooting.columns = [
-        col[1] if isinstance(col, tuple) and col[1] != "" else col[0] 
-        for col in df_shooting.columns
-    ]
-
-    # Reset degli indici di riga (league, season, team, player) per averli come colonne normali
-    df_standard = df_standard.reset_index()
-    df_shooting = df_shooting.reset_index()
+    # Reset degli indici (league, season, team, player) per averli come colonne standard
+    df_player = df_player.reset_index()
 
     # Creazione DataFrame pulito e strutturato per Supabase
     df_clean = pd.DataFrame()
     
-    df_clean["player_name"] = df_standard["player"].astype(str)
-    df_clean["team"] = df_standard["team"].astype(str)
-    df_clean["season"] = df_standard["season"].astype(str)
+    df_clean["player_name"] = df_player["player"].astype(str)
+    df_clean["team"] = df_player["team"].astype(str)
+    df_clean["season"] = df_player["season"].astype(str)
     
     # Minutaggio e presenze
-    df_clean["matches_played"] = pd.to_numeric(df_standard.get("MP", 0), errors="coerce").fillna(0).astype(int)
-    df_clean["minutes_played"] = pd.to_numeric(df_standard.get("Min", 0), errors="coerce").fillna(0).astype(int)
+    df_clean["matches_played"] = pd.to_numeric(df_player.get("matches", 0), errors="coerce").fillna(0).astype(int)
+    df_clean["minutes_played"] = pd.to_numeric(df_player.get("time", 0), errors="coerce").fillna(0).astype(int)
     
     # Gol & Assist
-    df_clean["goals"] = pd.to_numeric(df_standard.get("Gls", 0), errors="coerce").fillna(0).astype(int)
-    df_clean["assists"] = pd.to_numeric(df_standard.get("Ast", 0), errors="coerce").fillna(0).astype(int)
+    df_clean["goals"] = pd.to_numeric(df_player.get("goals", 0), errors="coerce").fillna(0).astype(int)
+    df_clean["assists"] = pd.to_numeric(df_player.get("assists", 0), errors="coerce").fillna(0).astype(int)
     
-    # Metriche Avanzate (Expected Goals & Expected Assisted Goals)
-    df_clean["xg"] = pd.to_numeric(df_standard.get("xG", 0.0), errors="coerce").fillna(0.0).round(2)
-    df_clean["xa"] = pd.to_numeric(df_standard.get("xAG", 0.0), errors="coerce").fillna(0.0).round(2)
+    # Metriche Avanzate (Expected Goals & Expected Assists)
+    df_clean["xg"] = pd.to_numeric(df_player.get("xg", 0.0), errors="coerce").fillna(0.0).round(2)
+    df_clean["xa"] = pd.to_numeric(df_player.get("xa", 0.0), errors="coerce").fillna(0.0).round(2)
 
     # Calcolo KPI per 90 minuti
     mins = df_clean["minutes_played"]
@@ -67,8 +55,8 @@ def fetch_and_process_data(seasons=["2024-2025"]):
     df_clean["xg_per_90"] = (df_clean["xg"] / (mins / 90)).where(mins > 0, 0.0).round(2)
 
     # Tiri
-    df_clean["shots_total"] = pd.to_numeric(df_shooting.get("Sh", 0), errors="coerce").fillna(0).astype(int)
-    df_clean["shots_on_target"] = pd.to_numeric(df_shooting.get("SoT", 0), errors="coerce").fillna(0).astype(int)
+    df_clean["shots_total"] = pd.to_numeric(df_player.get("shots", 0), errors="coerce").fillna(0).astype(int)
+    df_clean["shots_on_target"] = pd.to_numeric(df_player.get("key_passes", 0), errors="coerce").fillna(0).astype(int)
 
     # Identificativo univoco (Chiave Primaria)
     df_clean["id"] = df_clean["player_name"] + "_" + df_clean["season"]
@@ -94,6 +82,6 @@ def upload_to_supabase(df):
 
 
 if __name__ == "__main__":
-    # Esegue l'estrazione per la stagione corrente
-    df_processed = fetch_and_process_data(seasons=["2024-2025"])
+    # In Understat l'anno '2024' identifica la stagione 2024/2025
+    df_processed = fetch_and_process_data(seasons=["2024"])
     upload_to_supabase(df_processed)
