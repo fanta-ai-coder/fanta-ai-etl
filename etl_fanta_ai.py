@@ -24,45 +24,78 @@ supabase: Client = create_client(
 
 
 # ============================================================
+# STAGIONI DA IMPORTARE
+# ============================================================
+
+# SoccerData / Understat utilizza l'anno di inizio della stagione:
+#
+# 2020 = 2020/21
+# 2021 = 2021/22
+# 2022 = 2022/23
+# 2023 = 2023/24
+# 2024 = 2024/25
+
+SEASONS = [
+    "2020",
+    "2021",
+    "2022",
+    "2023",
+    "2024"
+]
+
+
+# ============================================================
 # FUNZIONI DI SUPPORTO
 # ============================================================
 
 def to_numeric(series, default=0):
     """
-    Converte una Series in numerico gestendo valori nulli/non validi.
+    Converte una Series Pandas in numerico gestendo
+    valori nulli o non validi.
     """
-    return pd.to_numeric(series, errors="coerce").fillna(default)
+    return pd.to_numeric(
+        series,
+        errors="coerce"
+    ).fillna(default)
 
 
-def fetch_and_process_data(seasons=None):
+# ============================================================
+# DOWNLOAD + TRASFORMAZIONE
+# ============================================================
+
+def fetch_and_process_data(season):
     """
     Scarica le statistiche stagionali dei giocatori da Understat
-    tramite SoccerData e prepara il DataFrame per Supabase.
+    tramite SoccerData per una singola stagione.
     """
 
-    if seasons is None:
-        seasons = ["2024"]
-
-    print(
-        f"Scaricamento dati Understat per le stagioni: {seasons}..."
-    )
+    print("\n" + "=" * 70)
+    print(f"DOWNLOAD STAGIONE {season}/{int(season) + 1}")
+    print("=" * 70)
 
     try:
+
         understat = sd.Understat(
             leagues="ITA-Serie A",
-            seasons=seasons
+            seasons=[season]
         )
 
         df_player = understat.read_player_season_stats()
 
     except Exception as e:
+
         print(
-            f"Errore durante il download dei dati da Understat: {e}"
+            f"ERRORE download Understat stagione {season}: {e}"
         )
+
         return None
 
     if df_player is None or df_player.empty:
-        print("Understat non ha restituito alcun dato.")
+
+        print(
+            f"Nessun dato restituito per la stagione {season}."
+        )
+
         return None
 
     # --------------------------------------------------------
@@ -73,11 +106,6 @@ def fetch_and_process_data(seasons=None):
 
     print(
         f"Ricevuti {len(df_player)} record da Understat."
-    )
-
-    print(
-        "Colonne ricevute:",
-        list(df_player.columns)
     )
 
     # --------------------------------------------------------
@@ -107,32 +135,33 @@ def fetch_and_process_data(seasons=None):
     ]
 
     missing_columns = [
-        col for col in required_columns
+        col
+        for col in required_columns
         if col not in df_player.columns
     ]
 
     if missing_columns:
+
         raise ValueError(
-            "Mancano colonne attese da SoccerData: "
+            f"Colonne mancanti per stagione {season}: "
             + ", ".join(missing_columns)
         )
 
     # ========================================================
-    # CREAZIONE DATAFRAME PULITO
+    # DATAFRAME PULITO
     # ========================================================
 
     df_clean = pd.DataFrame()
 
     # --------------------------------------------------------
-    # IDENTIFICATIVI / ANAGRAFICA
+    # IDENTIFICATIVI
     # --------------------------------------------------------
 
     df_clean["player_id"] = (
         pd.to_numeric(
             df_player["player_id"],
             errors="coerce"
-        )
-        .astype("Int64")
+        ).astype("Int64")
     )
 
     df_clean["player_name"] = (
@@ -164,17 +193,19 @@ def fetch_and_process_data(seasons=None):
     )
 
     # --------------------------------------------------------
-    # PRESENZE E MINUTI
+    # PRESENZE / MINUTI
     # --------------------------------------------------------
 
     df_clean["matches_played"] = (
-        to_numeric(df_player["matches"])
-        .astype(int)
+        to_numeric(
+            df_player["matches"]
+        ).astype(int)
     )
 
     df_clean["minutes_played"] = (
-        to_numeric(df_player["minutes"])
-        .astype(int)
+        to_numeric(
+            df_player["minutes"]
+        ).astype(int)
     )
 
     # --------------------------------------------------------
@@ -182,55 +213,63 @@ def fetch_and_process_data(seasons=None):
     # --------------------------------------------------------
 
     df_clean["goals"] = (
-        to_numeric(df_player["goals"])
-        .astype(int)
+        to_numeric(
+            df_player["goals"]
+        ).astype(int)
     )
 
     df_clean["assists"] = (
-        to_numeric(df_player["assists"])
-        .astype(int)
+        to_numeric(
+            df_player["assists"]
+        ).astype(int)
     )
 
     # --------------------------------------------------------
-    # EXPECTED GOALS / EXPECTED ASSISTS
+    # xG / xA
     # --------------------------------------------------------
 
     df_clean["xg"] = (
-        to_numeric(df_player["xg"])
-        .round(2)
+        to_numeric(
+            df_player["xg"]
+        ).round(2)
     )
 
     df_clean["xa"] = (
-        to_numeric(df_player["xa"])
-        .round(2)
+        to_numeric(
+            df_player["xa"]
+        ).round(2)
     )
 
     # --------------------------------------------------------
-    # NON-PENALTY GOALS / XG
+    # NON-PENALTY
     # --------------------------------------------------------
 
     df_clean["np_goals"] = (
-        to_numeric(df_player["np_goals"])
-        .astype(int)
+        to_numeric(
+            df_player["np_goals"]
+        ).astype(int)
     )
 
     df_clean["np_xg"] = (
-        to_numeric(df_player["np_xg"])
-        .round(2)
+        to_numeric(
+            df_player["np_xg"]
+        ).round(2)
     )
 
     # --------------------------------------------------------
-    # TIRI E PASSAGGI CHIAVE
+    # TIRI / KEY PASSES
     # --------------------------------------------------------
 
     df_clean["shots_total"] = (
-        to_numeric(df_player["shots"])
-        .astype(int)
+        to_numeric(
+            df_player["shots"]
+        ).astype(int)
     )
 
     df_clean["key_passes"] = (
-        to_numeric(df_player["key_passes"])
-        .astype(int)
+        to_numeric(
+            df_player["key_passes"]
+        ).astype(int)
     )
 
     # --------------------------------------------------------
@@ -238,31 +277,35 @@ def fetch_and_process_data(seasons=None):
     # --------------------------------------------------------
 
     df_clean["yellow_cards"] = (
-        to_numeric(df_player["yellow_cards"])
-        .astype(int)
+        to_numeric(
+            df_player["yellow_cards"]
+        ).astype(int)
     )
 
     df_clean["red_cards"] = (
-        to_numeric(df_player["red_cards"])
-        .astype(int)
+        to_numeric(
+            df_player["red_cards"]
+        ).astype(int)
     )
 
     # --------------------------------------------------------
-    # METRICHE AVANZATE UNDERSTAT
+    # METRICHE AVANZATE
     # --------------------------------------------------------
 
     df_clean["xg_chain"] = (
-        to_numeric(df_player["xg_chain"])
-        .round(2)
+        to_numeric(
+            df_player["xg_chain"]
+        ).round(2)
     )
 
     df_clean["xg_buildup"] = (
-        to_numeric(df_player["xg_buildup"])
-        .round(2)
+        to_numeric(
+            df_player["xg_buildup"]
+        ).round(2)
     )
 
     # ========================================================
-    # KPI PER 90 MINUTI
+    # METRICHE PER 90
     # ========================================================
 
     minutes = df_clean["minutes_played"]
@@ -309,26 +352,24 @@ def fetch_and_process_data(seasons=None):
         0.0
     ).round(2)
 
-    # --------------------------------------------------------
+    # ========================================================
     # ID UNIVOCO
-    # --------------------------------------------------------
-    #
-    # Non usiamo player_name perché può cambiare.
-    # Usiamo player_id + stagione.
-    #
+    # ========================================================
 
     df_clean["id"] = (
         df_clean["player_id"].astype(str)
         + "_"
-        + df_clean["season"]
+        + df_clean["season"].astype(str)
     )
 
-    # --------------------------------------------------------
-    # ORDINAMENTO COLONNE
-    # --------------------------------------------------------
+    # ========================================================
+    # ORDINE COLONNE
+    # ========================================================
 
     columns_order = [
+
         "id",
+
         "player_id",
         "player_name",
         "team",
@@ -367,19 +408,20 @@ def fetch_and_process_data(seasons=None):
     df_clean = df_clean[columns_order]
 
     # --------------------------------------------------------
-    # CONTROLLO FINALE
+    # RIMOZIONE DUPLICATI
     # --------------------------------------------------------
 
     df_clean = df_clean.drop_duplicates(
-        subset=["player_id", "season"]
+        subset=[
+            "player_id",
+            "season"
+        ]
     )
 
     print(
-        f"DataFrame finale: {len(df_clean)} giocatori."
+        f"DataFrame finale stagione {season}: "
+        f"{len(df_clean)} giocatori."
     )
-
-    print("\nEsempio dati:")
-    print(df_clean.head())
 
     return df_clean
 
@@ -388,61 +430,73 @@ def fetch_and_process_data(seasons=None):
 # UPLOAD SUPABASE
 # ============================================================
 
-def upload_to_supabase(df, batch_size=500):
+def upload_to_supabase(
+    df,
+    batch_size=500
+):
     """
-    Carica i dati su Supabase tramite upsert.
-    I record vengono inviati a batch per evitare richieste
-    troppo grandi.
+    Esegue l'upsert dei record su Supabase.
     """
 
     if df is None or df.empty:
-        print("Nessun dato valido da caricare.")
-        return
 
-    print(
-        f"\nInizio caricamento di {len(df)} record su Supabase..."
+        print(
+            "Nessun dato valido da caricare."
+        )
+
+        return False
+
+    records = df.to_dict(
+        orient="records"
     )
 
     # --------------------------------------------------------
-    # Conversione DataFrame -> JSON
+    # Conversione tipi Pandas -> Python
     # --------------------------------------------------------
 
-    records = df.to_dict(orient="records")
-
-    # Supabase/PostgREST non gestisce bene alcuni tipi
-    # Pandas come Int64.
     for record in records:
+
         for key, value in record.items():
 
             if pd.isna(value):
+
                 record[key] = None
 
             elif hasattr(value, "item"):
-                record[key] = value.item()
 
-    # --------------------------------------------------------
-    # UPLOAD A BATCH
-    # --------------------------------------------------------
+                record[key] = value.item()
 
     total = len(records)
 
+    print(
+        f"Inizio caricamento di "
+        f"{total} record su Supabase..."
+    )
+
     try:
 
-        for start in range(0, total, batch_size):
+        for start in range(
+            0,
+            total,
+            batch_size
+        ):
 
             end = min(
                 start + batch_size,
                 total
             )
 
-            batch = records[start:end]
+            batch = records[
+                start:end
+            ]
 
             print(
-                f"Upload record {start + 1}-{end} "
+                f"Upload record "
+                f"{start + 1}-{end} "
                 f"di {total}..."
             )
 
-            response = (
+            (
                 supabase
                 .table("player_stats")
                 .upsert(
@@ -453,17 +507,20 @@ def upload_to_supabase(df, batch_size=500):
             )
 
             print(
-                f"Batch {start + 1}-{end} completato."
+                f"Batch {start + 1}-{end} "
+                f"completato."
             )
 
         print(
-            "\nCaricamento completato con successo!"
+            "Caricamento completato con successo!"
         )
+
+        return True
 
     except Exception as e:
 
         print(
-            f"\nErrore durante l'upsert su Supabase: {e}"
+            f"Errore durante l'upsert su Supabase: {e}"
         )
 
         raise
@@ -475,13 +532,100 @@ def upload_to_supabase(df, batch_size=500):
 
 if __name__ == "__main__":
 
-    # 2024 = stagione 2024/25
-    seasons = ["2024"]
+    print("\n")
+    print("=" * 70)
+    print("FANTA-AI - INGESTION STORICA UNDERSTAT")
+    print("=" * 70)
 
-    df_processed = fetch_and_process_data(
-        seasons=seasons
+    print(
+        f"Stagioni da importare: {SEASONS}"
     )
 
-    upload_to_supabase(
-        df_processed
+    total_records = 0
+    successful_seasons = []
+    failed_seasons = []
+
+    # --------------------------------------------------------
+    # ELABORAZIONE UNA STAGIONE ALLA VOLTA
+    # --------------------------------------------------------
+
+    for season in SEASONS:
+
+        try:
+
+            df_processed = fetch_and_process_data(
+                season
+            )
+
+            if df_processed is None:
+
+                failed_seasons.append(
+                    season
+                )
+
+                continue
+
+            success = upload_to_supabase(
+                df_processed
+            )
+
+            if success:
+
+                successful_seasons.append(
+                    season
+                )
+
+                total_records += len(
+                    df_processed
+                )
+
+        except Exception as e:
+
+            print(
+                f"\nERRORE STAGIONE {season}: {e}"
+            )
+
+            failed_seasons.append(
+                season
+            )
+
+    # ========================================================
+    # RIEPILOGO
+    # ========================================================
+
+    print("\n")
+    print("=" * 70)
+    print("RIEPILOGO INGESTION")
+    print("=" * 70)
+
+    print(
+        f"Stagioni completate: "
+        f"{successful_seasons}"
+    )
+
+    print(
+        f"Stagioni fallite: "
+        f"{failed_seasons}"
+    )
+
+    print(
+        f"Totale record elaborati: "
+        f"{total_records}"
+    )
+
+    if failed_seasons:
+
+        print(
+            "\nATTENZIONE: alcune stagioni "
+            "non sono state caricate."
+        )
+
+        raise RuntimeError(
+            "Ingestion completata parzialmente. "
+            f"Stagioni fallite: {failed_seasons}"
+        )
+
+    print(
+        "\nINGESTION STORICA COMPLETATA "
+        "CON SUCCESSO!"
     )
