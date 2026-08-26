@@ -2,3 +2,5 @@ soccerdata
 supabase
 pandas
 requests
+streamlit
+plotly
