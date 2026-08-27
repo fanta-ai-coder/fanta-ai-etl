@@ -16,8 +16,9 @@ supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # Costanti API-Football
 API_URL = "https://v3.football.api-sports.io/players"
+# Metti .strip() per pulire la chiave da eventuali \n o spazi
 HEADERS = {
-    "x-apisports-key": API_FOOTBALL_KEY
+    "x-apisports-key": API_FOOTBALL_KEY.strip()
 }
 SERIE_A_LEAGUE_ID = 135  # ID della Serie A su API-Football
 DAILY_REQUEST_BUDGET = 30 # Limite prudenziale per singola esecuzione (Piano Free ha 100 req/giorno)
