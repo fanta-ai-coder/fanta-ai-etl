@@ -2,6 +2,7 @@ import os
 import requests
 from supabase import create_client
 
+
 # ============================================================
 # CONFIGURAZIONE
 # ============================================================
@@ -20,6 +21,11 @@ supabase = create_client(
     SUPABASE_KEY
 )
 
+
+# ============================================================
+# API-FOOTBALL
+# ============================================================
+
 API_URL = "https://v3.football.api-sports.io/players"
 
 HEADERS = {
@@ -28,11 +34,10 @@ HEADERS = {
 
 SERIE_A_LEAGUE_ID = 135
 
-# Stagioni da importare
 START_SEASON = 2022
 END_SEASON = 2026
 
-# Limite prudenziale di chiamate per esecuzione
+# Numero massimo di chiamate API per singola esecuzione
 DAILY_REQUEST_BUDGET = 30
 
 
@@ -42,7 +47,7 @@ DAILY_REQUEST_BUDGET = 30
 
 def get_checkpoint():
     """
-    Recupera lo stato dell'ETL.
+    Recupera lo stato attuale dell'ingestion.
     """
 
     try:
@@ -60,6 +65,7 @@ def get_checkpoint():
     except Exception as e:
         print(f"⚠️ Errore lettura checkpoint: {e}")
 
+    # Se non esiste ancora il checkpoint
     return {
         "id": 1,
         "current_season": START_SEASON,
@@ -70,7 +76,7 @@ def get_checkpoint():
 
 def update_checkpoint(season, page, is_completed=False):
     """
-    Salva lo stato dell'ETL.
+    Salva lo stato dell'ingestion.
     """
 
     payload = {
@@ -81,10 +87,15 @@ def update_checkpoint(season, page, is_completed=False):
     }
 
     try:
-        supabase
+        (
+            supabase
             .table("etl_checkpoint")
-            .upsert(payload, on_conflict="id")
+            .upsert(
+                payload,
+                on_conflict="id"
+            )
             .execute()
+        )
 
     except Exception as e:
         print(f"⚠️ Errore aggiornamento checkpoint: {e}")
@@ -96,7 +107,7 @@ def update_checkpoint(season, page, is_completed=False):
 
 def safe_int(value, default=0):
     """
-    Converte un valore in int evitando errori con None/stringhe.
+    Converte un valore in intero in modo sicuro.
     """
 
     if value is None:
@@ -110,7 +121,7 @@ def safe_int(value, default=0):
 
 def safe_float(value):
     """
-    Converte un valore in float.
+    Converte un valore in float in modo sicuro.
     """
 
     if value is None:
@@ -123,12 +134,12 @@ def safe_float(value):
 
 
 # ============================================================
-# GESTIONE PLAYER
+# PLAYER
 # ============================================================
 
 def get_existing_player(api_id):
     """
-    Cerca il giocatore nella tabella players tramite API-Football ID.
+    Cerca un giocatore esistente tramite API-Football ID.
     """
 
     try:
@@ -145,18 +156,21 @@ def get_existing_player(api_id):
             return res.data[0]
 
     except Exception as e:
-        print(f"⚠️ Errore ricerca player {api_id}: {e}")
+        print(
+            f"⚠️ Errore ricerca player "
+            f"{api_id}: {e}"
+        )
 
     return None
 
 
 def create_or_update_player(player_data):
     """
-    Crea/aggiorna il giocatore senza cancellare
-    i dati provenienti da Fantacalcio.
+    Crea o aggiorna il giocatore.
 
     IMPORTANTE:
-    non invia colonne NOT NULL di Fantacalcio con valore NULL.
+    - non sovrascrive i dati Fantacalcio esistenti
+    - aggiorna solamente i dati provenienti da API-Football
     """
 
     player = player_data.get("player", {}) or {}
@@ -165,26 +179,27 @@ def create_or_update_player(player_data):
     api_name = player.get("name")
 
     if not api_id:
-        print("⚠️ Player senza API Football ID, salto.")
+        print("⚠️ Giocatore senza API-Football ID. Salto.")
         return None
 
     existing = get_existing_player(api_id)
 
     # --------------------------------------------------------
-    # PLAYER GIÀ PRESENTE
+    # GIOCATORE GIÀ PRESENTE
     # --------------------------------------------------------
 
     if existing:
 
         update_payload = {}
 
-        # Aggiorniamo solamente i campi API Football.
-        # NON tocchiamo nome_fantacalcio, ruolo, squadra_fantacalcio ecc.
-
-        if api_name and existing.get("api_football_name") != api_name:
+        if (
+            api_name
+            and existing.get("api_football_name") != api_name
+        ):
             update_payload["api_football_name"] = api_name
 
         if update_payload:
+
             try:
                 (
                     supabase
@@ -195,6 +210,7 @@ def create_or_update_player(player_data):
                 )
 
             except Exception as e:
+
                 print(
                     f"⚠️ Errore aggiornamento player "
                     f"{api_name}: {e}"
@@ -203,20 +219,18 @@ def create_or_update_player(player_data):
         return existing["id"]
 
     # --------------------------------------------------------
-    # PLAYER NUOVO
+    # GIOCATORE NUOVO
     # --------------------------------------------------------
-
-    # ATTENZIONE:
-    # Se players ha colonne NOT NULL senza default
-    # (es. nome_fantacalcio), bisogna valorizzarle.
-    #
-    # Qui usiamo api_name come fallback temporaneo.
-    # Successivamente potrà essere sostituito dal nome
-    # ufficiale Fantacalcio.
 
     insert_payload = {
         "api_football_id": api_id,
         "api_football_name": api_name,
+
+        # Fallback per soddisfare il NOT NULL
+        # della tabella players.
+        #
+        # Quando importerai i nomi Fantacalcio,
+        # questo valore potrà essere sostituito.
         "nome_fantacalcio": api_name
     }
 
@@ -243,7 +257,7 @@ def create_or_update_player(player_data):
 
 
 # ============================================================
-# STATISTICHE
+# STATISTICHE PLAYER
 # ============================================================
 
 def save_player_stats(player_data, season):
@@ -253,16 +267,22 @@ def save_player_stats(player_data, season):
 
     player = player_data.get("player", {}) or {}
 
-    statistics = player_data.get("statistics", []) or []
+    statistics = (
+        player_data.get("statistics", [])
+        or []
+    )
 
     if not statistics:
+
         print(
             f"⚠️ Nessuna statistica per "
             f"{player.get('name')}"
         )
+
         return
 
-    # La prima statistica dovrebbe essere quella della Serie A
+    # Prima statistica restituita da API-Football.
+    # Per questa query dovrebbe essere la Serie A.
     stats = statistics[0] or {}
 
     api_id = player.get("id")
@@ -271,14 +291,15 @@ def save_player_stats(player_data, season):
         return
 
     team = stats.get("team", {}) or {}
-
     games = stats.get("games", {}) or {}
     goals = stats.get("goals", {}) or {}
     cards = stats.get("cards", {}) or {}
     shots = stats.get("shots", {}) or {}
     passes = stats.get("passes", {}) or {}
 
-    rating = safe_float(games.get("rating"))
+    rating = safe_float(
+        games.get("rating")
+    )
 
     payload = {
         "api_football_id": api_id,
@@ -351,24 +372,34 @@ def save_player_stats(player_data, season):
 
 
 # ============================================================
-# SALVATAGGIO COMPLETO PLAYER
+# PROCESS PLAYER
 # ============================================================
 
 def process_player(player_data, season):
 
-    player = player_data.get("player", {}) or {}
+    player = player_data.get(
+        "player",
+        {}
+    ) or {}
 
-    player_name = player.get("name", "Sconosciuto")
+    player_name = player.get(
+        "name",
+        "Sconosciuto"
+    )
 
     try:
 
-        player_id = create_or_update_player(player_data)
+        player_id = create_or_update_player(
+            player_data
+        )
 
         if player_id is None:
+
             print(
                 f"⚠️ Impossibile creare/aggiornare "
                 f"{player_name}"
             )
+
             return
 
         save_player_stats(
@@ -385,7 +416,7 @@ def process_player(player_data, season):
 
 
 # ============================================================
-# API FOOTBALL
+# CHIAMATA API
 # ============================================================
 
 def get_players_page(season, page):
@@ -407,7 +438,10 @@ def get_players_page(season, page):
 
     except requests.RequestException as e:
 
-        print(f"❌ Errore connessione API: {e}")
+        print(
+            f"❌ Errore connessione API: {e}"
+        )
+
         return None
 
     if response.status_code != 200:
@@ -421,11 +455,16 @@ def get_players_page(season, page):
         return None
 
     try:
+
         return response.json()
 
     except ValueError:
 
-        print("❌ Risposta API non valida.")
+        print(
+            "❌ La risposta dell'API "
+            "non è JSON valido."
+        )
+
         return None
 
 
@@ -440,7 +479,8 @@ def run_ingestion():
     if checkpoint.get("is_completed"):
 
         print(
-            "✅ Ingestion storica già completata."
+            "✅ Ingestion storica "
+            "già completata."
         )
 
         return
@@ -461,21 +501,25 @@ def run_ingestion():
     print("=" * 60)
     print("🚀 AVVIO INGESTION API-FOOTBALL")
     print("=" * 60)
+
     print(
         f"Stagione iniziale : {current_season}"
     )
+
     print(
         f"Pagina iniziale   : {current_page}"
     )
+
     print(
         f"Budget chiamate   : {DAILY_REQUEST_BUDGET}"
     )
+
     print("=" * 60)
 
     while requests_made < DAILY_REQUEST_BUDGET:
 
         # ----------------------------------------------------
-        # CONTROLLO FINE INGESTION
+        # CONTROLLO FINE
         # ----------------------------------------------------
 
         if current_season > END_SEASON:
@@ -494,10 +538,11 @@ def run_ingestion():
             return
 
         # ----------------------------------------------------
-        # CHIAMATA API
+        # API REQUEST
         # ----------------------------------------------------
 
         print("")
+
         print(
             f"📡 Richiesta "
             f"Stagione {current_season} "
@@ -514,8 +559,12 @@ def run_ingestion():
         if data is None:
 
             print(
-                "🛑 Richiesta fallita. "
-                "Checkpoint mantenuto."
+                "🛑 Richiesta fallita."
+            )
+
+            print(
+                "💾 Il checkpoint precedente "
+                "rimane valido."
             )
 
             break
@@ -546,7 +595,7 @@ def run_ingestion():
         )
 
         # ----------------------------------------------------
-        # SALVATAGGIO PLAYER
+        # SALVATAGGIO
         # ----------------------------------------------------
 
         for player_data in players_list:
@@ -557,7 +606,7 @@ def run_ingestion():
             )
 
         # ----------------------------------------------------
-        # CHECKPOINT
+        # PAGINAZIONE
         # ----------------------------------------------------
 
         if current_page < total_pages:
@@ -567,6 +616,7 @@ def run_ingestion():
         else:
 
             print("")
+
             print(
                 f"🎉 Stagione "
                 f"{current_season} completata!"
@@ -574,6 +624,10 @@ def run_ingestion():
 
             current_season += 1
             current_page = 1
+
+        # ----------------------------------------------------
+        # CHECKPOINT
+        # ----------------------------------------------------
 
         update_checkpoint(
             current_season,
@@ -583,26 +637,31 @@ def run_ingestion():
 
         print(
             f"💾 Checkpoint salvato: "
-            f"{current_season} / pagina {current_page}"
+            f"stagione {current_season}, "
+            f"pagina {current_page}"
         )
 
     # --------------------------------------------------------
-    # FINE BUDGET
+    # BUDGET TERMINATO
     # --------------------------------------------------------
 
     print("")
     print("=" * 60)
     print("🛑 BUDGET API RAGGIUNTO")
     print("=" * 60)
+
     print(
         f"Richieste effettuate: {requests_made}"
     )
+
     print(
         f"Prossima stagione: {current_season}"
     )
+
     print(
         f"Prossima pagina: {current_page}"
     )
+
     print("=" * 60)
 
 
