@@ -20,6 +20,13 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+ROLE_LABELS = {"P": "Portieri", "D": "Difensori", "C": "Centrocampisti", "A": "Attaccanti"}
+ROLE_ORDER = {"P": 0, "D": 1, "C": 2, "A": 3}
+MAX_SEASON_MINUTES = 3420  # 38 giornate x 90'
+
+PLAYER_COLOR = "#2563eb"
+PEER_COLOR = "#84cc16"
+
 
 # ============================================================
 # CSS
@@ -30,81 +37,46 @@ st.markdown(
     <style>
 
     .block-container {
-        padding-top: 1.5rem;
+        padding-top: 1.2rem;
         padding-bottom: 2rem;
-        max-width: 1550px;
+        max-width: 1650px;
     }
 
     section[data-testid="stSidebar"] {
-        min-width: 320px;
-        max-width: 380px;
+        min-width: 300px;
+        max-width: 340px;
     }
 
-    .main-title {
-        font-size: 40px;
-        font-weight: 800;
-        margin-bottom: 0;
-    }
-
-    .subtitle {
-        color: #6b7280;
-        font-size: 15px;
-        margin-top: -5px;
-        margin-bottom: 20px;
-    }
+    .main-title { font-size: 38px; font-weight: 800; margin-bottom: 0; }
+    .subtitle { color: #6b7280; font-size: 15px; margin-top: -5px; margin-bottom: 16px; }
 
     .player-header {
-        padding: 18px 0 22px 0;
+        padding: 14px 0 18px 0;
         border-bottom: 1px solid #e5e7eb;
-        margin-bottom: 20px;
+        margin-bottom: 16px;
     }
-
-    .player-name {
-        font-size: 32px;
-        font-weight: 800;
-        line-height: 1.1;
-    }
-
-    .player-meta {
-        color: #6b7280;
-        font-size: 15px;
-        margin-top: 6px;
-    }
+    .player-name { font-size: 28px; font-weight: 800; line-height: 1.1; }
+    .player-meta { color: #6b7280; font-size: 14px; margin-top: 6px; }
 
     div[data-testid="stMetric"] {
         background: #f8fafc;
         border: 1px solid #e5e7eb;
         border-radius: 12px;
-        padding: 14px;
+        padding: 12px;
     }
+    div[data-testid="stMetricLabel"] { font-size: 12px; }
+    div[data-testid="stMetricValue"] { font-size: 22px; font-weight: 700; }
 
-    div[data-testid="stMetricLabel"] { font-size: 13px; }
-    div[data-testid="stMetricValue"] { font-size: 25px; font-weight: 700; }
-
-    .section-title {
-        font-size: 21px;
-        font-weight: 750;
-        margin-top: 22px;
-        margin-bottom: 10px;
-    }
+    .section-title { font-size: 19px; font-weight: 750; margin-top: 18px; margin-bottom: 8px; }
 
     .verdict-box {
         border-radius: 14px;
-        padding: 18px 22px;
-        margin-bottom: 18px;
+        padding: 16px 20px;
+        margin-bottom: 14px;
         border: 1px solid #e5e7eb;
     }
-
-    .verdict-title {
-        font-size: 22px;
-        font-weight: 800;
-        margin-bottom: 4px;
-    }
-
-    .verdict-sub {
-        font-size: 14px;
-        color: #374151;
-    }
+    .verdict-title { font-size: 20px; font-weight: 800; margin-bottom: 4px; }
+    .verdict-sub { font-size: 13px; color: #374151; }
 
     .tier-S { background:#065f46; color:white; padding:2px 10px; border-radius:8px; font-weight:700; }
     .tier-A { background:#16a34a; color:white; padding:2px 10px; border-radius:8px; font-weight:700; }
@@ -112,6 +84,31 @@ st.markdown(
     .tier-C { background:#ea580c; color:white; padding:2px 10px; border-radius:8px; font-weight:700; }
     .tier-D { background:#dc2626; color:white; padding:2px 10px; border-radius:8px; font-weight:700; }
     .tier-ND { background:#6b7280; color:white; padding:2px 10px; border-radius:8px; font-weight:700; }
+
+    /* lista giocatori scrollabile */
+    div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stButton"] > button {
+        text-align: left;
+        justify-content: flex-start;
+        font-size: 13px;
+        padding: 6px 10px;
+    }
+
+    .split-row { margin-bottom: 14px; }
+    .split-label { font-size: 13px; font-weight: 700; text-align: center; margin-bottom: 4px; }
+    .split-values { display: flex; justify-content: space-between; font-size: 12px; color: #6b7280; margin-top: 3px; }
+    .split-bar-track { display: flex; height: 10px; border-radius: 6px; overflow: hidden; background: #f1f5f9; }
+    .split-bar-player { background: #2563eb; }
+    .split-bar-peer { background: #84cc16; }
+
+    .gk-note {
+        background: #fef9c3;
+        border: 1px solid #fde68a;
+        border-radius: 10px;
+        padding: 12px 16px;
+        font-size: 13px;
+        color: #78350f;
+        margin-bottom: 16px;
+    }
 
     </style>
     """,
@@ -154,14 +151,14 @@ except Exception as e:
 
 
 @st.cache_data(ttl=600, show_spinner=False)
-def load_player_stats():
+def load_table(table_name):
     all_rows = []
     page_size = 1000
     start = 0
 
     while True:
         response = (
-            supabase.table("player_stats")
+            supabase.table(table_name)
             .select("*")
             .range(start, start + page_size - 1)
             .execute()
@@ -177,20 +174,39 @@ def load_player_stats():
     return pd.DataFrame(all_rows)
 
 
-with st.spinner("Caricamento statistiche giocatori..."):
+with st.spinner("Caricamento dati..."):
     try:
-        df = load_player_stats()
+        df = load_table("player_stats")
     except Exception as e:
         st.error(f"Errore durante la lettura di player_stats: {e}")
         st.stop()
+
+    try:
+        quotazioni_raw = load_table("quotazioni")
+    except Exception:
+        quotazioni_raw = pd.DataFrame()
+
+    try:
+        mapping_raw = load_table("player_mapping")
+    except Exception:
+        mapping_raw = pd.DataFrame()
 
 if df.empty:
     st.warning("La tabella `player_stats` non contiene dati.")
     st.stop()
 
+quotazioni_available = not quotazioni_raw.empty and not mapping_raw.empty
+
+if not quotazioni_available:
+    st.info(
+        "ℹ️ Tabelle `quotazioni`/`player_mapping` non trovate o vuote: la lista giocatori "
+        "userà solo i dati Understat disponibili, senza quotazioni/FVM. "
+        "Esegui l'ETL per popolarle e sbloccare la vista completa del listone."
+    )
+
 
 # ============================================================
-# NORMALIZZAZIONE
+# NORMALIZZAZIONE player_stats
 # ============================================================
 
 numeric_columns = [
@@ -236,10 +252,9 @@ def format_season(value):
 
 
 df["season_start"] = df["season"].apply(season_start)
-df["season_label"] = df["season"].apply(format_season)
 
 
-def normalize_role(position):
+def normalize_role_understat(position):
     if pd.isna(position):
         return "N/D"
     position = str(position).upper()
@@ -257,11 +272,11 @@ def normalize_role(position):
 if "position" not in df.columns:
     df["position"] = ""
 
-df["role"] = df["position"].apply(normalize_role)
+df["role"] = df["position"].apply(normalize_role_understat)
 
 
 # ============================================================
-# AGGREGAZIONE DUPLICATI (player_id + season, es. trasferimenti)
+# AGGREGAZIONE DUPLICATI (player_id + season)
 # ============================================================
 
 sum_columns = [
@@ -283,6 +298,53 @@ df = (
 
 
 # ============================================================
+# QUOTAZIONI + MAPPING -> RUOLO UFFICIALE PIU' AFFIDABILE
+# ============================================================
+
+if quotazioni_available:
+    quotazioni = quotazioni_raw.copy()
+    mapping = mapping_raw.copy()
+
+    for col in ["id", "quotazione_attuale", "quotazione_iniziale", "fvm"]:
+        if col in quotazioni.columns:
+            quotazioni[col] = pd.to_numeric(quotazioni[col], errors="coerce")
+
+    mapping["player_id"] = pd.to_numeric(mapping.get("player_id"), errors="coerce")
+    mapping["id_excel"] = pd.to_numeric(mapping.get("id_excel"), errors="coerce")
+
+    quotazioni_full = quotazioni.merge(
+        mapping[["id_excel", "player_id"]],
+        left_on="id",
+        right_on="id_excel",
+        how="left",
+    )
+
+    # Usa il ruolo del listone (piu' affidabile) ovunque disponibile
+    role_map = (
+        quotazioni_full.dropna(subset=["player_id"])
+        .drop_duplicates(subset=["player_id"])
+        .set_index("player_id")["ruolo"]
+        .to_dict()
+    )
+    df["role"] = df["player_id"].map(role_map).fillna(df["role"])
+
+else:
+    # Fallback: costruiamo un "listone" surrogato a partire da Understat,
+    # cosi' la lista a sinistra funziona comunque.
+    fallback_latest = df[df["season_start"] == df["season_start"].max()].copy()
+    quotazioni_full = pd.DataFrame({
+        "id": fallback_latest["player_id"],
+        "id_excel": fallback_latest["player_id"],
+        "player_id": fallback_latest["player_id"],
+        "nome": fallback_latest["player_name"],
+        "ruolo": fallback_latest["role"],
+        "squadra": fallback_latest["team"],
+        "quotazione_attuale": np.nan,
+        "fvm": np.nan,
+    })
+
+
+# ============================================================
 # METRICHE DERIVATE PER 90
 # ============================================================
 
@@ -294,10 +356,6 @@ df["xg_per_90"] = (df["xg"] / (minutes / 90)).fillna(0)
 df["xa_per_90"] = (df["xa"] / (minutes / 90)).fillna(0)
 df["shots_per_90"] = (df["shots_total"] / (minutes / 90)).fillna(0)
 df["key_passes_per_90"] = (df["key_passes"] / (minutes / 90)).fillna(0)
-
-df["shot_conversion"] = (
-    df["goals"] / df["shots_total"].replace(0, np.nan)
-).fillna(0) * 100
 
 df["goal_xg_diff"] = df["goals"] - df["xg"]
 
@@ -315,28 +373,17 @@ ROLE_WEIGHTS = {
           "xa_per_90": 0.15, "shots_per_90": 0.10, "key_passes_per_90": 0.05},
 }
 
-MAX_SEASON_MINUTES = 3420  # 38 giornate x 90'
-
 
 def compute_performance_scores(data):
-    """Calcola il Punteggio Prestazione (0-100) come percentile pesato
-    all'interno dello stesso ruolo e della stessa stagione."""
-
     data = data.copy()
     data["performance_score"] = np.nan
 
     for (season, role), group in data.groupby(["season_start", "role"]):
-
         weights = ROLE_WEIGHTS.get(role)
-
         if not weights or len(group) < 3:
-            # Portieri o gruppi troppo piccoli: Understat non ha
-            # statistiche difensive da portiere, quindi non calcoliamo
-            # un punteggio affidabile.
             continue
 
         score = pd.Series(0.0, index=group.index)
-
         for metric, weight in weights.items():
             pct = group[metric].rank(pct=True) * 100
             score = score + pct * weight
@@ -348,7 +395,6 @@ def compute_performance_scores(data):
 
 df = compute_performance_scores(df)
 
-# Affidabilita': disponibilita' minuti stagione + costanza minuti tra stagioni
 df["availability_score"] = (
     (df["minutes_played"] / MAX_SEASON_MINUTES) * 100
 ).clip(upper=100)
@@ -356,12 +402,10 @@ df["availability_score"] = (
 df = df.sort_values(["player_id", "season_start"])
 
 df["minutes_std3"] = (
-    df.groupby("player_id")["minutes_played"]
-    .transform(lambda s: s.rolling(3, min_periods=2).std())
+    df.groupby("player_id")["minutes_played"].transform(lambda s: s.rolling(3, min_periods=2).std())
 )
 df["minutes_mean3"] = (
-    df.groupby("player_id")["minutes_played"]
-    .transform(lambda s: s.rolling(3, min_periods=2).mean())
+    df.groupby("player_id")["minutes_played"].transform(lambda s: s.rolling(3, min_periods=2).mean())
 )
 
 cv = (df["minutes_std3"] / df["minutes_mean3"].replace(0, np.nan)).fillna(0)
@@ -376,7 +420,6 @@ df["value_score"] = (
     df["performance_score"] * 0.65 + df["reliability_score"] * 0.35
 ).round(1)
 
-# Trend rispetto alla stagione precedente dello stesso giocatore
 df["prev_performance_score"] = df.groupby("player_id")["performance_score"].shift(1)
 df["trend_delta"] = (df["performance_score"] - df["prev_performance_score"]).round(1)
 
@@ -387,8 +430,7 @@ def assign_tier(group):
         return pd.Series("N/D", index=group.index)
     try:
         tiers = pd.qcut(
-            valid["value_score"],
-            q=[0, 0.10, 0.30, 0.60, 0.85, 1.0],
+            valid["value_score"], q=[0, 0.10, 0.30, 0.60, 0.85, 1.0],
             labels=["D", "C", "B", "A", "S"],
         )
     except ValueError:
@@ -404,58 +446,9 @@ for (season, role), group in df.groupby(["season_start", "role"]):
 
 
 latest_season = int(df["season_start"].dropna().max())
-
 latest_players = df[df["season_start"] == latest_season].copy()
 if latest_players.empty:
     latest_players = df.copy()
-
-role_order = {"P": 0, "D": 1, "C": 2, "A": 3, "N/D": 4}
-latest_players["role_order"] = latest_players["role"].map(role_order).fillna(4)
-
-
-# ============================================================
-# LISTONE QUOTAZIONI (opzionale)
-# ============================================================
-
-def normalize_name(name):
-    return re.sub(r"\s+", " ", str(name)).strip().lower()
-
-
-quotazioni_map = {}
-
-with st.sidebar:
-    st.markdown("## 💰 Listone (opzionale)")
-    uploaded = st.file_uploader(
-        "Carica CSV con colonne 'Nome' e 'Quotazione'",
-        type=["csv"],
-        help="Serve per calcolare il rapporto qualità/prezzo reale rispetto al listone della tua lega.",
-    )
-
-    if uploaded is not None:
-        try:
-            listone = pd.read_csv(uploaded)
-            listone.columns = [c.strip().lower() for c in listone.columns]
-
-            name_col = next((c for c in listone.columns if "nome" in c), None)
-            price_col = next((c for c in listone.columns if "quotazion" in c), None)
-
-            if name_col and price_col:
-                listone["_key"] = listone[name_col].apply(normalize_name)
-                quotazioni_map = dict(
-                    zip(listone["_key"], pd.to_numeric(listone[price_col], errors="coerce"))
-                )
-                st.success(f"Listone caricato: {len(quotazioni_map)} giocatori.")
-            else:
-                st.warning("Non trovo colonne 'Nome' e 'Quotazione' nel CSV.")
-        except Exception as e:
-            st.error(f"Errore nel leggere il listone: {e}")
-
-latest_players["quotazione"] = latest_players["player_name"].apply(
-    lambda n: quotazioni_map.get(normalize_name(n), np.nan)
-)
-latest_players["value_for_money"] = (
-    latest_players["value_score"] / latest_players["quotazione"]
-).replace([np.inf, -np.inf], np.nan)
 
 
 # ============================================================
@@ -465,6 +458,9 @@ latest_players["value_for_money"] = (
 if "shortlist" not in st.session_state:
     st.session_state.shortlist = set()
 
+if "selected_listone_id" not in st.session_state:
+    first_row = quotazioni_full.sort_values("nome").iloc[0]
+    st.session_state.selected_listone_id = first_row["id"]
 
 with st.sidebar:
     st.markdown("## ⭐ Shortlist")
@@ -474,7 +470,7 @@ with st.sidebar:
             st.session_state.shortlist = set()
             st.rerun()
     else:
-        st.caption("Aggiungi giocatori dalla tabella Ranking o dalla scheda dettaglio.")
+        st.caption("Aggiungi giocatori dalla scheda dettaglio o dal ranking.")
 
 
 # ============================================================
@@ -487,100 +483,426 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-tab_ranking, tab_player, tab_compare = st.tabs(
-    ["🏆 Ranking & Overview", "🔍 Analisi Giocatore", "⚖️ Confronto"]
+tab_player, tab_ranking, tab_compare = st.tabs(
+    ["🔍 Analisi Giocatore", "🏆 Ranking & Overview", "⚖️ Confronto"]
 )
 
 
 # ============================================================
-# TAB 1 — RANKING
+# TAB — ANALISI GIOCATORE (lista a sinistra + dettaglio a destra)
+# ============================================================
+
+with tab_player:
+
+    col_list, col_detail = st.columns([1, 2.6], gap="large")
+
+    # --------------------------------------------------------
+    # LISTA GIOCATORI (foglio "Tutti")
+    # --------------------------------------------------------
+
+    with col_list:
+
+        st.markdown("#### Rosa Serie A")
+
+        role_pick = st.radio(
+            "Ruolo", ["P", "D", "C", "A"],
+            format_func=lambda r: ROLE_LABELS[r],
+            horizontal=True,
+            key="role_pick_list",
+        )
+
+        search_list = st.text_input(
+            "Cerca", placeholder="Cerca giocatore...", label_visibility="collapsed"
+        )
+
+        players_view = quotazioni_full[quotazioni_full["ruolo"] == role_pick].copy()
+
+        if search_list:
+            players_view = players_view[
+                players_view["nome"].astype(str).str.lower().str.contains(search_list.lower(), na=False)
+            ]
+
+        players_view = players_view.sort_values("nome")
+
+        st.caption(f"{len(players_view)} giocatori")
+
+        with st.container(height=560):
+            for _, row in players_view.iterrows():
+                is_selected = row["id"] == st.session_state.selected_listone_id
+                label = f"{'●' if is_selected else '○'} {row['nome']} · {row.get('squadra', '')}"
+                if st.button(label, key=f"pbtn_{row['id']}", use_container_width=True):
+                    st.session_state.selected_listone_id = row["id"]
+                    st.rerun()
+
+    # --------------------------------------------------------
+    # DETTAGLIO GIOCATORE
+    # --------------------------------------------------------
+
+    def render_player_detail():
+
+        listone_row = quotazioni_full[
+            quotazioni_full["id"] == st.session_state.selected_listone_id
+        ]
+
+        if listone_row.empty:
+            st.warning("Seleziona un giocatore dalla lista a sinistra.")
+            return
+
+        listone_row = listone_row.iloc[0]
+        role = listone_row["ruolo"]
+        selected_player_id = listone_row.get("player_id")
+        has_stats = pd.notna(selected_player_id) and selected_player_id in df["player_id"].values
+
+        display_name = listone_row["nome"]
+        team_display = listone_row.get("squadra", "")
+        quot = listone_row.get("quotazione_attuale", np.nan)
+        fvm = listone_row.get("fvm", np.nan)
+
+        player_history = None
+        player_latest = None
+
+        if has_stats:
+            player_history = (
+                df[df["player_id"] == selected_player_id].sort_values("season_start").copy()
+            )
+            player_latest = player_history.iloc[-1]
+            display_name = player_latest["player_name"]
+            team_display = player_latest["team"]
+
+        st.markdown('<div class="player-header">', unsafe_allow_html=True)
+        st.markdown(f'<div class="player-name">{display_name}</div>', unsafe_allow_html=True)
+
+        meta_parts = [f"⚽ {team_display}", f"Ruolo: <b>{role}</b>"]
+        if pd.notna(quot):
+            meta_parts.append(f"Quotazione: <b>{int(quot)}</b>")
+        if pd.notna(fvm):
+            meta_parts.append(f"FVM: <b>{int(fvm)}</b>")
+        st.markdown(
+            f'<div class="player-meta">{" &nbsp;·&nbsp; ".join(meta_parts)}</div>',
+            unsafe_allow_html=True,
+        )
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        if st.button("⭐ Aggiungi/rimuovi dalla shortlist"):
+            if display_name in st.session_state.shortlist:
+                st.session_state.shortlist.discard(display_name)
+            else:
+                st.session_state.shortlist.add(display_name)
+            st.rerun()
+
+        if not has_stats:
+            st.info(
+                "Nessuna statistica Understat disponibile per questo giocatore "
+                "(nuovo arrivo in Serie A, infortunio prolungato o non ancora censito)."
+            )
+            return
+
+        # ------------------------------------------------
+        # VISTA PORTIERI — dati limitati, niente radar/value score
+        # ------------------------------------------------
+
+        if role == "P":
+
+            st.markdown(
+                '<div class="gk-note">⚠️ Understat non fornisce statistiche difensive '
+                'per i portieri (parate, gol subiti, clean sheet). Qui sotto trovi solo '
+                'disponibilità (presenze/minuti) e quotazione: usa questi dati insieme '
+                'a fonti specifiche sui portieri prima di fare un\'offerta in asta.</div>',
+                unsafe_allow_html=True,
+            )
+
+            c1, c2, c3, c4 = st.columns(4)
+            c1.metric("Presenze", int(player_latest["matches_played"]))
+            c2.metric("Minuti", f'{int(player_latest["minutes_played"]):,}'.replace(",", "."))
+            c3.metric("Quotazione", int(quot) if pd.notna(quot) else "N/D")
+            c4.metric("FVM", int(fvm) if pd.notna(fvm) else "N/D")
+
+            st.markdown('<div class="section-title">📈 Presenze nel tempo</div>', unsafe_allow_html=True)
+
+            history_display = player_history.copy()
+            history_display["Stagione"] = history_display["season_start"].apply(format_season)
+
+            fig_gk = go.Figure()
+            fig_gk.add_trace(go.Bar(x=history_display["Stagione"], y=history_display["matches_played"], name="Presenze"))
+            fig_gk.update_layout(height=340, margin=dict(l=20, r=20, t=30, b=20))
+            st.plotly_chart(fig_gk, use_container_width=True)
+
+            return
+
+        # ------------------------------------------------
+        # VERDETTO
+        # ------------------------------------------------
+
+        player_latest_season = int(player_latest["season_start"])
+        value_score = player_latest["value_score"]
+        tier = player_latest["tier"]
+        trend = player_latest["trend_delta"]
+
+        tier_colors = {
+            "S": ("#065f46", "#d1fae5", "TOP PICK — priorità assoluta"),
+            "A": ("#16a34a", "#dcfce7", "OTTIMO ACQUISTO — spendici sopra"),
+            "B": ("#ca8a04", "#fef9c3", "BUON PROFILO — valuta in base al prezzo"),
+            "C": ("#ea580c", "#ffedd5", "NELLA MEDIA — comprare solo a prezzo basso"),
+            "D": ("#dc2626", "#fee2e2", "DA EVITARE — rischio non giustificato"),
+            "N/D": ("#6b7280", "#f3f4f6", "DATI INSUFFICIENTI per un verdetto affidabile"),
+        }
+        color, bg, verdict_text = tier_colors.get(tier, tier_colors["N/D"])
+
+        trend_text = ""
+        if pd.notna(trend):
+            arrow = "↑" if trend > 1 else ("↓" if trend < -1 else "→")
+            trend_text = f" &nbsp;·&nbsp; Trend: {arrow} {trend:+.1f} pt"
+
+        value_text = f"{value_score:.1f}/100" if pd.notna(value_score) else "N/D"
+
+        price_text = ""
+        if pd.notna(quot) and pd.notna(value_score) and quot:
+            vfm_ratio = value_score / quot
+            price_text = f" &nbsp;·&nbsp; Val./Prezzo: {vfm_ratio:.2f}"
+
+        st.markdown(
+            f"""
+            <div class="verdict-box" style="background:{bg}; border-color:{color};">
+                <div class="verdict-title" style="color:{color};">{verdict_text}</div>
+                <div class="verdict-sub">
+                    Value Score: <b>{value_text}</b> &nbsp;·&nbsp; Tier: <b>{tier}</b>
+                    {trend_text}{price_text}
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        # ----------------------------------------------------
+        # KPI (ripuliti: niente coppie ridondanti tipo xA + xA/90)
+        # ----------------------------------------------------
+
+        c1, c2, c3, c4, c5, c6 = st.columns(6)
+        c1.metric("Presenze", int(player_latest["matches_played"]))
+        c2.metric("Minuti", f'{int(player_latest["minutes_played"]):,}'.replace(",", "."))
+        c3.metric("⚽ Gol", int(player_latest["goals"]))
+        c4.metric("🎯 Assist", int(player_latest["assists"]))
+        c5.metric("xG", f'{player_latest["xg"]:.2f}')
+        c6.metric("xA", f'{player_latest["xa"]:.2f}')
+
+        # ----------------------------------------------------
+        # STORICO
+        # ----------------------------------------------------
+
+        st.markdown('<div class="section-title">📈 Evoluzione storica</div>', unsafe_allow_html=True)
+
+        history_display = player_history.copy()
+        history_display["Stagione"] = history_display["season_start"].apply(format_season)
+
+        fig_history = go.Figure()
+        fig_history.add_trace(go.Scatter(
+            x=history_display["Stagione"], y=history_display["goals"],
+            mode="lines+markers", name="Gol", line=dict(width=3),
+        ))
+        fig_history.add_trace(go.Scatter(
+            x=history_display["Stagione"], y=history_display["xg"],
+            mode="lines+markers", name="xG", line=dict(width=3, dash="dash"),
+        ))
+        fig_history.update_layout(
+            title="Gol vs Expected Goals", xaxis_title="Stagione", yaxis_title="Valore",
+            hovermode="x unified", height=340, margin=dict(l=20, r=20, t=50, b=20),
+        )
+        st.plotly_chart(fig_history, use_container_width=True)
+
+        # ----------------------------------------------------
+        # RADAR: GIOCATORE VS MEDIA DEI SIMILI
+        # ----------------------------------------------------
+
+        st.markdown('<div class="section-title">🎯 Confronto con giocatori simili</div>', unsafe_allow_html=True)
+        st.caption(
+            "Confronto solo con giocatori dello stesso ruolo e con minutaggio "
+            "da titolare, per non mescolare Lautaro con le riserve."
+        )
+
+        starter_pct = st.slider(
+            "Minuti minimi per essere considerato titolare (% della stagione)",
+            min_value=20, max_value=90, value=50, step=5,
+            key="starter_pct_slider",
+        ) / 100
+
+        min_minutes_threshold = starter_pct * MAX_SEASON_MINUTES
+
+        peer_pool = df[
+            (df["season_start"] == player_latest_season)
+            & (df["role"] == role)
+            & (df["player_id"] != selected_player_id)
+            & (df["minutes_played"] >= min_minutes_threshold)
+        ].copy()
+
+        radar_metrics = {
+            "goals_per_90": "Gol/90", "assists_per_90": "Assist/90",
+            "xg_per_90": "xG/90", "xa_per_90": "xA/90",
+            "shots_per_90": "Tiri/90", "key_passes_per_90": "Key Passes/90",
+        }
+
+        if len(peer_pool) >= 3:
+
+            role_pool_all = df[
+                (df["season_start"] == player_latest_season) & (df["role"] == role)
+            ]
+
+            peer_avg = {m: peer_pool[m].mean() for m in radar_metrics}
+            player_vals = {m: float(player_latest[m]) for m in radar_metrics}
+            scale_max = {
+                m: max(role_pool_all[m].max(), player_vals[m], peer_avg[m], 0.01)
+                for m in radar_metrics
+            }
+
+            categories = list(radar_metrics.values())
+
+            player_radar = [player_vals[m] / scale_max[m] * 100 for m in radar_metrics]
+            peer_radar = [peer_avg[m] / scale_max[m] * 100 for m in radar_metrics]
+
+            fig_radar = go.Figure()
+            fig_radar.add_trace(go.Scatterpolar(
+                r=player_radar + [player_radar[0]],
+                theta=categories + [categories[0]],
+                fill="toself", name=display_name,
+                line=dict(color=PLAYER_COLOR), fillcolor="rgba(37,99,235,0.35)",
+            ))
+            fig_radar.add_trace(go.Scatterpolar(
+                r=peer_radar + [peer_radar[0]],
+                theta=categories + [categories[0]],
+                fill="toself", name=f"Media {ROLE_LABELS[role].lower()} titolari",
+                line=dict(color=PEER_COLOR), fillcolor="rgba(132,204,22,0.30)",
+            ))
+            fig_radar.update_layout(
+                polar=dict(radialaxis=dict(visible=True, range=[0, 100])),
+                height=420, showlegend=True, margin=dict(l=30, r=30, t=30, b=30),
+            )
+            st.plotly_chart(fig_radar, use_container_width=True)
+
+            st.caption(f"Media calcolata su {len(peer_pool)} {ROLE_LABELS[role].lower()} titolari nella stagione {format_season(player_latest_season)}.")
+
+            # ------------------------------------------------
+            # BARRE DI CONFRONTO (stile "share" come l'esempio)
+            # ------------------------------------------------
+
+            bars_html = ""
+            for metric, label in radar_metrics.items():
+                p_val = player_vals[metric]
+                peer_val = peer_avg[metric]
+                total = p_val + peer_val
+                p_share = (p_val / total * 100) if total > 0 else 50
+                peer_share = 100 - p_share
+
+                bars_html += f"""
+                <div class="split-row">
+                    <div class="split-label">{label.upper()}</div>
+                    <div class="split-bar-track">
+                        <div class="split-bar-player" style="width:{p_share:.1f}%;"></div>
+                        <div class="split-bar-peer" style="width:{peer_share:.1f}%;"></div>
+                    </div>
+                    <div class="split-values">
+                        <span>{p_val:.2f}</span>
+                        <span>{peer_val:.2f}</span>
+                    </div>
+                </div>
+                """
+
+            st.markdown(bars_html, unsafe_allow_html=True)
+
+        else:
+            st.info(
+                "Non ci sono abbastanza giocatori titolari dello stesso ruolo per "
+                "calcolare un confronto significativo. Prova ad abbassare la soglia minuti."
+            )
+
+        # ----------------------------------------------------
+        # DETTAGLIO STAGIONALE (unica tabella, niente doppioni)
+        # ----------------------------------------------------
+
+        st.markdown('<div class="section-title">📋 Dettaglio stagionale</div>', unsafe_allow_html=True)
+
+        detail = history_display[[
+            "Stagione", "team", "matches_played", "minutes_played",
+            "goals", "assists", "xg", "xa", "shots_total", "key_passes",
+            "yellow_cards", "red_cards", "value_score", "tier",
+        ]].rename(columns={
+            "team": "Squadra", "matches_played": "Presenze", "minutes_played": "Minuti",
+            "goals": "Gol", "assists": "Assist", "xg": "xG", "xa": "xA",
+            "shots_total": "Tiri", "key_passes": "Key Passes",
+            "yellow_cards": "Gialli", "red_cards": "Rossi",
+            "value_score": "Value Score", "tier": "Tier",
+        })
+        detail["xG"] = detail["xG"].round(2)
+        detail["xA"] = detail["xA"].round(2)
+
+        st.dataframe(detail, use_container_width=True, hide_index=True)
+
+    with col_detail:
+        render_player_detail()
+
+
+# ============================================================
+# TAB — RANKING
 # ============================================================
 
 with tab_ranking:
 
-    st.caption(f"Stagione di riferimento: {format_season(latest_season)}")
+    st.caption(f"Universo: tutti i giocatori del listone · statistiche stagione {format_season(latest_season)} dove disponibili")
 
     f1, f2, f3, f4 = st.columns([1.2, 1.5, 1.2, 1.5])
 
     with f1:
-        roles_selected = st.multiselect(
-            "Ruolo", ["P", "D", "C", "A"], default=["P", "D", "C", "A"]
-        )
+        roles_selected = st.multiselect("Ruolo", ["P", "D", "C", "A"], default=["P", "D", "C", "A"])
     with f2:
-        teams_available = sorted(latest_players["team"].dropna().unique().tolist())
+        teams_available = sorted(quotazioni_full["squadra"].dropna().unique().tolist())
         teams_selected = st.multiselect("Squadra", teams_available, default=[])
     with f3:
-        min_minutes = st.slider("Minuti minimi", 0, 3420, 450, step=90)
+        min_minutes = st.slider("Minuti minimi", 0, 3420, 0, step=90)
     with f4:
         search_ranking = st.text_input("Cerca giocatore", placeholder="Es. Lautaro, Barella...")
 
-    ranked = latest_players.copy()
-    ranked = ranked[ranked["role"].isin(roles_selected)]
+    stats_latest = latest_players[[
+        "player_id", "matches_played", "minutes_played", "goals", "assists", "xg", "xa",
+        "performance_score", "reliability_score", "value_score", "tier", "trend_delta",
+    ]]
+
+    ranked = quotazioni_full.merge(stats_latest, on="player_id", how="left")
+    ranked = ranked[ranked["ruolo"].isin(roles_selected)]
+    ranked["minutes_played"] = ranked["minutes_played"].fillna(0)
     ranked = ranked[ranked["minutes_played"] >= min_minutes]
 
     if teams_selected:
-        ranked = ranked[ranked["team"].isin(teams_selected)]
+        ranked = ranked[ranked["squadra"].isin(teams_selected)]
 
     if search_ranking:
-        ranked = ranked[
-            ranked["player_name"].str.lower().str.contains(search_ranking.lower(), na=False)
-        ]
+        ranked = ranked[ranked["nome"].str.lower().str.contains(search_ranking.lower(), na=False)]
+
+    ranked["value_for_money"] = (ranked["value_score"] / ranked["quotazione_attuale"]).replace([np.inf, -np.inf], np.nan)
 
     ranked = ranked.sort_values("value_score", ascending=False, na_position="last")
 
     display_cols = {
-        "player_name": "Giocatore",
-        "team": "Squadra",
-        "role": "Ruolo",
-        "tier": "Tier",
-        "value_score": "Value Score",
-        "performance_score": "Prestazione",
-        "reliability_score": "Affidabilità",
-        "trend_delta": "Trend",
-        "matches_played": "Presenze",
-        "minutes_played": "Minuti",
-        "goals": "Gol",
-        "assists": "Assist",
-        "xg": "xG",
-        "xa": "xA",
+        "nome": "Giocatore", "squadra": "Squadra", "ruolo": "Ruolo", "tier": "Tier",
+        "value_score": "Value Score", "reliability_score": "Affidabilità", "trend_delta": "Trend",
+        "quotazione_attuale": "Quot.", "fvm": "FVM", "value_for_money": "Val./Prezzo",
+        "matches_played": "Presenze", "minutes_played": "Minuti",
+        "goals": "Gol", "assists": "Assist", "xg": "xG", "xa": "xA",
     }
-
-    if quotazioni_map:
-        display_cols["quotazione"] = "Quot."
-        display_cols["value_for_money"] = "Val./Prezzo"
-
     table = ranked[list(display_cols.keys())].rename(columns=display_cols)
-    table.insert(0, "Shortlist", table["Giocatore"].isin(
-        [n for n in st.session_state.shortlist]
-    ))
+    table.insert(0, "Shortlist", table["Giocatore"].isin(list(st.session_state.shortlist)))
 
     st.caption(f"{len(table)} giocatori corrispondenti ai filtri")
 
     edited = st.data_editor(
-        table,
-        use_container_width=True,
-        hide_index=True,
-        height=520,
+        table, use_container_width=True, hide_index=True, height=520,
         disabled=[c for c in table.columns if c != "Shortlist"],
         column_config={
             "Shortlist": st.column_config.CheckboxColumn(required=True),
-            "Value Score": st.column_config.ProgressColumn(
-                min_value=0, max_value=100, format="%.1f"
-            ),
-            "Prestazione": st.column_config.ProgressColumn(
-                min_value=0, max_value=100, format="%.1f"
-            ),
-            "Affidabilità": st.column_config.ProgressColumn(
-                min_value=0, max_value=100, format="%.1f"
-            ),
+            "Value Score": st.column_config.ProgressColumn(min_value=0, max_value=100, format="%.1f"),
+            "Affidabilità": st.column_config.ProgressColumn(min_value=0, max_value=100, format="%.1f"),
             "Trend": st.column_config.NumberColumn(format="%+.1f"),
         },
         key="ranking_editor",
     )
-
-    st.session_state.shortlist = set(
-        edited.loc[edited["Shortlist"], "Giocatore"].tolist()
-    )
+    st.session_state.shortlist = set(edited.loc[edited["Shortlist"], "Giocatore"].tolist())
 
     st.markdown(
         "<span class='tier-S'>S</span> top assoluti &nbsp; "
@@ -590,318 +912,67 @@ with tab_ranking:
         "<span class='tier-D'>D</span> da evitare",
         unsafe_allow_html=True,
     )
-
-    if not quotazioni_map:
-        st.info(
-            "Carica un listone (CSV con 'Nome' e 'Quotazione') dalla sidebar per vedere "
-            "anche il rapporto qualità/prezzo reale rispetto ai valori d'asta."
-        )
-
     st.caption(
-        "Nota: per i portieri (P) Understat non fornisce statistiche difensive "
-        "(parate, gol subiti), quindi Punteggio Prestazione e Tier non sono calcolati per loro."
+        "Per i portieri (P) Understat non fornisce statistiche difensive: "
+        "Value Score e Tier non sono calcolati, restano solo quotazione e FVM."
     )
 
 
 # ============================================================
-# TAB 2 — ANALISI GIOCATORE
-# ============================================================
-
-with tab_player:
-
-    player_options = []
-    player_map = {}
-
-    for _, row in latest_players.sort_values(["role_order", "player_name"]).iterrows():
-        label = f"{row['player_name']} · {row['team']} · {row['role']}"
-        player_options.append(label)
-        player_map[label] = row["player_id"]
-
-    if not player_options:
-        st.warning("Nessun giocatore disponibile.")
-        st.stop()
-
-    if (
-        "selected_player_id" not in st.session_state
-        or st.session_state.selected_player_id not in player_map.values()
-    ):
-        st.session_state.selected_player_id = latest_players.iloc[0]["player_id"]
-
-    current_index = 0
-    for i, label in enumerate(player_options):
-        if player_map[label] == st.session_state.selected_player_id:
-            current_index = i
-            break
-
-    selected_label = st.selectbox(
-        "Seleziona giocatore", player_options, index=current_index, key="player_selector"
-    )
-    selected_player_id = player_map[selected_label]
-    st.session_state.selected_player_id = selected_player_id
-
-    player_history = (
-        df[df["player_id"] == selected_player_id].sort_values("season_start").copy()
-    )
-
-    if player_history.empty:
-        st.error("Statistiche del giocatore non trovate.")
-        st.stop()
-
-    player_latest = player_history.iloc[-1]
-
-    player_name = str(player_latest["player_name"])
-    team = str(player_latest["team"])
-    role = str(player_latest["role"])
-    position = str(player_latest["position"])
-    player_latest_season = int(player_latest["season_start"])
-
-    st.markdown('<div class="player-header">', unsafe_allow_html=True)
-    st.markdown(f'<div class="player-name">{player_name}</div>', unsafe_allow_html=True)
-    st.markdown(
-        f'<div class="player-meta">⚽ {team} &nbsp; · &nbsp; Ruolo: <b>{role}</b> '
-        f'&nbsp; · &nbsp; {position} &nbsp; · &nbsp; '
-        f'Stagione: <b>{format_season(player_latest_season)}</b></div>',
-        unsafe_allow_html=True,
-    )
-    st.markdown("</div>", unsafe_allow_html=True)
-
-    if st.button("⭐ Aggiungi/rimuovi dalla shortlist"):
-        if player_name in st.session_state.shortlist:
-            st.session_state.shortlist.discard(player_name)
-        else:
-            st.session_state.shortlist.add(player_name)
-        st.rerun()
-
-    # --------------------------------------------------------
-    # VERDETTO
-    # --------------------------------------------------------
-
-    value_score = player_latest["value_score"]
-    tier = player_latest["tier"]
-    trend = player_latest["trend_delta"]
-
-    tier_colors = {
-        "S": ("#065f46", "#d1fae5", "TOP PICK — priorità assoluta"),
-        "A": ("#16a34a", "#dcfce7", "OTTIMO ACQUISTO — spendici sopra"),
-        "B": ("#ca8a04", "#fef9c3", "BUON PROFILO — valuta in base al prezzo"),
-        "C": ("#ea580c", "#ffedd5", "NELLA MEDIA — comprare solo a prezzo basso"),
-        "D": ("#dc2626", "#fee2e2", "DA EVITARE — rischio non giustificato"),
-        "N/D": ("#6b7280", "#f3f4f6", "DATI INSUFFICIENTI per un verdetto affidabile"),
-    }
-
-    color, bg, verdict_text = tier_colors.get(tier, tier_colors["N/D"])
-
-    trend_text = ""
-    if pd.notna(trend):
-        arrow = "↑" if trend > 1 else ("↓" if trend < -1 else "→")
-        trend_text = f" &nbsp;·&nbsp; Trend rispetto alla stagione precedente: {arrow} {trend:+.1f} pt"
-
-    value_text = f"{value_score:.1f}/100" if pd.notna(value_score) else "N/D"
-
-    price_text = ""
-    quot = player_latest.get("quotazione") if "quotazione" in player_latest else np.nan
-    if pd.notna(quot):
-        vfm = value_score / quot if pd.notna(value_score) and quot else np.nan
-        price_text = f" &nbsp;·&nbsp; Quotazione: {quot:.0f} &nbsp;·&nbsp; Val./Prezzo: {vfm:.2f}"
-
-    st.markdown(
-        f"""
-        <div class="verdict-box" style="background:{bg}; border-color:{color};">
-            <div class="verdict-title" style="color:{color};">{verdict_text}</div>
-            <div class="verdict-sub">
-                Value Score: <b>{value_text}</b> &nbsp;·&nbsp; Tier: <b>{tier}</b>
-                {trend_text}{price_text}
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    # --------------------------------------------------------
-    # KPI
-    # --------------------------------------------------------
-
-    col1, col2, col3, col4, col5 = st.columns(5)
-    col1.metric("⚽ Gol", int(player_latest["goals"]))
-    col2.metric("🎯 Assist", int(player_latest["assists"]))
-    col3.metric("xG", f'{player_latest["xg"]:.2f}')
-    col4.metric("xG / 90", f'{player_latest["xg_per_90"]:.2f}')
-    col5.metric("⏱ Minuti", f'{int(player_latest["minutes_played"]):,}'.replace(",", "."))
-
-    st.markdown("")
-    col1, col2, col3, col4, col5 = st.columns(5)
-    col1.metric("Presenze", int(player_latest["matches_played"]))
-    col2.metric("Affidabilità", f'{player_latest["reliability_score"]:.0f}/100'
-                if pd.notna(player_latest["reliability_score"]) else "N/D")
-    col3.metric("xA", f'{player_latest["xa"]:.2f}')
-    col4.metric("xA / 90", f'{player_latest["xa_per_90"]:.2f}')
-    col5.metric("Tiri", int(player_latest["shots_total"]))
-
-    # --------------------------------------------------------
-    # STORICO
-    # --------------------------------------------------------
-
-    st.markdown('<div class="section-title">📈 Evoluzione storica</div>', unsafe_allow_html=True)
-
-    history_display = player_history.copy()
-    history_display["Stagione"] = history_display["season_start"].apply(format_season)
-
-    fig_history = go.Figure()
-    fig_history.add_trace(go.Scatter(
-        x=history_display["Stagione"], y=history_display["goals"],
-        mode="lines+markers", name="Gol", line=dict(width=3),
-    ))
-    fig_history.add_trace(go.Scatter(
-        x=history_display["Stagione"], y=history_display["xg"],
-        mode="lines+markers", name="xG", line=dict(width=3, dash="dash"),
-    ))
-    fig_history.update_layout(
-        title="Gol vs Expected Goals", xaxis_title="Stagione", yaxis_title="Valore",
-        hovermode="x unified", height=380, margin=dict(l=20, r=20, t=60, b=20),
-    )
-    st.plotly_chart(fig_history, use_container_width=True)
-
-    col_left, col_right = st.columns(2)
-
-    with col_left:
-        fig_over = px.bar(
-            history_display, x="Stagione", y="goal_xg_diff",
-            title="Over / Underperformance · Gol − xG",
-            labels={"goal_xg_diff": "Gol − xG", "Stagione": "Stagione"},
-            text_auto=".2f",
-        )
-        fig_over.add_hline(y=0, line_dash="dash")
-        fig_over.update_layout(height=360, margin=dict(l=20, r=20, t=60, b=20))
-        st.plotly_chart(fig_over, use_container_width=True)
-
-    with col_right:
-        fig_value = px.line(
-            history_display, x="Stagione", y="value_score", markers=True,
-            title="Value Score nel tempo",
-            labels={"value_score": "Value Score", "Stagione": "Stagione"},
-        )
-        fig_value.update_layout(height=360, margin=dict(l=20, r=20, t=60, b=20), yaxis_range=[0, 100])
-        st.plotly_chart(fig_value, use_container_width=True)
-
-    # --------------------------------------------------------
-    # CONFRONTO CON IL RUOLO (percentili)
-    # --------------------------------------------------------
-
-    st.markdown('<div class="section-title">🎯 Confronto con i pari ruolo</div>', unsafe_allow_html=True)
-
-    role_players = df[
-        (df["season_start"] == player_latest_season) & (df["role"] == role)
-    ].copy()
-
-    if len(role_players) >= 5:
-        metrics_for_percentile = {
-            "goals_per_90": "Gol / 90", "xg_per_90": "xG / 90", "xa_per_90": "xA / 90",
-            "shots_per_90": "Tiri / 90", "key_passes_per_90": "Key Passes / 90",
-        }
-        percentile_data = []
-        for metric, label in metrics_for_percentile.items():
-            values = pd.to_numeric(role_players[metric], errors="coerce").fillna(0)
-            player_value = float(player_latest[metric])
-            percentile = (values < player_value).mean() * 100
-            percentile_data.append({"Metrica": label, "Valore": round(player_value, 2), "Percentile": round(percentile, 0)})
-
-        percentile_df = pd.DataFrame(percentile_data)
-
-        fig_percentile = px.bar(
-            percentile_df, x="Percentile", y="Metrica", orientation="h", text="Percentile",
-            range_x=[0, 100],
-            title=f"Percentile rispetto ai {role} della Serie A · {format_season(player_latest_season)}",
-        )
-        fig_percentile.update_traces(texttemplate="%{text}°", textposition="inside")
-        fig_percentile.update_layout(height=330, margin=dict(l=20, r=20, t=60, b=20))
-        st.plotly_chart(fig_percentile, use_container_width=True)
-    else:
-        st.info("Non ci sono abbastanza giocatori dello stesso ruolo per un confronto significativo.")
-
-    # --------------------------------------------------------
-    # DETTAGLIO STAGIONALE
-    # --------------------------------------------------------
-
-    st.markdown('<div class="section-title">📋 Dettaglio stagionale</div>', unsafe_allow_html=True)
-
-    detail = history_display[[
-        "Stagione", "team", "role", "matches_played", "minutes_played",
-        "goals", "assists", "xg", "xa", "shots_total", "key_passes",
-        "yellow_cards", "red_cards", "value_score", "tier",
-    ]].rename(columns={
-        "team": "Squadra", "role": "Ruolo", "matches_played": "Presenze",
-        "minutes_played": "Minuti", "goals": "Gol", "assists": "Assist",
-        "xg": "xG", "xa": "xA", "shots_total": "Tiri", "key_passes": "Key Passes",
-        "yellow_cards": "Gialli", "red_cards": "Rossi",
-        "value_score": "Value Score", "tier": "Tier",
-    })
-
-    detail["xG"] = detail["xG"].round(2)
-    detail["xA"] = detail["xA"].round(2)
-
-    st.dataframe(detail, use_container_width=True, hide_index=True)
-
-
-# ============================================================
-# TAB 3 — CONFRONTO
+# TAB — CONFRONTO
 # ============================================================
 
 with tab_compare:
 
-    st.caption("Confronta fino a 4 giocatori della stessa stagione più recente disponibile.")
+    st.caption("Confronta fino a 4 giocatori (stagione più recente disponibile).")
 
     default_selection = list(st.session_state.shortlist)[:4]
 
     compare_names = st.multiselect(
         "Giocatori da confrontare",
-        latest_players["player_name"].sort_values().unique().tolist(),
-        default=default_selection,
+        quotazioni_full["nome"].sort_values().unique().tolist(),
+        default=[n for n in default_selection if n in quotazioni_full["nome"].values],
         max_selections=4,
     )
 
     if len(compare_names) < 2:
         st.info("Seleziona almeno due giocatori (puoi partire dalla tua shortlist).")
     else:
-        compare_df = latest_players[latest_players["player_name"].isin(compare_names)].copy()
+        compare_ids = quotazioni_full[quotazioni_full["nome"].isin(compare_names)]["player_id"]
+        compare_df = latest_players[latest_players["player_id"].isin(compare_ids)].copy()
 
-        radar_metrics = {
-            "goals_per_90": "Gol/90", "assists_per_90": "Assist/90",
-            "xg_per_90": "xG/90", "xa_per_90": "xA/90",
-            "shots_per_90": "Tiri/90", "key_passes_per_90": "Key Passes/90",
-        }
+        if compare_df.empty:
+            st.warning("Nessuno dei giocatori selezionati ha statistiche Understat disponibili.")
+        else:
+            radar_metrics = {
+                "goals_per_90": "Gol/90", "assists_per_90": "Assist/90",
+                "xg_per_90": "xG/90", "xa_per_90": "xA/90",
+                "shots_per_90": "Tiri/90", "key_passes_per_90": "Key Passes/90",
+            }
 
-        fig_radar = go.Figure()
-        for _, row in compare_df.iterrows():
-            values = [float(row[m]) for m in radar_metrics.keys()]
-            fig_radar.add_trace(go.Scatterpolar(
-                r=values + [values[0]],
-                theta=list(radar_metrics.values()) + [list(radar_metrics.values())[0]],
-                fill="toself",
-                name=row["player_name"],
-            ))
+            fig_radar = go.Figure()
+            for _, row in compare_df.iterrows():
+                values = [float(row[m]) for m in radar_metrics.keys()]
+                fig_radar.add_trace(go.Scatterpolar(
+                    r=values + [values[0]],
+                    theta=list(radar_metrics.values()) + [list(radar_metrics.values())[0]],
+                    fill="toself", name=row["player_name"],
+                ))
+            fig_radar.update_layout(
+                polar=dict(radialaxis=dict(visible=True)), height=480, showlegend=True,
+                title="Confronto per 90 minuti",
+            )
+            st.plotly_chart(fig_radar, use_container_width=True)
 
-        fig_radar.update_layout(
-            polar=dict(radialaxis=dict(visible=True)),
-            height=500, showlegend=True,
-            title="Confronto per 90 minuti",
-        )
-        st.plotly_chart(fig_radar, use_container_width=True)
-
-        compare_cols = {
-            "player_name": "Giocatore", "team": "Squadra", "role": "Ruolo",
-            "tier": "Tier", "value_score": "Value Score",
-            "performance_score": "Prestazione", "reliability_score": "Affidabilità",
-            "goals": "Gol", "assists": "Assist", "xg": "xG", "xa": "xA",
-            "minutes_played": "Minuti",
-        }
-        if quotazioni_map:
-            compare_cols["quotazione"] = "Quot."
-            compare_cols["value_for_money"] = "Val./Prezzo"
-
-        st.dataframe(
-            compare_df[list(compare_cols.keys())].rename(columns=compare_cols),
-            use_container_width=True, hide_index=True,
-        )
+            compare_cols = {
+                "player_name": "Giocatore", "team": "Squadra", "role": "Ruolo",
+                "tier": "Tier", "value_score": "Value Score", "reliability_score": "Affidabilità",
+                "goals": "Gol", "assists": "Assist", "xg": "xG", "xa": "xA", "minutes_played": "Minuti",
+            }
+            st.dataframe(
+                compare_df[list(compare_cols.keys())].rename(columns=compare_cols),
+                use_container_width=True, hide_index=True,
+            )
 
 
 # ============================================================
@@ -911,7 +982,7 @@ with tab_compare:
 st.markdown("---")
 st.caption(
     f"FantaAI · Database: {len(df):,} record stagionali · "
-    f"{df['player_id'].nunique():,} giocatori · "
+    f"{df['player_id'].nunique():,} giocatori con statistiche · "
     f"Ultima stagione disponibile: {format_season(latest_season)} · "
     "Value Score e Tier sono stime basate su dati Understat, non sostituiscono la valutazione personale."
 )
