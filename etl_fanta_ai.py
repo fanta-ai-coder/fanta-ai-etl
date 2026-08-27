@@ -5,6 +5,17 @@ from supabase import Client, create_client
 
 
 # ============================================================
+# FILE LOCALI (nella root del repo)
+# ============================================================
+
+QUOTAZIONI_XLSX_PATH = "Quotazioni_Fantacalcio_Stagione_2026_27.xlsx"
+QUOTAZIONI_SHEET_NAME = "Tutti"
+QUOTAZIONI_STAGIONE = "2026/27"
+
+MAPPING_CSV_PATH = "mapping_giocatori.csv"
+
+
+# ============================================================
 # CONFIGURAZIONE
 # ============================================================
 
@@ -434,10 +445,16 @@ def fetch_and_process_data(season):
 
 def upload_to_supabase(
     df,
+    table_name="player_stats",
+    on_conflict="player_id,season",
     batch_size=500
 ):
     """
     Esegue l'upsert dei record su Supabase.
+
+    table_name  : tabella di destinazione su Supabase.
+    on_conflict : colonna/e usate per l'upsert (deve esistere
+                  un constraint UNIQUE su Supabase per queste colonne).
     """
 
     if df is None or df.empty:
@@ -472,7 +489,7 @@ def upload_to_supabase(
 
     print(
         f"Inizio caricamento di "
-        f"{total} record su Supabase..."
+        f"{total} record su Supabase (tabella '{table_name}')..."
     )
 
     try:
@@ -500,10 +517,10 @@ def upload_to_supabase(
 
             (
                 supabase
-                .table("player_stats")
+                .table(table_name)
                 .upsert(
                     batch,
-                    on_conflict="player_id,season"
+                    on_conflict=on_conflict
                 )
                 .execute()
             )
@@ -514,7 +531,7 @@ def upload_to_supabase(
             )
 
         print(
-            "Caricamento completato con successo!"
+            f"Caricamento su '{table_name}' completato con successo!"
         )
 
         return True
@@ -522,10 +539,192 @@ def upload_to_supabase(
     except Exception as e:
 
         print(
-            f"Errore durante l'upsert su Supabase: {e}"
+            f"Errore durante l'upsert su '{table_name}': {e}"
         )
 
         raise
+
+
+# ============================================================
+# QUOTAZIONI FANTACALCIO (foglio "Tutti" del listone Excel)
+# ============================================================
+
+def fetch_and_process_quotazioni(
+    path=QUOTAZIONI_XLSX_PATH,
+    sheet_name=QUOTAZIONI_SHEET_NAME,
+    stagione=QUOTAZIONI_STAGIONE
+):
+    """
+    Legge il foglio "Tutti" del listone Fantacalcio (file Excel) e lo
+    trasforma in un DataFrame pronto per l'upsert su Supabase.
+    """
+
+    print("\n" + "=" * 70)
+    print(f"LETTURA LISTONE QUOTAZIONI · foglio '{sheet_name}'")
+    print("=" * 70)
+
+    if not os.path.exists(path):
+        print(f"File non trovato: {path}")
+        return None
+
+    try:
+
+        # La prima riga del foglio è un titolo, l'header vero è
+        # sulla riga successiva -> skiprows=1.
+        df_raw = pd.read_excel(
+            path,
+            sheet_name=sheet_name,
+            skiprows=1
+        )
+
+    except Exception as e:
+
+        print(f"ERRORE lettura file Excel: {e}")
+
+        return None
+
+    if df_raw is None or df_raw.empty:
+
+        print("Nessun dato trovato nel foglio 'Tutti'.")
+
+        return None
+
+    print(f"Ricevute {len(df_raw)} righe dal listone.")
+
+    required_columns = [
+        "Id", "R", "RM", "Nome", "Squadra",
+        "Qt.A", "Qt.I", "Diff.",
+        "Qt.A M", "Qt.I M", "Diff.M",
+        "FVM", "FVM M",
+    ]
+
+    missing_columns = [
+        col for col in required_columns if col not in df_raw.columns
+    ]
+
+    if missing_columns:
+
+        raise ValueError(
+            "Colonne mancanti nel foglio 'Tutti': "
+            + ", ".join(missing_columns)
+        )
+
+    df_clean = pd.DataFrame()
+
+    df_clean["id"] = pd.to_numeric(
+        df_raw["Id"], errors="coerce"
+    ).astype("Int64")
+
+    df_clean["stagione"] = stagione
+
+    df_clean["ruolo"] = df_raw["R"].fillna("").astype(str).str.strip()
+    df_clean["ruolo_mantra"] = df_raw["RM"].fillna("").astype(str).str.strip()
+    df_clean["nome"] = df_raw["Nome"].fillna("").astype(str).str.strip()
+    df_clean["squadra"] = df_raw["Squadra"].fillna("").astype(str).str.strip()
+
+    df_clean["quotazione_attuale"] = to_numeric(df_raw["Qt.A"]).astype(int)
+    df_clean["quotazione_iniziale"] = to_numeric(df_raw["Qt.I"]).astype(int)
+    df_clean["differenza"] = to_numeric(df_raw["Diff."]).astype(int)
+
+    df_clean["quotazione_attuale_mantra"] = to_numeric(df_raw["Qt.A M"]).astype(int)
+    df_clean["quotazione_iniziale_mantra"] = to_numeric(df_raw["Qt.I M"]).astype(int)
+    df_clean["differenza_mantra"] = to_numeric(df_raw["Diff.M"]).astype(int)
+
+    df_clean["fvm"] = to_numeric(df_raw["FVM"]).astype(int)
+    df_clean["fvm_mantra"] = to_numeric(df_raw["FVM M"]).astype(int)
+
+    df_clean = df_clean.dropna(subset=["id"])
+
+    df_clean = df_clean.drop_duplicates(subset=["id", "stagione"])
+
+    print(f"DataFrame finale quotazioni: {len(df_clean)} giocatori.")
+
+    return df_clean
+
+
+# ============================================================
+# MAPPING GIOCATORI (listone <-> player_id Understat)
+# ============================================================
+
+def fetch_and_process_mapping(path=MAPPING_CSV_PATH):
+    """
+    Legge mapping_giocatori.csv (associazione tra id del listone
+    Fantacalcio e player_id di Understat/player_stats) e lo
+    trasforma in un DataFrame pronto per l'upsert su Supabase.
+    """
+
+    print("\n" + "=" * 70)
+    print("LETTURA MAPPING GIOCATORI")
+    print("=" * 70)
+
+    if not os.path.exists(path):
+        print(f"File non trovato: {path}")
+        return None
+
+    try:
+
+        df_raw = pd.read_csv(path)
+
+    except Exception as e:
+
+        print(f"ERRORE lettura mapping_giocatori.csv: {e}")
+
+        return None
+
+    if df_raw is None or df_raw.empty:
+
+        print("Nessun dato trovato in mapping_giocatori.csv.")
+
+        return None
+
+    print(f"Ricevute {len(df_raw)} righe dal mapping.")
+
+    required_columns = [
+        "id_excel", "nome_excel", "ruolo",
+        "squadra_excel", "player_id_csv", "match_confidence",
+    ]
+
+    missing_columns = [
+        col for col in required_columns if col not in df_raw.columns
+    ]
+
+    if missing_columns:
+
+        raise ValueError(
+            "Colonne mancanti in mapping_giocatori.csv: "
+            + ", ".join(missing_columns)
+        )
+
+    df_clean = pd.DataFrame()
+
+    df_clean["id_excel"] = pd.to_numeric(
+        df_raw["id_excel"], errors="coerce"
+    ).astype("Int64")
+
+    df_clean["nome_excel"] = df_raw["nome_excel"].fillna("").astype(str).str.strip()
+    df_clean["ruolo"] = df_raw["ruolo"].fillna("").astype(str).str.strip()
+    df_clean["squadra_excel"] = df_raw["squadra_excel"].fillna("").astype(str).str.strip()
+
+    # player_id_csv e match_confidence possono essere vuoti quando
+    # non è stato trovato un match affidabile: restano NULL su Supabase.
+    df_clean["player_id"] = pd.to_numeric(
+        df_raw["player_id_csv"], errors="coerce"
+    ).astype("Int64")
+
+    df_clean["match_confidence"] = pd.to_numeric(
+        df_raw["match_confidence"], errors="coerce"
+    )
+
+    df_clean = df_clean.dropna(subset=["id_excel"])
+
+    df_clean = df_clean.drop_duplicates(subset=["id_excel"])
+
+    print(f"DataFrame finale mapping: {len(df_clean)} righe.")
+
+    n_con_match = df_clean["player_id"].notna().sum()
+    print(f"Righe con player_id assegnato: {n_con_match}/{len(df_clean)}")
+
+    return df_clean
 
 
 # ============================================================
@@ -568,7 +767,9 @@ if __name__ == "__main__":
                 continue
 
             success = upload_to_supabase(
-                df_processed
+                df_processed,
+                table_name="player_stats",
+                on_conflict="player_id,season"
             )
 
             if success:
@@ -592,6 +793,50 @@ if __name__ == "__main__":
             )
 
     # ========================================================
+    # QUOTAZIONI FANTACALCIO
+    # ========================================================
+
+    quotazioni_ok = False
+
+    try:
+
+        df_quotazioni = fetch_and_process_quotazioni()
+
+        if df_quotazioni is not None:
+
+            quotazioni_ok = upload_to_supabase(
+                df_quotazioni,
+                table_name="quotazioni",
+                on_conflict="id,stagione"
+            )
+
+    except Exception as e:
+
+        print(f"\nERRORE INGESTION QUOTAZIONI: {e}")
+
+    # ========================================================
+    # MAPPING GIOCATORI
+    # ========================================================
+
+    mapping_ok = False
+
+    try:
+
+        df_mapping = fetch_and_process_mapping()
+
+        if df_mapping is not None:
+
+            mapping_ok = upload_to_supabase(
+                df_mapping,
+                table_name="player_mapping",
+                on_conflict="id_excel"
+            )
+
+    except Exception as e:
+
+        print(f"\nERRORE INGESTION MAPPING: {e}")
+
+    # ========================================================
     # RIEPILOGO
     # ========================================================
 
@@ -611,8 +856,16 @@ if __name__ == "__main__":
     )
 
     print(
-        f"Totale record elaborati: "
+        f"Totale record elaborati (player_stats): "
         f"{total_records}"
+    )
+
+    print(
+        f"Quotazioni caricate: {'sì' if quotazioni_ok else 'no'}"
+    )
+
+    print(
+        f"Mapping giocatori caricato: {'sì' if mapping_ok else 'no'}"
     )
 
     if failed_seasons:
@@ -627,7 +880,19 @@ if __name__ == "__main__":
             f"Stagioni fallite: {failed_seasons}"
         )
 
+    if not quotazioni_ok or not mapping_ok:
+
+        print(
+            "\nATTENZIONE: quotazioni e/o mapping "
+            "non sono stati caricati correttamente."
+        )
+
+        raise RuntimeError(
+            "Ingestion storica completata, ma quotazioni/mapping "
+            "non sono stati caricati con successo."
+        )
+
     print(
-        "\nINGESTION STORICA COMPLETATA "
+        "\nINGESTION COMPLETA (storico + quotazioni + mapping) "
         "CON SUCCESSO!"
     )
