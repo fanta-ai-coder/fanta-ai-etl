@@ -1,47 +1,58 @@
-name: Fantacalcio Scraping & Supabase Ingestion
+name: Fantacalcio Ingestion
 
 on:
+
+  workflow_dispatch:
+
   schedule:
-    # Esegue ogni lunedì alle 06:00 UTC (08:00 italiane)
-    - cron: '0 6 * * 1'
-  workflow_dispatch: # Permette di avviarlo manualmente da GitHub UI
+    - cron: "0 4 * * *"
 
 jobs:
-  scrape-and-ingest:
+
+  ingestion:
+
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: write
+
+    env:
+
+      FANTACALCIO_USERNAME: ${{ secrets.FANTACALCIO_USERNAME }}
+      FANTACALCIO_PASSWORD: ${{ secrets.FANTACALCIO_PASSWORD }}
+
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+
     steps:
-      # 1. Checkout del codice dal repository
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Configurazione Python
-      - name: Set up Python 3.10
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
-          cache: 'pip'
+          python-version: "3.11"
 
-      # 3. Installazione dipendenze
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install requests pandas openpyxl supabase
+          pip install -r ingestion/requirements.txt
 
-      # 4. Esecuzione dello script Python
-      - name: Run Scraper and Ingestion
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+      - name: Run Fantacalcio ingestion
         run: |
-          python scraper_and_ingestion.py
+          python ingestion/fantacalcio_ingestion.py
 
-      # 5. Commit e Push dei file Excel scaricati su GitHub
-      - name: Commit and push Excel files to GitHub
+      - name: Commit downloaded Excel files
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/excel/
-          git status
-          git diff-index --quiet HEAD || git commit -m "update: aggiunti nuovi file excel voti Fantacalcio [skip ci]"
-          git push
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add data/
+
+          if git diff --cached --quiet; then
+            echo "Nessun nuovo file da committare"
+          else
+            git commit -m "Update Fantacalcio historical data"
+            git push
+          fi
