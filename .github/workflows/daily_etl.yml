@@ -1,37 +1,47 @@
-name: API-Football ETL
+name: Fantacalcio Scraping & Supabase Ingestion
 
 on:
-  workflow_dispatch:
-    inputs:
-      season:
-        description: "Stagione Serie A"
-        required: true
-        default: "2024"
-        type: string
+  schedule:
+    # Esegue ogni lunedì alle 06:00 UTC (08:00 italiane)
+    - cron: '0 6 * * 1'
+  workflow_dispatch: # Permette di avviarlo manualmente da GitHub UI
 
 jobs:
-  ingestion:
+  scrape-and-ingest:
     runs-on: ubuntu-latest
 
     steps:
-
+      # 1. Checkout del codice dal repository
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Python
+      # 2. Configurazione Python
+      - name: Set up Python 3.10
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: '3.10'
+          cache: 'pip'
 
+      # 3. Installazione dipendenze
       - name: Install dependencies
         run: |
-          pip install requests supabase
+          python -m pip install --upgrade pip
+          pip install requests pandas openpyxl supabase
 
-      - name: Run ingestion
+      # 4. Esecuzione dello script Python
+      - name: Run Scraper and Ingestion
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-          API_FOOTBALL_KEY: ${{ secrets.API_FOOTBALL_KEY }}
-          SEASON: ${{ inputs.season }}
         run: |
-          python etl_ingestion.py
+          python scraper_and_ingestion.py
+
+      # 5. Commit e Push dei file Excel scaricati su GitHub
+      - name: Commit and push Excel files to GitHub
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/excel/
+          git status
+          git diff-index --quiet HEAD || git commit -m "update: aggiunti nuovi file excel voti Fantacalcio [skip ci]"
+          git push
