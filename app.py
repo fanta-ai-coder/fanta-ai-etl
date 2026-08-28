@@ -1,560 +1,99 @@
 import os
-import pandas as pd
 import streamlit as st
-
+import pandas as pd
+import plotly.express as px
 from supabase import create_client
 
+st.set_page_config(page_title="Fantacalcio Analytics Dashboard", layout="wide")
 
-# ============================================================
-# CONFIGURAZIONE
-# ============================================================
-
-st.set_page_config(
-    page_title="FantaAI",
-    page_icon="⚽",
-    layout="wide",
-    initial_sidebar_state="expanded",
-)
-
-
-# ============================================================
-# CSS
-# ============================================================
-
-st.markdown(
-    """
-    <style>
-
-    .block-container {
-        padding-top: 1.2rem;
-        padding-bottom: 2rem;
-        max-width: 1650px;
-    }
-
-    section[data-testid="stSidebar"] {
-        min-width: 300px;
-        max-width: 340px;
-    }
-
-    .main-title {
-        font-size: 38px;
-        font-weight: 800;
-        margin-bottom: 0;
-    }
-
-    .subtitle {
-        color: #6b7280;
-        font-size: 15px;
-        margin-top: -5px;
-        margin-bottom: 20px;
-    }
-
-    div[data-testid="stMetric"] {
-        background: #f8fafc;
-        border: 1px solid #e5e7eb;
-        border-radius: 12px;
-        padding: 12px;
-    }
-
-    div[data-testid="stMetricLabel"] {
-        font-size: 12px;
-    }
-
-    div[data-testid="stMetricValue"] {
-        font-size: 22px;
-        font-weight: 700;
-    }
-
-    .section-title {
-        font-size: 19px;
-        font-weight: 750;
-        margin-top: 18px;
-        margin-bottom: 8px;
-    }
-
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
-
-
-# ============================================================
-# SUPABASE
-# ============================================================
-
-def get_secret(name):
-    value = os.getenv(name)
-
-    if value:
-        return value
-
-    try:
-        return st.secrets.get(name)
-    except Exception:
-        return None
-
-
-SUPABASE_URL = get_secret("SUPABASE_URL")
-SUPABASE_KEY = get_secret("SUPABASE_KEY")
-
-
-if not SUPABASE_URL or not SUPABASE_KEY:
-    st.error(
-        "⚠️ Credenziali Supabase non trovate. "
-        "Configura SUPABASE_URL e SUPABASE_KEY."
-    )
-    st.stop()
-
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
 @st.cache_resource
 def init_supabase():
-    return create_client(
-        SUPABASE_URL,
-        SUPABASE_KEY,
-    )
+    return create_client(SUPABASE_URL, SUPABASE_KEY)
 
+supabase = init_supabase()
+
+@st.cache_data(ttl=600)
+def load_data():
+    res = supabase.table("player_stats_history").select("*").execute()
+    df = pd.DataFrame(res.data)
+    return df
+
+st.title("⚽ Dashboard Analitica Voti & Fantavoti Serie A")
 
 try:
-    supabase = init_supabase()
-
+    df = load_data()
 except Exception as e:
-    st.error(f"Errore nella connessione a Supabase: {e}")
+    st.error(f"Errore nel caricamento dei dati da Supabase: {e}")
     st.stop()
 
-
-# ============================================================
-# CARICAMENTO TABELLA QUOTAZIONI
-# ============================================================
-
-@st.cache_data(ttl=600, show_spinner=False)
-def load_table(table_name):
-
-    all_rows = []
-
-    page_size = 1000
-    start = 0
-
-    while True:
-
-        response = (
-            supabase
-            .table(table_name)
-            .select("*")
-            .range(start, start + page_size - 1)
-            .execute()
-        )
-
-        rows = response.data or []
-
-        if not rows:
-            break
-
-        all_rows.extend(rows)
-
-        if len(rows) < page_size:
-            break
-
-        start += page_size
-
-    return pd.DataFrame(all_rows)
-
-
-with st.spinner("Caricamento quotazioni..."):
-
-    try:
-        quotazioni = load_table("quotazioni")
-
-    except Exception as e:
-        st.error(
-            f"Errore durante la lettura della tabella `quotazioni`: {e}"
-        )
-        st.stop()
-
-
-if quotazioni.empty:
-
-    st.warning(
-        "La tabella `quotazioni` non contiene dati."
-    )
-
+if df.empty:
+    st.warning("Nessun dato presente nel database. Esegui prima lo script di ingestion.")
     st.stop()
 
+# Sidebar filtri globali
+st.sidebar.header("🎯 Filtri Globali")
+selected_season = st.sidebar.multiselect("Stagione", options=sorted(df["stagione"].unique()), default=sorted(df["stagione"].unique())[-1:])
+selected_role = st.sidebar.multiselect("Ruolo", options=["P", "D", "C", "A"], default=["P", "D", "C", "A"])
 
-# ============================================================
-# NORMALIZZAZIONE MINIMA
-# ============================================================
+df_filtered = df[(df["stagione"].isin(selected_season)) & (df["ruolo"].isin(selected_role))]
 
-# NON vengono creati nuovi dati.
-# Convertiamo solamente alcune colonne numeriche, se esistono,
-# per permettere ordinamento e visualizzazione corretti.
-
-numeric_columns = [
-    "id",
-    "quotazione_attuale",
-    "quotazione_iniziale",
-    "fvm",
-]
-
-for col in numeric_columns:
-
-    if col in quotazioni.columns:
-
-        quotazioni[col] = pd.to_numeric(
-            quotazioni[col],
-            errors="coerce"
-        )
-
-
-# ============================================================
-# HEADER
-# ============================================================
-
-st.markdown(
-    '<div class="main-title">⚽ FantaAI</div>',
-    unsafe_allow_html=True,
-)
-
-st.markdown(
-    '<div class="subtitle">'
-    'Lista quotazioni Fantacalcio · Dati dalla tabella quotazioni'
-    '</div>',
-    unsafe_allow_html=True,
-)
-
-
-# ============================================================
-# INFORMAZIONI TABELLA
-# ============================================================
-
-c1, c2, c3 = st.columns(3)
-
-c1.metric(
-    "Giocatori",
-    len(quotazioni)
-)
-
-if "ruolo" in quotazioni.columns:
-    c2.metric(
-        "Ruoli",
-        quotazioni["ruolo"].nunique()
-    )
-else:
-    c2.metric(
-        "Colonne",
-        len(quotazioni.columns)
-    )
-
-if "squadra" in quotazioni.columns:
-    c3.metric(
-        "Squadre",
-        quotazioni["squadra"].nunique()
-    )
-else:
-    c3.metric(
-        "Record",
-        len(quotazioni)
-    )
-
-
-# ============================================================
-# FILTRI
-# ============================================================
-
-st.markdown(
-    '<div class="section-title">🔎 Lista giocatori</div>',
-    unsafe_allow_html=True,
-)
-
-
-f1, f2, f3, f4 = st.columns(
-    [1.0, 1.5, 2.0, 1.5]
-)
-
+tab1, tab2, tab3 = st.tabs(["👤 Profilo Singolo Giocatore", "⚔️ Confronto Giocatori", "🛡️ Analisi Squadre"])
 
 # ------------------------------------------------------------
-# RUOLO
+# TAB 1: PROFILO GIOCATORE
 # ------------------------------------------------------------
-
-with f1:
-
-    if "ruolo" in quotazioni.columns:
-
-        roles = (
-            quotazioni["ruolo"]
-            .dropna()
-            .astype(str)
-            .sort_values()
-            .unique()
-            .tolist()
-        )
-
-        roles_with_all = ["Tutti"] + roles
-
-        role_selected = st.selectbox(
-            "Ruolo",
-            roles_with_all,
-        )
-
-    else:
-
-        role_selected = "Tutti"
-
+with tab1:
+    player_list = sorted(df_filtered["nome"].unique())
+    selected_player = st.selectbox("Seleziona Calciatore", options=player_list)
+    
+    p_df = df_filtered[df_filtered["nome"] == selected_player].sort_values(by=["stagione", "giornata"])
+    
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("Media Voto", round(p_df["voto"].mean(), 2))
+    col2.metric("Media FantaVoto", round(p_df["fanta_voto"].mean(), 2))
+    col3.metric("Gol Fatti Totali", int(p_df["gf"].sum()))
+    col4.metric("Assist Totali", int(p_df["ass"].sum()))
+    
+    fig = px.line(p_df, x="giornata", y=["voto", "fanta_voto"], color="stagione", 
+                  title=f"Andamento Voti per {selected_player}", markers=True)
+    st.plotly_chart(fig, use_container_width=True)
 
 # ------------------------------------------------------------
-# SQUADRA
+# TAB 2: CONFRONTO GIOCATORI
 # ------------------------------------------------------------
-
-with f2:
-
-    if "squadra" in quotazioni.columns:
-
-        teams = (
-            quotazioni["squadra"]
-            .dropna()
-            .astype(str)
-            .sort_values()
-            .unique()
-            .tolist()
-        )
-
-        team_selected = st.selectbox(
-            "Squadra",
-            ["Tutte"] + teams,
-        )
-
-    else:
-
-        team_selected = "Tutte"
-
+with tab2:
+    st.subheader("Confronta fino a 4 Giocatori")
+    comp_players = st.multiselect("Scegli Giocatori da Confrontare", options=player_list, max_selections=4)
+    
+    if comp_players:
+        c_df = df_filtered[df_filtered["nome"].isin(comp_players)]
+        summary = c_df.groupby("nome").agg(
+            Partite=('voto', 'count'),
+            Media_Voto=('voto', 'mean'),
+            Media_Fantavoto=('fanta_voto', 'mean'),
+            Gol=('gf', 'sum'),
+            Assist=('ass', 'sum'),
+            Ammonizioni=('amm', 'sum')
+        ).reset_index()
+        
+        st.dataframe(summary.style.highlight_max(axis=0, color='lightgreen'))
+        
+        fig_bar = px.bar(c_df, x="nome", y="fanta_voto", color="nome", barmode="group", title="Distribuzione FantaVoti")
+        st.plotly_chart(fig_bar, use_container_width=True)
 
 # ------------------------------------------------------------
-# RICERCA
+# TAB 3: ANALISI SQUADRE
 # ------------------------------------------------------------
-
-with f3:
-
-    if "nome" in quotazioni.columns:
-
-        search = st.text_input(
-            "Cerca giocatore",
-            placeholder="Es. Lautaro, Barella...",
-        )
-
-    else:
-
-        search = st.text_input(
-            "Cerca",
-            placeholder="Cerca...",
-        )
-
-
-# ------------------------------------------------------------
-# ORDINAMENTO
-# ------------------------------------------------------------
-
-with f4:
-
-    sort_options = []
-
-    if "nome" in quotazioni.columns:
-        sort_options.append("Nome")
-
-    if "quotazione_attuale" in quotazioni.columns:
-        sort_options.append("Quotazione attuale")
-
-    if "quotazione_iniziale" in quotazioni.columns:
-        sort_options.append("Quotazione iniziale")
-
-    if "fvm" in quotazioni.columns:
-        sort_options.append("FVM")
-
-    if not sort_options:
-        sort_options = ["ID"]
-
-    sort_selected = st.selectbox(
-        "Ordina per",
-        sort_options,
-    )
-
-
-# ============================================================
-# APPLICAZIONE FILTRI
-# ============================================================
-
-filtered = quotazioni.copy()
-
-
-# Ruolo
-if (
-    role_selected != "Tutti"
-    and "ruolo" in filtered.columns
-):
-
-    filtered = filtered[
-        filtered["ruolo"].astype(str) == role_selected
-    ]
-
-
-# Squadra
-if (
-    team_selected != "Tutte"
-    and "squadra" in filtered.columns
-):
-
-    filtered = filtered[
-        filtered["squadra"].astype(str) == team_selected
-    ]
-
-
-# Ricerca nome
-if search and "nome" in filtered.columns:
-
-    filtered = filtered[
-        filtered["nome"]
-        .astype(str)
-        .str.contains(
-            search,
-            case=False,
-            na=False
-        )
-    ]
-
-
-# ============================================================
-# ORDINAMENTO
-# ============================================================
-
-sort_mapping = {
-    "Nome": "nome",
-    "Quotazione attuale": "quotazione_attuale",
-    "Quotazione iniziale": "quotazione_iniziale",
-    "FVM": "fvm",
-    "ID": "id",
-}
-
-sort_column = sort_mapping.get(
-    sort_selected
-)
-
-if sort_column in filtered.columns:
-
-    if sort_column == "nome":
-
-        filtered = filtered.sort_values(
-            sort_column,
-            ascending=True,
-            na_position="last",
-        )
-
-    else:
-
-        filtered = filtered.sort_values(
-            sort_column,
-            ascending=False,
-            na_position="last",
-        )
-
-
-# ============================================================
-# RISULTATI
-# ============================================================
-
-st.caption(
-    f"{len(filtered)} giocatori visualizzati "
-    f"su {len(quotazioni)} totali"
-)
-
-
-# ============================================================
-# PREPARAZIONE VISUALIZZAZIONE
-# ============================================================
-
-display_df = filtered.copy()
-
-
-# ------------------------------------------------------------
-# Rinomina SOLO le colonne esistenti.
-# Non vengono create nuove colonne.
-# ------------------------------------------------------------
-
-column_labels = {
-
-    "id": "ID",
-
-    "nome": "Giocatore",
-
-    "ruolo": "Ruolo",
-
-    "squadra": "Squadra",
-
-    "quotazione_attuale": "Quotazione",
-
-    "quotazione_iniziale": "Quotazione iniziale",
-
-    "fvm": "FVM",
-}
-
-
-display_df = display_df.rename(
-    columns={
-        col: column_labels[col]
-        for col in display_df.columns
-        if col in column_labels
-    }
-)
-
-
-# ============================================================
-# CONFIGURAZIONE COLONNE
-# ============================================================
-
-column_config = {}
-
-
-if "Quotazione" in display_df.columns:
-
-    column_config["Quotazione"] = st.column_config.NumberColumn(
-        "Quotazione",
-        format="%d",
-    )
-
-
-if "Quotazione iniziale" in display_df.columns:
-
-    column_config["Quotazione iniziale"] = st.column_config.NumberColumn(
-        "Quotazione iniziale",
-        format="%d",
-    )
-
-
-if "FVM" in display_df.columns:
-
-    column_config["FVM"] = st.column_config.NumberColumn(
-        "FVM",
-        format="%d",
-    )
-
-
-# ============================================================
-# TABELLA
-# ============================================================
-
-st.dataframe(
-    display_df,
-    use_container_width=True,
-    hide_index=True,
-    height=650,
-    column_config=column_config,
-)
-
-
-# ============================================================
-# FOOTER
-# ============================================================
-
-st.markdown("---")
-
-st.caption(
-    f"FantaAI · {len(quotazioni):,} giocatori "
-    "· Fonte: tabella Supabase `quotazioni`"
-)
+with tab3:
+    st.subheader("Rendimento Medio per Squadra e Ruolo")
+    team_summary = df_filtered.groupby(["squadra", "ruolo"]).agg(
+        Media_Voto=('voto', 'mean'),
+        Media_Fantavoto=('fanta_voto', 'mean')
+    ).reset_index()
+    
+    fig_heat = px.density_heatmap(team_summary, x="squadra", y="ruolo", z="Media_Fantavoto", 
+                                  title="Heatmap Media FantaVoto per Squadra e Ruolo", color_continuous_scale="Viridis")
+    st.plotly_chart(fig_heat, use_container_width=True)
