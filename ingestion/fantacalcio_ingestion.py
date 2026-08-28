@@ -1,14 +1,11 @@
 import os
 import shutil
-import sys
 import time
 from pathlib import Path
 
+import requests
 from selenium import webdriver
-from selenium.common.exceptions import (
-    TimeoutException,
-    NoSuchElementException,
-)
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
@@ -29,12 +26,13 @@ SEASONS = [
     "2026-27",
 ]
 
-BASE_URL = (
-    "https://www.fantacalcio.it/"
-    "voti-fantacalcio-serie-a"
-)
+BASE_URL = "https://www.fantacalcio.it"
 
-LOGIN_URL = "https://www.fantacalcio.it/login"
+LOGIN_URL = f"{BASE_URL}/login"
+
+VOTES_URL = (
+    f"{BASE_URL}/voti-fantacalcio-serie-a"
+)
 
 DOWNLOAD_ROOT = (
     Path(__file__).resolve().parent.parent / "data"
@@ -58,14 +56,12 @@ def create_driver():
         exist_ok=True,
     )
 
-    # Pulizia download precedenti
+    # Pulizia directory temporanea
     for file in DOWNLOAD_TEMP.iterdir():
 
         try:
-
             if file.is_file():
                 file.unlink()
-
             elif file.is_dir():
                 shutil.rmtree(file)
 
@@ -80,6 +76,7 @@ def create_driver():
     options.add_argument("--disable-gpu")
     options.add_argument("--window-size=1920,1080")
 
+    # Download automatici
     options.add_experimental_option(
         "prefs",
         {
@@ -120,7 +117,7 @@ def login(driver):
 
     if not password:
         raise RuntimeError(
-            "FANTACALCIO_PASSWORD non configurata"
+            "FANTACALCIO_PASSWORD non configurato"
         )
 
     print()
@@ -135,14 +132,15 @@ def login(driver):
         WAIT_SECONDS,
     )
 
-    # Username
+    # --------------------------------------------------------
+    # USERNAME
+    # --------------------------------------------------------
+
     username_input = wait.until(
         EC.presence_of_element_located(
             (
-                By.XPATH,
-                "//input[contains("
-                "@placeholder, 'Username'"
-                ")]"
+                By.CSS_SELECTOR,
+                "#loginForm input[name='username']",
             )
         )
     )
@@ -150,15 +148,15 @@ def login(driver):
     username_input.clear()
     username_input.send_keys(username)
 
-    # Password
+    # --------------------------------------------------------
+    # PASSWORD
+    # --------------------------------------------------------
+
     password_input = wait.until(
         EC.presence_of_element_located(
             (
-                By.XPATH,
-                "//input[@type='password' "
-                "or contains("
-                "@placeholder, 'Password'"
-                ")]"
+                By.CSS_SELECTOR,
+                "#loginForm input[name='password']",
             )
         )
     )
@@ -166,110 +164,57 @@ def login(driver):
     password_input.clear()
     password_input.send_keys(password)
 
-    # Login
+    # --------------------------------------------------------
+    # LOGIN
+    # --------------------------------------------------------
+
     login_button = wait.until(
         EC.element_to_be_clickable(
             (
-                By.XPATH,
-                "//button["
-                "contains("
-                "translate(normalize-space(.), "
-                "'ABCDEFGHIJKLMNOPQRSTUVWXYZ', "
-                "'abcdefghijklmnopqrstuvwxyz'"
-                "),"
-                "'login'"
-                ")]"
-                " | "
-                "//input["
-                "@type='submit' and "
-                "contains("
-                "translate(@value, "
-                "'ABCDEFGHIJKLMNOPQRSTUVWXYZ', "
-                "'abcdefghijklmnopqrstuvwxyz'"
-                "),"
-                "'login'"
-                ")]"
+                By.CSS_SELECTOR,
+                "#loginForm button[type='submit']",
             )
         )
     )
 
     login_button.click()
 
+    # Aspettiamo che la navigazione/login venga elaborata
     time.sleep(3)
 
-    # Controlliamo che non siamo ancora sulla pagina login
-    current_url = driver.current_url
+    # Controllo pagina
+    if "/login" in driver.current_url.lower():
 
-    if "/login" in current_url.lower():
-
-        # Controllo eventuale messaggio di errore
-        page_text = driver.page_source.lower()
+        page_source = driver.page_source.lower()
 
         if (
-            "password errata" in page_text
-            or "credenziali" in page_text
-            or "username o password" in page_text
+            "password errata" in page_source
+            or "credenziali" in page_source
+            or "username o password" in page_source
         ):
             raise RuntimeError(
-                "Login Fantacalcio fallito: "
-                "credenziali non valide"
+                "Credenziali Fantacalcio non valide"
             )
 
         raise RuntimeError(
-            "Login Fantacalcio non riuscito"
+            "Login Fantacalcio fallito"
         )
 
     print("✅ Login effettuato")
 
 
 # ============================================================
-# DOWNLOAD EXCEL
+# OTTIENI URL EXCEL
 # ============================================================
 
-def wait_for_download(timeout=WAIT_SECONDS):
-
-    start = time.time()
-
-    while time.time() - start < timeout:
-
-        files = list(
-            DOWNLOAD_TEMP.glob("*")
-        )
-
-        # Ignora file temporanei Chrome
-        excel_files = [
-            f
-            for f in files
-            if f.is_file()
-            and f.suffix.lower() in {
-                ".xlsx",
-                ".xls",
-            }
-        ]
-
-        if excel_files:
-
-            # Prendiamo il più recente
-            return max(
-                excel_files,
-                key=lambda x: x.stat().st_mtime,
-            )
-
-        time.sleep(1)
-
-    raise TimeoutException(
-        "Timeout: Excel non scaricato"
-    )
-
-
-def download_excel(
+def get_excel_url(
     driver,
     stagione,
     giornata,
 ):
 
     url = (
-        f"{BASE_URL}/"
+        f"{VOTES_URL}/"
         f"{stagione}/"
         f"{giornata}"
     )
@@ -290,90 +235,125 @@ def download_excel(
         WAIT_SECONDS,
     )
 
-    # Aspettiamo che la pagina sia caricata
-    wait.until(
+    # Aspettiamo il pulsante specifico
+    download_control = wait.until(
         EC.presence_of_element_located(
-            (By.TAG_NAME, "body")
+            (
+                By.ID,
+                "download-control",
+            )
         )
     )
 
-    # --------------------------------------------------------
-    # CERCA IL PULSANTE SCARICA
-    # --------------------------------------------------------
+    excel_url = (
+        download_control
+        .get_attribute("href")
+    )
 
-    selectors = [
-        (
-            By.XPATH,
-            "//*[self::button or self::a]"
-            "[contains("
-            "translate(normalize-space(.), "
-            "'ABCDEFGHIJKLMNOPQRSTUVWXYZ', "
-            "'abcdefghijklmnopqrstuvwxyz'"
-            "),"
-            "'scarica'"
-            ")]",
-        ),
-        (
-            By.XPATH,
-            "//*[contains("
-            "translate(normalize-space(.), "
-            "'ABCDEFGHIJKLMNOPQRSTUVWXYZ', "
-            "'abcdefghijklmnopqrstuvwxyz'"
-            "),"
-            "'scarica'"
-            ")]",
-        ),
-    ]
-
-    download_button = None
-
-    for by, selector in selectors:
-
-        try:
-
-            download_button = wait.until(
-                EC.element_to_be_clickable(
-                    (by, selector)
-                )
-            )
-
-            if download_button:
-                break
-
-        except TimeoutException:
-            continue
-
-    if download_button is None:
+    if not excel_url:
         raise RuntimeError(
-            "Pulsante 'Scarica' non trovato"
+            "Il pulsante download-control "
+            "non contiene href"
         )
 
-    print("⬇️ Pulsante Scarica trovato")
-
-    # Pulizia eventuali file precedenti
-    for file in DOWNLOAD_TEMP.glob("*"):
-
-        try:
-
-            if file.is_file():
-                file.unlink()
-
-        except Exception:
-            pass
-
-    download_button.click()
-
-    print("⏳ Attendo download Excel...")
-
-    excel_file = wait_for_download()
+    if excel_url.startswith("/"):
+        excel_url = (
+            BASE_URL + excel_url
+        )
 
     print(
-        f"✅ Excel scaricato: "
-        f"{excel_file.name}"
+        f"📎 Excel URL: {excel_url}"
+    )
+
+    return excel_url
+
+
+# ============================================================
+# DOWNLOAD EXCEL CON SESSIONE SELENIUM
+# ============================================================
+
+def download_excel(
+    driver,
+    stagione,
+    giornata,
+):
+
+    excel_url = get_excel_url(
+        driver,
+        stagione,
+        giornata,
+    )
+
+    print("⬇️ Download Excel...")
+
+    # --------------------------------------------------------
+    # COPIA DEI COOKIE SELENIUM
+    # --------------------------------------------------------
+
+    selenium_cookies = driver.get_cookies()
+
+    cookies = {
+        cookie["name"]: cookie["value"]
+        for cookie in selenium_cookies
+    }
+
+    # --------------------------------------------------------
+    # SESSIONE REQUESTS
+    # --------------------------------------------------------
+
+    session = requests.Session()
+
+    for name, value in cookies.items():
+
+        session.cookies.set(
+            name,
+            value,
+            domain=".fantacalcio.it",
+        )
+
+    headers = {
+        "User-Agent": driver.execute_script(
+            "return navigator.userAgent;"
+        ),
+
+        "Referer": driver.current_url,
+    }
+
+    response = session.get(
+        excel_url,
+        headers=headers,
+        timeout=60,
+    )
+
+    print(
+        f"HTTP Excel: {response.status_code}"
+    )
+
+    if response.status_code != 200:
+
+        raise RuntimeError(
+            "Download Excel fallito: "
+            f"HTTP {response.status_code}"
+        )
+
+    content_type = (
+        response.headers
+        .get("Content-Type", "")
+        .lower()
     )
 
     # --------------------------------------------------------
-    # DESTINAZIONE GITHUB
+    # CONTROLLO RISPOSTA
+    # --------------------------------------------------------
+
+    if len(response.content) < 1000:
+
+        raise RuntimeError(
+            "Risposta Excel troppo piccola"
+        )
+
+    # --------------------------------------------------------
+    # DESTINAZIONE
     # --------------------------------------------------------
 
     season_dir = (
@@ -390,13 +370,27 @@ def download_excel(
         / f"giornata_{giornata:02d}.xlsx"
     )
 
-    shutil.copy2(
-        excel_file,
+    with open(
         destination,
+        "wb",
+    ) as file:
+
+        file.write(
+            response.content
+        )
+
+    print(
+        f"✅ Excel salvato: {destination}"
     )
 
     print(
-        f"📁 Salvato: {destination}"
+        f"   Dimensione: "
+        f"{len(response.content):,} bytes"
+    )
+
+    print(
+        f"   Content-Type: "
+        f"{content_type}"
     )
 
     return destination
@@ -439,12 +433,14 @@ def process_day(
         # SUPABASE
         # ----------------------------------------------------
 
-        inserted = supabase.insert_stats(
-            records
+        inserted = (
+            supabase.insert_stats(
+                records
+            )
         )
 
         # ----------------------------------------------------
-        # LOG COMPLETED
+        # LOG
         # ----------------------------------------------------
 
         supabase.save_log(
@@ -459,6 +455,7 @@ def process_day(
             f"✅ COMPLETED "
             f"{stagione} G{giornata}"
         )
+
         print(
             f"   Record: {inserted}"
         )
@@ -499,7 +496,11 @@ def main():
         "next",
     ).lower()
 
-    if mode not in {"next", "all"}:
+    if mode not in {
+        "next",
+        "all",
+    }:
+
         raise ValueError(
             "INGESTION_MODE deve essere "
             "'next' oppure 'all'"
@@ -507,29 +508,31 @@ def main():
 
     print()
     print("=" * 60)
-    print("⚽ FANTACALCIO HISTORICAL INGESTION")
+    print(
+        "⚽ FANTACALCIO HISTORICAL INGESTION"
+    )
     print("=" * 60)
-    print(f"Modalità: {mode}")
+
+    print(
+        f"Modalità: {mode}"
+    )
+
     print("=" * 60)
 
     supabase = SupabaseClient()
-
-    # --------------------------------------------------------
-    # CREA SELENIUM
-    # --------------------------------------------------------
 
     driver = create_driver()
 
     try:
 
         # ----------------------------------------------------
-        # LOGIN UNA SOLA VOLTA
+        # LOGIN
         # ----------------------------------------------------
 
         login(driver)
 
         # ----------------------------------------------------
-        # MODALITÀ NEXT
+        # NEXT
         # ----------------------------------------------------
 
         if mode == "next":
@@ -542,7 +545,6 @@ def main():
 
             if not stagione:
 
-                print()
                 print(
                     "🎉 Tutte le giornate "
                     "sono già state scaricate."
@@ -564,56 +566,55 @@ def main():
             )
 
             if not success:
-                sys.exit(1)
+                raise RuntimeError(
+                    "Ingestion fallita"
+                )
 
         # ----------------------------------------------------
-        # MODALITÀ ALL
+        # ALL
         # ----------------------------------------------------
 
         else:
 
             for stagione in SEASONS:
 
-                for giornata in range(1, 39):
+                for giornata in range(
+                    1,
+                    39,
+                ):
 
-                    # Già completata?
                     if supabase.is_completed(
                         stagione,
                         giornata,
                     ):
+
                         print(
                             f"⏭️ SKIP "
-                            f"{stagione} G{giornata}"
+                            f"{stagione} "
+                            f"G{giornata}"
                         )
+
                         continue
 
-                    success = process_day(
+                    process_day(
                         driver,
                         supabase,
                         stagione,
                         giornata,
                     )
 
-                    if not success:
-
-                        print(
-                            "⚠️ Giornata fallita."
-                        )
-
-                        # Passiamo alla successiva.
-                        # Il log FAILED permetterà
-                        # di ritentare alla prossima
-                        # esecuzione.
-                        continue
-
     finally:
 
         print()
-        print("🌐 Chiusura browser...")
+        print(
+            "🌐 Chiusura browser..."
+        )
 
         driver.quit()
 
-        print("🏁 Ingestion terminata.")
+        print(
+            "🏁 Ingestion terminata."
+        )
 
 
 if __name__ == "__main__":
