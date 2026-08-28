@@ -1,4 +1,3 @@
-```python
 print("### 1 - SCRIPT AVVIATO ###", flush=True)
 
 import os
@@ -44,7 +43,6 @@ from supabase_client import SupabaseClient
 print("### 15 - SUPABASE CLIENT OK ###", flush=True)
 
 print("### 16 - TUTTI GLI IMPORT COMPLETATI ###", flush=True)
-```
 
 
 
