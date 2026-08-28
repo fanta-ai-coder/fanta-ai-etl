@@ -2,10 +2,12 @@ import os
 import shutil
 import time
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import requests
 
 from selenium import webdriver
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
@@ -43,6 +45,8 @@ DOWNLOAD_TEMP = (
 )
 
 WAIT_SECONDS = 40
+
+POPUP_WAIT_SECONDS = 15
 
 
 # ============================================================
@@ -106,6 +110,159 @@ def create_driver():
     )
 
     return driver
+
+
+# ============================================================
+# GESTIONE POPUP PUBBLICITARIO
+# ============================================================
+#
+# Fantacalcio.it mostra, in modo intermittente (frequency capping
+# lato Google Ads), due tipi di interstitial pubblicitario:
+#
+#   1. Un formato "Vignette" che compare subito dopo la navigazione
+#      a una nuova pagina (riconoscibile dal suffisso
+#      "#google_vignette" nell'URL).
+#   2. Un overlay (es. "Pulse") che può comparire dopo il click su
+#      #download-control.
+#
+# In entrambi i casi, un link/etichetta con testo esatto "Chiudi" o
+# "Close" chiude l'annuncio. Cerchiamo via JavaScript (non solo con
+# XPath sul testo) perché una ricerca puramente testuale rischia di
+# agganciare un "Chiudi" legittimo altrove nella pagina (banner
+# cookie, menu, ecc.) e cliccarlo per errore, rompendo la
+# navigazione. Richiediamo quindi anche che l'elemento sia
+# posizionato "fixed" o "absolute", come sono sempre gli overlay.
+
+_CLOSE_TEXTS_JS = ["chiudi", "close"]
+
+_FIND_OVERLAY_CLOSE_JS = """
+const targets = arguments[0];
+const nodes = document.querySelectorAll('body *');
+for (const el of nodes) {
+    const text = (el.innerText || el.textContent || '').trim().toLowerCase();
+    if (!targets.includes(text)) continue;
+
+    const rect = el.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) continue;
+
+    const style = window.getComputedStyle(el);
+    if (style.position === 'fixed' || style.position === 'absolute') {
+        return el;
+    }
+}
+return null;
+"""
+
+
+def _find_overlay_close_element(driver):
+    try:
+        return driver.execute_script(_FIND_OVERLAY_CLOSE_JS, _CLOSE_TEXTS_JS)
+    except Exception:
+        return None
+
+
+def _try_click_close_overlay(driver) -> bool:
+    element = _find_overlay_close_element(driver)
+
+    if element is None:
+        return False
+
+    try:
+        tag = element.tag_name
+        text = element.text
+    except Exception:
+        tag, text = "?", "?"
+
+    try:
+        print(
+            f"   🖱️ Chiudo overlay pubblicitario "
+            f"(elemento <{tag}> testo='{text}')."
+        )
+        driver.execute_script(
+            "arguments[0].scrollIntoView({block: 'center'});", element
+        )
+        time.sleep(0.3)
+        driver.execute_script("arguments[0].click();", element)
+        time.sleep(1)
+        return True
+    except Exception as exc:
+        print(f"   ⚠️ Click sull'elemento di chiusura fallito: {exc}")
+        return False
+
+
+def dismiss_navigation_popup(driver, wait_seconds=POPUP_WAIT_SECONDS):
+    """
+    Da chiamare subito dopo un driver.get() su una pagina voti: rileva
+    ed eventualmente chiude un interstitial "Vignette" comparso alla
+    navigazione, prima di cercare #download-control.
+    """
+
+    time.sleep(1)
+
+    def popup_present(d):
+        if "google_vignette" in d.current_url.lower():
+            return True
+        return _find_overlay_close_element(d) is not None
+
+    try:
+        WebDriverWait(driver, wait_seconds).until(popup_present)
+    except TimeoutException:
+        return  # nessun interstitial di navigazione: si prosegue
+
+    print("   ℹ️ Rilevato interstitial pubblicitario dopo la navigazione.")
+
+    expected_path = urlsplit(driver.current_url).path
+
+    for attempt in range(3):
+        if _try_click_close_overlay(driver):
+            break
+        time.sleep(1)
+    else:
+        print(
+            "   ⚠️ Non sono riuscito a chiudere l'interstitial "
+            "di navigazione: proseguo comunque."
+        )
+        return
+
+    # Se il click ha (per errore) portato la pagina altrove invece di
+    # limitarsi a chiudere l'overlay, torniamo alla pagina attesa.
+    time.sleep(1)
+    if urlsplit(driver.current_url).path != expected_path:
+        print(
+            "   ⚠️ La pagina è cambiata dopo la chiusura del popup, "
+            "ricarico la pagina corretta."
+        )
+        driver.get(f"{BASE_URL}{expected_path}")
+        WebDriverWait(driver, WAIT_SECONDS).until(
+            lambda d: d.execute_script("return document.readyState") == "complete"
+        )
+
+
+def dismiss_click_popup(driver, wait_seconds=POPUP_WAIT_SECONDS):
+    """
+    Da chiamare subito dopo il click su #download-control: rileva ed
+    eventualmente chiude un overlay pubblicitario comparso in risposta
+    al click stesso.
+    """
+
+    try:
+        WebDriverWait(driver, wait_seconds).until(
+            lambda d: _find_overlay_close_element(d) is not None
+        )
+    except TimeoutException:
+        return  # nessun popup dopo il click: si prosegue
+
+    print("   ℹ️ Rilevato overlay pubblicitario dopo il click su Scarica.")
+
+    for attempt in range(3):
+        if _try_click_close_overlay(driver):
+            return
+        time.sleep(1)
+
+    print(
+        "   ⚠️ Non sono riuscito a chiudere l'overlay post-click "
+        "in automatico: il download potrebbe fallire."
+    )
 
 
 # ============================================================
@@ -497,6 +654,11 @@ def get_excel_url(
 
     driver.get(url)
 
+    # Il popup pubblicitario "Vignette" può comparire subito dopo il
+    # caricamento della pagina, prima ancora di cercare il pulsante
+    # di download.
+    dismiss_navigation_popup(driver)
+
     wait = WebDriverWait(
         driver,
         WAIT_SECONDS,
@@ -635,6 +797,11 @@ def download_excel(
     print(
         "   ✓ Download avviato"
     )
+
+    # Un overlay pubblicitario (es. "Pulse") può comparire in
+    # risposta a questo click: lo intercettiamo prima di aspettare
+    # il file.
+    dismiss_click_popup(driver)
 
     # ========================================================
     # ATTENDI FILE
