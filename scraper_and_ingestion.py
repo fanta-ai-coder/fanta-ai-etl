@@ -16,14 +16,22 @@ if not SUPABASE_URL or not SUPABASE_KEY:
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-# Stagioni da analizzare
-STAGIONI = ["2023-24", "2024-25", "2025-26", "2026-27"]
+# Mappatura Stagioni: Nome -> ID interno usato dal backend di Fantacalcio.it
+STAGIONI_MAP = {
+    "2023-24": 18,
+    "2024-25": 19,
+    "2025-26": 20,
+    "2026-27": 21
+}
+
+# Assicuriamo la creazione preliminare della directory base per evitare errori Git
+os.makedirs("data/excel", exist_ok=True)
 
 # ============================================================
 # UTILITY DATABASE & LOGGING
 # ============================================================
 def get_completed_days():
-    """Recupera l'elenco delle giornate già scaricate ed elaborate con successo dal database."""
+    """Recupera l'elenco delle giornate già scaricate dal log."""
     try:
         res = supabase.table("download_logs").select("stagione, giornata").eq("status", "COMPLETED").execute()
         completed = set()
@@ -31,29 +39,26 @@ def get_completed_days():
             completed.add((row["stagione"], int(row["giornata"])))
         return completed
     except Exception as e:
-        print(f"⚠️ Impossibile leggere i log da Supabase (prima esecuzione?): {e}")
+        print(f"⚠️ Impossibile leggere i log da Supabase: {e}")
         return set()
 
 # ============================================================
 # PARSING EXCEL & INGESTION
 # ============================================================
 def parse_excel_and_insert(content, stagione, giornata):
-    """Legge il file Excel in memoria, ne estrae le statistiche e le carica su Supabase."""
+    """Legge il file Excel ed esegue l'upsert dei voti su Supabase."""
     df_raw = pd.read_excel(io.BytesIO(content), sheet_name=0)
     
-    headers = df_raw.iloc[4].values
     rows = []
     current_team = None
     
     for i in range(3, len(df_raw)):
         row_vals = df_raw.iloc[i].values
         
-        # Identificazione del nome della squadra (riga con solo la prima colonna valorizzata)
         if pd.notna(row_vals[0]) and all(pd.isna(x) for x in row_vals[1:]):
             current_team = str(row_vals[0]).strip()
         elif row_vals[0] != 'Cod.' and pd.notna(row_vals[0]) and pd.notna(row_vals[1]):
             
-            # Helper per la conversione sicura dei numeri e la pulizia dei malus/bonus
             def safe_val(val, default=0):
                 if pd.isna(val) or val == '*' or val is None:
                     return default
@@ -62,7 +67,6 @@ def parse_excel_and_insert(content, stagione, giornata):
                 except (ValueError, TypeError):
                     return default
 
-            # Estrazione e pulizia del Voto (es. "6*", "5.5*", "6" -> 6.0, 5.5)
             voto_raw = str(row_vals[3]).replace('*', '').strip() if pd.notna(row_vals[3]) else None
             try:
                 voto = float(voto_raw) if voto_raw and voto_raw != '-' else None
@@ -91,7 +95,6 @@ def parse_excel_and_insert(content, stagione, giornata):
                 "gdp": safe_val(row_vals[14])
             }
             
-            # Calcolo automatico del FantaVoto base
             if voto is not None:
                 fanta_voto = voto
                 fanta_voto += (row_dict["gf"] * 3) + (row_dict["ass"] * 1) + (row_dict["rf"] * 3) + (row_dict["rp"] * 3)
@@ -104,7 +107,6 @@ def parse_excel_and_insert(content, stagione, giornata):
             rows.append(row_dict)
 
     if rows:
-        # Inserimento in batch/upsert su Supabase
         supabase.table("player_stats_history").upsert(
             rows, 
             on_conflict="player_id,stagione,giornata,redazione"
@@ -113,44 +115,54 @@ def parse_excel_and_insert(content, stagione, giornata):
     return len(rows)
 
 # ============================================================
-# FLUSSO PRINCIPALE DI DOWNLOAD & WORKFLOW
+# FLUSSO DI DOWNLOAD & WORKFLOW
 # ============================================================
 def run():
     completed_logs = get_completed_days()
     print(f"📊 Trovate {len(completed_logs)} giornate già elaborate nel registro log.")
 
-    # Configurazione della sessione HTTP per simulare la navigazione reale da browser
     session = requests.Session()
-    session.headers.update({
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,*/*;q=0.8",
+    headers_base = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
         "Accept-Language": "it-IT,it;q=0.9,en-US;q=0.8,en;q=0.7",
-        "Referer": "https://www.fantacalcio.it/voti-fantacalcio-serie-a"
-    })
+    }
 
-    for stagione in STAGIONI:
-        print(f"\n--- Elaborazione Stagione {stagione} ---")
+    for stagione, season_id in STAGIONI_MAP.items():
+        print(f"\n--- Elaborazione Stagione {stagione} (ID: {season_id}) ---")
         for giornata in range(1, 39):
             if (stagione, giornata) in completed_logs:
                 continue
 
-            excel_url = f"https://www.fantacalcio.it/servizi/voti/excel/{stagione}/{giornata}"
+            # Tentativo 1: Endpoint basato su ID numerico stagione
+            excel_url = f"https://www.fantacalcio.it/servizi/voti/excel?st={season_id}&g={giornata}"
             print(f"📡 Downloading: {stagione} | Giornata {giornata}...", end=" ", flush=True)
 
             try:
-                res = session.get(excel_url, timeout=20, allow_redirects=True)
+                headers_download = headers_base.copy()
+                headers_download["Referer"] = f"https://www.fantacalcio.it/voti-fantacalcio-serie-a/{stagione}/{giornata}"
+                res = session.get(excel_url, headers=headers_download, timeout=20, allow_redirects=True)
             except Exception as e:
                 print(f"⚠️ Errore di connessione: {e}")
                 break
 
-            # Verifichiamo che la risposta sia un file Excel ZIP/XLSX reale (magic bytes: PK\x03\x04)
+            # Verifichiamo se abbiamo ricevuto un file Excel (magic bytes ZIP/XLSX: PK\x03\x04)
             is_excel = res.status_code == 200 and res.content.startswith(b'PK\x03\x04')
 
             if not is_excel:
-                print(f"⚠️ Non disponibile o giornata non ancora giocata. Interruzione per la stagione {stagione}.")
-                break  # Passa alla stagione successiva se la giornata non è stata ancora disputata
+                # Tentativo 2 (Fallback): Endpoint con stringa stagione
+                alt_url = f"https://www.fantacalcio.it/servizi/voti/excel/{stagione}/{giornata}"
+                try:
+                    res = session.get(alt_url, headers=headers_download, timeout=20, allow_redirects=True)
+                    is_excel = res.status_code == 200 and res.content.startswith(b'PK\x03\x04')
+                except Exception:
+                    pass
 
-            # 1. Salva la copia locale del file Excel per il commit su GitHub
+            if not is_excel:
+                print(f"⚠️ Non disponibile o giornata futura. Interruzione per {stagione}.")
+                break
+
+            # 1. Salva file locale
             folder_path = f"data/excel/{stagione}"
             os.makedirs(folder_path, exist_ok=True)
             file_path = os.path.join(folder_path, f"giornata_{giornata}.xlsx")
@@ -158,14 +170,14 @@ def run():
             with open(file_path, "wb") as f:
                 f.write(res.content)
 
-            # 2. Parsing ed inserimento in Supabase
+            # 2. Parsing e Ingestion Supabase
             try:
                 inserted = parse_excel_and_insert(res.content, stagione, giornata)
             except Exception as e:
-                print(f"❌ Errore durante il parsing o il salvataggio su DB: {e}")
+                print(f"❌ Errore parsing/DB: {e}")
                 continue
 
-            # 3. Registrazione della giornata completata nel log di Supabase
+            # 3. Log di completamento
             supabase.table("download_logs").upsert({
                 "stagione": stagione,
                 "giornata": giornata,
