@@ -118,14 +118,19 @@ class SupabaseClient:
 
     def get_next_missing(self, seasons):
 
-        for stagione in seasons:
+    for stagione in seasons:
 
-            for giornata in range(1, 39):
+        for giornata in range(1, 39):
 
-                if not self.is_completed(
-                    stagione,
-                    giornata,
-                ):
-                    return stagione, giornata
+            log = self.get_log(
+                stagione,
+                giornata,
+            )
 
-        return None, None
+            if not log:
+                return stagione, giornata
+
+            if log.get("status") != "COMPLETED":
+                return stagione, giornata
+
+    return None, None
