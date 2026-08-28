@@ -200,10 +200,6 @@ def is_probable_team_row(row):
 
 
 def parse_excel(file_path, stagione, giornata):
-    """
-    Legge un Excel Fantacalcio e restituisce
-    una lista di record pronti per Supabase.
-    """
 
     file_path = Path(file_path)
 
@@ -219,100 +215,119 @@ def parse_excel(file_path, stagione, giornata):
 
     current_team = None
 
-    for _, row in df.iterrows():
+    for i, row in df.iterrows():
 
-        # --------------------------------------------------------
+        # ----------------------------------------------------
         # HEADER
-        # --------------------------------------------------------
+        # ----------------------------------------------------
 
         if is_header_row(row):
+
+            # La riga precedente contiene la squadra
+            if i > 0:
+
+                previous_row = df.iloc[i - 1]
+
+                candidate = clean_text(
+                    previous_row.iloc[0]
+                )
+
+                if candidate:
+                    current_team = (
+                        candidate.upper()
+                    )
+
             continue
 
-        # --------------------------------------------------------
+        # ----------------------------------------------------
         # GIOCATORE
-        # --------------------------------------------------------
+        # ----------------------------------------------------
 
         if is_player_row(row):
 
-            player_id = clean_number(row.iloc[0], default=None)
+            player_id = clean_number(
+                row.iloc[0],
+                default=None,
+            )
 
-            ruolo = clean_text(row.iloc[1]).upper()
+            ruolo = clean_text(
+                row.iloc[1]
+            ).upper()
 
-            nome = clean_text(row.iloc[2])
+            nome = clean_text(
+                row.iloc[2]
+            )
 
-            voto = clean_vote(row.iloc[3])
-
-            gf = clean_number(row.iloc[4])
-            gs = clean_number(row.iloc[5])
-            rp = clean_number(row.iloc[6])
-            rs = clean_number(row.iloc[7])
-            rf = clean_number(row.iloc[8])
-            au = clean_number(row.iloc[9])
-            amm = clean_number(row.iloc[10])
-            esp = clean_number(row.iloc[11])
-            ass = clean_number(row.iloc[12])
-            gdv = clean_number(row.iloc[13])
-            gdp = clean_number(row.iloc[14])
+            voto = clean_vote(
+                row.iloc[3]
+            )
 
             if player_id is None:
                 continue
 
             if not current_team:
+
                 raise ValueError(
-                    f"Giocatore trovato senza squadra: "
-                    f"{nome} ({player_id})"
+                    f"Squadra non determinata "
+                    f"per {nome} "
+                    f"(ID {player_id})"
                 )
 
             record = {
+
                 "player_id": player_id,
+
                 "nome": nome,
+
                 "ruolo": ruolo,
+
                 "squadra": current_team,
+
                 "stagione": stagione,
+
                 "giornata": giornata,
+
                 "redazione": "Fantacalcio",
 
                 "voto": voto,
 
-                # Per ora il FantaVoto viene lasciato NULL.
-                # Potremo calcolarlo con la formula ufficiale.
                 "fanta_voto": None,
 
-                "gf": gf,
-                "gs": gs,
-                "rp": rp,
-                "rs": rs,
-                "rf": rf,
-                "au": au,
-                "amm": amm,
-                "esp": esp,
-                "ass": ass,
-                "gdv": gdv,
-                "gdp": gdp,
+                "gf": clean_number(row.iloc[4]),
+
+                "gs": clean_number(row.iloc[5]),
+
+                "rp": clean_number(row.iloc[6]),
+
+                "rs": clean_number(row.iloc[7]),
+
+                "rf": clean_number(row.iloc[8]),
+
+                "au": clean_number(row.iloc[9]),
+
+                "amm": clean_number(row.iloc[10]),
+
+                "esp": clean_number(row.iloc[11]),
+
+                "ass": clean_number(row.iloc[12]),
+
+                "gdv": clean_number(row.iloc[13]),
+
+                "gdp": clean_number(row.iloc[14]),
             }
 
             records.append(record)
 
-            continue
-
-        # --------------------------------------------------------
-        # SQUADRA
-        # --------------------------------------------------------
-
-        if is_probable_team_row(row):
-
-            candidate = clean_text(row.iloc[0])
-
-            # Evitiamo di interpretare righe descrittive
-            # come squadre.
-            if len(candidate) <= 30:
-                current_team = candidate.upper()
-
-    print(f"   👤 Giocatori trovati: {len(records)}")
+    print(
+        f"   👤 Giocatori trovati: "
+        f"{len(records)}"
+    )
 
     if not records:
+
         raise ValueError(
-            f"Nessun giocatore trovato nel file {file_path}"
+            "Nessun giocatore trovato "
+            f"nel file {file_path}"
         )
 
     return records
