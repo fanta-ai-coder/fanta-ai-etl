@@ -1,11 +1,12 @@
+```python
 import os
 import shutil
 import time
 from pathlib import Path
 
 import requests
+
 from selenium import webdriver
-from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
@@ -56,17 +57,26 @@ def create_driver():
         exist_ok=True,
     )
 
+    # --------------------------------------------------------
     # Pulizia directory temporanea
+    # --------------------------------------------------------
+
     for file in DOWNLOAD_TEMP.iterdir():
 
         try:
+
             if file.is_file():
                 file.unlink()
+
             elif file.is_dir():
                 shutil.rmtree(file)
 
         except Exception:
             pass
+
+    # --------------------------------------------------------
+    # Chrome
+    # --------------------------------------------------------
 
     options = Options()
 
@@ -76,7 +86,10 @@ def create_driver():
     options.add_argument("--disable-gpu")
     options.add_argument("--window-size=1920,1080")
 
-    # Download automatici
+    # --------------------------------------------------------
+    # Download
+    # --------------------------------------------------------
+
     options.add_experimental_option(
         "prefs",
         {
@@ -100,7 +113,6 @@ def create_driver():
 # LOGIN
 # ============================================================
 
-```python
 def login(driver):
 
     username = os.environ.get(
@@ -126,6 +138,10 @@ def login(driver):
     print("🔐 LOGIN FANTACALCIO")
     print("=" * 60)
 
+    # --------------------------------------------------------
+    # Apertura pagina login
+    # --------------------------------------------------------
+
     driver.get(LOGIN_URL)
 
     wait = WebDriverWait(
@@ -133,13 +149,13 @@ def login(driver):
         WAIT_SECONDS,
     )
 
-    # ========================================================
-    # ASPETTA CHE IL FORM SIA PRESENTE
-    # ========================================================
-
+    # Aspetta il form
     wait.until(
         EC.presence_of_element_located(
-            (By.ID, "loginForm")
+            (
+                By.ID,
+                "loginForm",
+            )
         )
     )
 
@@ -156,7 +172,7 @@ def login(driver):
         )
     )
 
-    # Porta l'elemento al centro dello schermo
+    # Scroll
     driver.execute_script(
         """
         arguments[0].scrollIntoView({
@@ -167,27 +183,35 @@ def login(driver):
         username_input,
     )
 
-    # Click esplicito
+    # Aspetta che sia interagibile
     wait.until(
-        EC.element_to_be_clickable(
-            (
-                By.CSS_SELECTOR,
-                "#loginForm input[name='username']",
-            )
+        lambda d: (
+            username_input.is_displayed()
+            and username_input.is_enabled()
         )
     )
 
+    # Click via JavaScript
     driver.execute_script(
         "arguments[0].click();",
         username_input,
     )
 
-    # Pulisce il campo
-    username_input.clear()
+    # Impostazione valore tramite JavaScript
+    driver.execute_script(
+        """
+        arguments[0].value = arguments[1];
 
-    # Inserisce username
-    username_input.send_keys(
-        username
+        arguments[0].dispatchEvent(
+            new Event('input', { bubbles: true })
+        );
+
+        arguments[0].dispatchEvent(
+            new Event('change', { bubbles: true })
+        );
+        """,
+        username_input,
+        username,
     )
 
     print("   ✓ Username inserito")
@@ -216,11 +240,9 @@ def login(driver):
     )
 
     wait.until(
-        EC.element_to_be_clickable(
-            (
-                By.CSS_SELECTOR,
-                "#loginForm input[name='password']",
-            )
+        lambda d: (
+            password_input.is_displayed()
+            and password_input.is_enabled()
         )
     )
 
@@ -229,10 +251,20 @@ def login(driver):
         password_input,
     )
 
-    password_input.clear()
+    driver.execute_script(
+        """
+        arguments[0].value = arguments[1];
 
-    password_input.send_keys(
-        password
+        arguments[0].dispatchEvent(
+            new Event('input', { bubbles: true })
+        );
+
+        arguments[0].dispatchEvent(
+            new Event('change', { bubbles: true })
+        );
+        """,
+        password_input,
+        password,
     )
 
     print("   ✓ Password inserita")
@@ -267,9 +299,9 @@ def login(driver):
 
     print("   ✓ Pulsante Login premuto")
 
-    # ========================================================
-    # ATTENDI RISPOSTA LOGIN
-    # ========================================================
+    # --------------------------------------------------------
+    # Attesa risposta
+    # --------------------------------------------------------
 
     time.sleep(3)
 
@@ -283,45 +315,46 @@ def login(driver):
     # VERIFICA LOGIN
     # ========================================================
 
-    # Se siamo ancora sulla pagina di login,
-    # analizziamo la pagina per capire perché.
-    if "/login" in current_url.lower():
+    # Se il form è ancora presente e visibile,
+    # il login probabilmente non è andato a buon fine.
 
-        page_source = (
-            driver.page_source.lower()
+    try:
+
+        login_form = driver.find_element(
+            By.ID,
+            "loginForm",
         )
 
-        if (
-            "password errata" in page_source
-            or "credenziali non valide" in page_source
-            or "username o password" in page_source
-        ):
+        if login_form.is_displayed():
+
+            page_source = (
+                driver.page_source.lower()
+            )
+
+            if (
+                "password errata" in page_source
+                or "credenziali non valide" in page_source
+                or "username o password" in page_source
+            ):
+
+                raise RuntimeError(
+                    "Login Fantacalcio fallito: "
+                    "username o password non validi"
+                )
 
             raise RuntimeError(
                 "Login Fantacalcio fallito: "
-                "username o password non validi"
+                "il form di login è ancora presente"
             )
 
-        # Controlliamo se il form è ancora presente
-        try:
+    except RuntimeError:
+        raise
 
-            login_form = driver.find_element(
-                By.ID,
-                "loginForm",
-            )
-
-            if login_form.is_displayed():
-
-                raise RuntimeError(
-                    "Login Fantacalcio non riuscito: "
-                    "il form di login è ancora presente"
-                )
-
-        except Exception:
-            pass
+    except Exception:
+        # Form non trovato = comportamento atteso
+        pass
 
     print("✅ Login effettuato")
-```
 
 
 # ============================================================
@@ -347,7 +380,9 @@ def get_excel_url(
     )
     print("=" * 60)
 
-    print(f"🌐 {url}")
+    print(
+        f"🌐 {url}"
+    )
 
     driver.get(url)
 
@@ -356,7 +391,10 @@ def get_excel_url(
         WAIT_SECONDS,
     )
 
-    # Aspettiamo il pulsante specifico
+    # --------------------------------------------------------
+    # Pulsante download
+    # --------------------------------------------------------
+
     download_control = wait.until(
         EC.presence_of_element_located(
             (
@@ -372,12 +410,15 @@ def get_excel_url(
     )
 
     if not excel_url:
+
         raise RuntimeError(
             "Il pulsante download-control "
             "non contiene href"
         )
 
+    # URL relativo
     if excel_url.startswith("/"):
+
         excel_url = (
             BASE_URL + excel_url
         )
@@ -405,40 +446,54 @@ def download_excel(
         giornata,
     )
 
-    print("⬇️ Download Excel...")
+    print(
+        "⬇️ Download Excel..."
+    )
 
     # --------------------------------------------------------
-    # COPIA DEI COOKIE SELENIUM
+    # Cookie Selenium
     # --------------------------------------------------------
 
-    selenium_cookies = driver.get_cookies()
-
-    cookies = {
-        cookie["name"]: cookie["value"]
-        for cookie in selenium_cookies
-    }
+    selenium_cookies = (
+        driver.get_cookies()
+    )
 
     # --------------------------------------------------------
-    # SESSIONE REQUESTS
+    # Requests session
     # --------------------------------------------------------
 
     session = requests.Session()
 
-    for name, value in cookies.items():
+    for cookie in selenium_cookies:
 
         session.cookies.set(
-            name,
-            value,
+            cookie["name"],
+            cookie["value"],
             domain=".fantacalcio.it",
         )
 
-    headers = {
-        "User-Agent": driver.execute_script(
-            "return navigator.userAgent;"
-        ),
+    # --------------------------------------------------------
+    # Headers
+    # --------------------------------------------------------
 
+    user_agent = driver.execute_script(
+        "return navigator.userAgent;"
+    )
+
+    headers = {
+        "User-Agent": user_agent,
         "Referer": driver.current_url,
+        "Accept": (
+            "application/vnd.openxmlformats-"
+            "officedocument.spreadsheetml.sheet,"
+            "application/vnd.ms-excel,"
+            "*/*"
+        ),
     }
+
+    # --------------------------------------------------------
+    # Request
+    # --------------------------------------------------------
 
     response = session.get(
         excel_url,
@@ -447,7 +502,8 @@ def download_excel(
     )
 
     print(
-        f"HTTP Excel: {response.status_code}"
+        f"HTTP Excel: "
+        f"{response.status_code}"
     )
 
     if response.status_code != 200:
@@ -464,17 +520,28 @@ def download_excel(
     )
 
     # --------------------------------------------------------
-    # CONTROLLO RISPOSTA
+    # Controllo risposta
     # --------------------------------------------------------
 
     if len(response.content) < 1000:
 
         raise RuntimeError(
-            "Risposta Excel troppo piccola"
+            "Risposta Excel troppo piccola: "
+            f"{len(response.content)} bytes"
+        )
+
+    # Controllo XLSX
+    if not response.content.startswith(
+        b"PK"
+    ):
+
+        raise RuntimeError(
+            "La risposta non sembra essere "
+            "un file XLSX valido"
         )
 
     # --------------------------------------------------------
-    # DESTINAZIONE
+    # Directory stagione
     # --------------------------------------------------------
 
     season_dir = (
@@ -486,10 +553,18 @@ def download_excel(
         exist_ok=True,
     )
 
+    # --------------------------------------------------------
+    # Nome file
+    # --------------------------------------------------------
+
     destination = (
         season_dir
         / f"giornata_{giornata:02d}.xlsx"
     )
+
+    # --------------------------------------------------------
+    # Salvataggio
+    # --------------------------------------------------------
 
     with open(
         destination,
@@ -501,7 +576,8 @@ def download_excel(
         )
 
     print(
-        f"✅ Excel salvato: {destination}"
+        f"✅ Excel salvato: "
+        f"{destination}"
     )
 
     print(
@@ -595,13 +671,26 @@ def process_day(
             f"   Errore: {exc}"
         )
 
-        supabase.save_log(
-            stagione=stagione,
-            giornata=giornata,
-            status="FAILED",
-            records_inserted=0,
-            error_message=str(exc),
-        )
+        # ----------------------------------------------------
+        # Salva il fallimento nel log
+        # ----------------------------------------------------
+
+        try:
+
+            supabase.save_log(
+                stagione=stagione,
+                giornata=giornata,
+                status="FAILED",
+                records_inserted=0,
+                error_message=str(exc),
+            )
+
+        except Exception as log_error:
+
+            print(
+                "⚠️ Impossibile salvare "
+                f"il log: {log_error}"
+            )
 
         return False
 
@@ -646,15 +735,15 @@ def main():
 
     try:
 
-        # ----------------------------------------------------
+        # ====================================================
         # LOGIN
-        # ----------------------------------------------------
+        # ====================================================
 
         login(driver)
 
-        # ----------------------------------------------------
-        # NEXT
-        # ----------------------------------------------------
+        # ====================================================
+        # MODALITÀ NEXT
+        # ====================================================
 
         if mode == "next":
 
@@ -687,13 +776,14 @@ def main():
             )
 
             if not success:
+
                 raise RuntimeError(
                     "Ingestion fallita"
                 )
 
-        # ----------------------------------------------------
-        # ALL
-        # ----------------------------------------------------
+        # ====================================================
+        # MODALITÀ ALL
+        # ====================================================
 
         else:
 
@@ -738,5 +828,10 @@ def main():
         )
 
 
+# ============================================================
+# ENTRY POINT
+# ============================================================
+
 if __name__ == "__main__":
     main()
+```
