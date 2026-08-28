@@ -1,20 +1,51 @@
+```python
+print("### 1 - SCRIPT AVVIATO ###", flush=True)
+
 import os
+print("### 2 - OS OK ###", flush=True)
+
 import shutil
+print("### 3 - SHUTIL OK ###", flush=True)
+
 import time
+print("### 4 - TIME OK ###", flush=True)
+
 from pathlib import Path
+print("### 5 - PATHLIB OK ###", flush=True)
+
 from urllib.parse import urlsplit
+print("### 6 - URLSPLIT OK ###", flush=True)
 
 import requests
+print("### 7 - REQUESTS OK ###", flush=True)
 
 from selenium import webdriver
+print("### 8 - SELENIUM WEBDRIVER OK ###", flush=True)
+
 from selenium.common.exceptions import TimeoutException
+print("### 9 - SELENIUM EXCEPTIONS OK ###", flush=True)
+
 from selenium.webdriver.common.by import By
+print("### 10 - SELENIUM BY OK ###", flush=True)
+
 from selenium.webdriver.chrome.options import Options
+print("### 11 - CHROME OPTIONS OK ###", flush=True)
+
 from selenium.webdriver.support.ui import WebDriverWait
+print("### 12 - WEBDRIVERWAIT OK ###", flush=True)
+
 from selenium.webdriver.support import expected_conditions as EC
+print("### 13 - EXPECTED CONDITIONS OK ###", flush=True)
 
 from fantacalcio_parser import parse_excel
+print("### 14 - FANTACALCIO PARSER OK ###", flush=True)
+
 from supabase_client import SupabaseClient
+print("### 15 - SUPABASE CLIENT OK ###", flush=True)
+
+print("### 16 - TUTTI GLI IMPORT COMPLETATI ###", flush=True)
+```
+
 
 
 # ============================================================
