@@ -545,11 +545,16 @@ def get_excel_url(
 # DOWNLOAD EXCEL CON SESSIONE SELENIUM
 # ============================================================
 
+
 def download_excel(
     driver,
     stagione,
     giornata,
 ):
+
+    # ========================================================
+    # OTTIENI URL EXCEL
+    # ========================================================
 
     excel_url = get_excel_url(
         driver,
@@ -558,102 +563,12 @@ def download_excel(
     )
 
     print(
-        "⬇️ Download Excel..."
+        "⬇️ Download Excel tramite Selenium..."
     )
 
-    # --------------------------------------------------------
-    # Cookie Selenium
-    # --------------------------------------------------------
-
-    selenium_cookies = (
-        driver.get_cookies()
-    )
-
-    # --------------------------------------------------------
-    # Requests session
-    # --------------------------------------------------------
-
-    session = requests.Session()
-
-    for cookie in selenium_cookies:
-
-        session.cookies.set(
-            cookie["name"],
-            cookie["value"],
-            domain=".fantacalcio.it",
-        )
-
-    # --------------------------------------------------------
-    # Headers
-    # --------------------------------------------------------
-
-    user_agent = driver.execute_script(
-        "return navigator.userAgent;"
-    )
-
-    headers = {
-        "User-Agent": user_agent,
-        "Referer": driver.current_url,
-        "Accept": (
-            "application/vnd.openxmlformats-"
-            "officedocument.spreadsheetml.sheet,"
-            "application/vnd.ms-excel,"
-            "*/*"
-        ),
-    }
-
-    # --------------------------------------------------------
-    # Request
-    # --------------------------------------------------------
-
-    response = session.get(
-        excel_url,
-        headers=headers,
-        timeout=60,
-    )
-
-    print(
-        f"HTTP Excel: "
-        f"{response.status_code}"
-    )
-
-    if response.status_code != 200:
-
-        raise RuntimeError(
-            "Download Excel fallito: "
-            f"HTTP {response.status_code}"
-        )
-
-    content_type = (
-        response.headers
-        .get("Content-Type", "")
-        .lower()
-    )
-
-    # --------------------------------------------------------
-    # Controllo risposta
-    # --------------------------------------------------------
-
-    if len(response.content) < 1000:
-
-        raise RuntimeError(
-            "Risposta Excel troppo piccola: "
-            f"{len(response.content)} bytes"
-        )
-
-    # Controllo XLSX
-    if not response.content.startswith(
-        b"PK"
-    ):
-
-        raise RuntimeError(
-            "La risposta non sembra essere "
-            "un file XLSX valido"
-        )
-
-    # --------------------------------------------------------
-    # Directory stagione
-    # --------------------------------------------------------
+    # ========================================================
+    # DIRECTORY DESTINAZIONE
+    # ========================================================
 
     season_dir = (
         DOWNLOAD_ROOT / stagione
@@ -664,44 +579,234 @@ def download_excel(
         exist_ok=True,
     )
 
-    # --------------------------------------------------------
-    # Nome file
-    # --------------------------------------------------------
-
     destination = (
         season_dir
         / f"giornata_{giornata:02d}.xlsx"
     )
 
-    # --------------------------------------------------------
-    # Salvataggio
-    # --------------------------------------------------------
+    # Se esiste già lo eliminiamo
+    if destination.exists():
+
+        destination.unlink()
+
+    # ========================================================
+    # FILE PRESENTI PRIMA DEL DOWNLOAD
+    # ========================================================
+
+    before = set(
+        DOWNLOAD_TEMP.iterdir()
+    )
+
+    # ========================================================
+    # TROVA PULSANTE DOWNLOAD
+    # ========================================================
+
+    download_control = WebDriverWait(
+        driver,
+        WAIT_SECONDS,
+    ).until(
+        EC.presence_of_element_located(
+            (
+                By.ID,
+                "download-control",
+            )
+        )
+    )
+
+    # ========================================================
+    # URL
+    # ========================================================
+
+    print(
+        f"📎 Excel URL: {excel_url}"
+    )
+
+    # ========================================================
+    # CLICK DOWNLOAD
+    # ========================================================
+
+    driver.execute_script(
+        """
+        arguments[0].click();
+        """,
+        download_control,
+    )
+
+    print(
+        "   ✓ Download avviato"
+    )
+
+    # ========================================================
+    # ATTENDI FILE
+    # ========================================================
+
+    downloaded_file = None
+
+    deadline = (
+        time.time()
+        + WAIT_SECONDS
+    )
+
+    while time.time() < deadline:
+
+        time.sleep(1)
+
+        current_files = set(
+            DOWNLOAD_TEMP.iterdir()
+        )
+
+        new_files = (
+            current_files - before
+        )
+
+        # -----------------------------------------------
+        # Cerca XLSX
+        # -----------------------------------------------
+
+        xlsx_files = [
+            file
+            for file in new_files
+            if (
+                file.is_file()
+                and file.suffix.lower()
+                == ".xlsx"
+            )
+        ]
+
+        if xlsx_files:
+
+            downloaded_file = max(
+                xlsx_files,
+                key=lambda file: file.stat().st_mtime,
+            )
+
+            break
+
+        # -----------------------------------------------
+        # Download ancora in corso
+        # -----------------------------------------------
+
+        crdownload_files = [
+            file
+            for file in new_files
+            if (
+                file.is_file()
+                and file.suffix.lower()
+                == ".crdownload"
+            )
+        ]
+
+        if crdownload_files:
+
+            print(
+                "   ⏳ Download in corso..."
+            )
+
+    # ========================================================
+    # CONTROLLO
+    # ========================================================
+
+    if downloaded_file is None:
+
+        raise RuntimeError(
+            "Download Excel non completato "
+            f"entro {WAIT_SECONDS} secondi"
+        )
+
+    # ========================================================
+    # ATTENDI CHE IL FILE SIA STABILE
+    # ========================================================
+
+    previous_size = -1
+
+    stable_count = 0
+
+    deadline = (
+        time.time()
+        + 20
+    )
+
+    while time.time() < deadline:
+
+        current_size = (
+            downloaded_file.stat().st_size
+        )
+
+        if current_size == previous_size:
+
+            stable_count += 1
+
+        else:
+
+            stable_count = 0
+
+        previous_size = current_size
+
+        if stable_count >= 2:
+            break
+
+        time.sleep(1)
+
+    # ========================================================
+    # VALIDAZIONE
+    # ========================================================
+
+    file_size = (
+        downloaded_file.stat().st_size
+    )
+
+    print(
+        f"   ✓ File scaricato: "
+        f"{downloaded_file.name}"
+    )
+
+    print(
+        f"   ✓ Dimensione: "
+        f"{file_size:,} bytes"
+    )
+
+    if file_size < 1000:
+
+        raise RuntimeError(
+            "File Excel troppo piccolo: "
+            f"{file_size} bytes"
+        )
+
+    # ========================================================
+    # VERIFICA XLSX
+    # ========================================================
 
     with open(
-        destination,
-        "wb",
+        downloaded_file,
+        "rb",
     ) as file:
 
-        file.write(
-            response.content
+        signature = file.read(2)
+
+    if signature != b"PK":
+
+        raise RuntimeError(
+            "Il file scaricato non sembra "
+            "essere un XLSX valido"
         )
+
+    # ========================================================
+    # SPOSTA FILE
+    # ========================================================
+
+    shutil.move(
+        str(downloaded_file),
+        str(destination),
+    )
 
     print(
         f"✅ Excel salvato: "
         f"{destination}"
     )
 
-    print(
-        f"   Dimensione: "
-        f"{len(response.content):,} bytes"
-    )
-
-    print(
-        f"   Content-Type: "
-        f"{content_type}"
-    )
-
     return destination
+
+
 
 
 # ============================================================
