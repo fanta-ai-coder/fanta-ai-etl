@@ -1,355 +1,155 @@
 import os
 import sys
-import time
+import io
 import requests
+import pandas as pd
 from supabase import create_client
-
 
 # ============================================================
 # CONFIGURAZIONE
 # ============================================================
-
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
-API_FOOTBALL_KEY = os.getenv("API_FOOTBALL_KEY")
-SEASON = os.getenv("SEASON")
 
+if not SUPABASE_URL or not SUPABASE_KEY:
+    raise ValueError("❌ SUPABASE_URL e SUPABASE_KEY devono essere impostati.")
 
-if not SUPABASE_URL:
-    raise ValueError("❌ SUPABASE_URL non configurata")
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-if not SUPABASE_KEY:
-    raise ValueError("❌ SUPABASE_KEY non configurata")
-
-if not API_FOOTBALL_KEY:
-    raise ValueError("❌ API_FOOTBALL_KEY non configurata")
-
-if not SEASON:
-    raise ValueError("❌ SEASON non configurata")
-
-
-try:
-    SEASON = int(SEASON)
-except ValueError:
-    raise ValueError(f"❌ SEASON non valida: {SEASON}")
-
-
-# ============================================================
-# API-FOOTBALL
-# ============================================================
-
-BASE_URL = "https://v3.football.api-sports.io"
-TEAMS_ENDPOINT = f"{BASE_URL}/teams"
-PLAYERS_ENDPOINT = f"{BASE_URL}/players"
-
-LEAGUE_ID = 135  # Serie A
+# Definizione delle stagioni da coprire
+STAGIONI = ["2023-24", "2024-25", "2025-26", "2026-27"]
 
 HEADERS = {
-    "x-apisports-key": API_FOOTBALL_KEY.strip()
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
 }
-
-
-# ============================================================
-# SUPABASE
-# ============================================================
-
-print("🔵 Connessione a Supabase...", flush=True)
-
-supabase = create_client(
-    SUPABASE_URL,
-    SUPABASE_KEY
-)
-
-print("✅ Supabase connesso", flush=True)
-
 
 # ============================================================
 # UTILITY
 # ============================================================
+def get_completed_days():
+    """Recupera le giornate già scaricate con successo dal DB di log."""
+    res = supabase.table("download_logs").select("stagione, giornata").eq("status", "COMPLETED").execute()
+    completed = set()
+    for row in res.data:
+        completed.add((row["stagione"], row["giornata"]))
+    return completed
 
-def safe_int(value):
-    if value is None:
-        return 0
-    try:
-        return int(value)
-    except (ValueError, TypeError):
-        return 0
+def parse_excel_and_insert(content, stagione, giornata):
+    """Esegue il parsing del file Excel in memory e salva su Supabase."""
+    df_raw = pd.read_excel(io.BytesIO(content), sheet_name=0)
+    
+    headers = df_raw.iloc[4].values
+    rows = []
+    current_team = None
+    
+    for i in range(3, len(df_raw)):
+        row_vals = df_raw.iloc[i].values
+        # Riconoscimento intestazione squadra
+        if pd.notna(row_vals[0]) and all(pd.isna(x) for x in row_vals[1:]):
+            current_team = str(row_vals[0]).strip()
+        elif row_vals[0] != 'Cod.' and pd.notna(row_vals[0]) and pd.notna(row_vals[1]):
+            # Cast sicuro
+            def safe_val(val, default=0):
+                if pd.isna(val) or val == '*' or val is None:
+                    return default
+                try:
+                    return float(val) if isinstance(default, float) else int(val)
+                except (ValueError, TypeError):
+                    return default
 
+            voto_raw = str(row_vals[3]).replace('*', '') if pd.notna(row_vals[3]) else None
+            voto = float(voto_raw) if voto_raw and voto_raw != '5.5*' and voto_raw != '6*' and voto_raw.replace('.', '').isdigit() else None
+            
+            # Pulisce stringhe di voto con asterisco (es. "6*")
+            if voto is None and pd.notna(row_vals[3]):
+                try:
+                    voto = float(str(row_vals[3]).replace('*', ''))
+                except:
+                    voto = None
 
-def safe_float(value):
-    if value is None:
-        return None
-    try:
-        return float(value)
-    except (ValueError, TypeError):
-        return None
+            row_dict = {
+                "player_id": int(row_vals[0]),
+                "ruolo": str(row_vals[1]).strip(),
+                "nome": str(row_vals[2]).strip(),
+                "squadra": current_team,
+                "stagione": stagione,
+                "giornata": giornata,
+                "redazione": "Fantacalcio",
+                "voto": voto,
+                "gf": safe_val(row_vals[4]),
+                "gs": safe_val(row_vals[5]),
+                "rp": safe_val(row_vals[6]),
+                "rs": safe_val(row_vals[7]),
+                "rf": safe_val(row_vals[8]),
+                "au": safe_val(row_vals[9]),
+                "amm": safe_val(row_vals[10]),
+                "esp": safe_val(row_vals[11]),
+                "ass": safe_val(row_vals[12]),
+                "gdv": safe_val(row_vals[13]),
+                "gdp": safe_val(row_vals[14])
+            }
+            
+            # Calcolo automatico FantaVoto base
+            fanta_voto = voto if voto is not None else 0.0
+            if voto is not None:
+                fanta_voto += (row_dict["gf"] * 3) + (row_dict["ass"] * 1) + (row_dict["rf"] * 3) + (row_dict["rp"] * 3)
+                fanta_voto += (row_dict["gdv"] * 0) + (row_dict["gdp"] * 0)
+                fanta_voto -= (row_dict["gs"] * 1) + (row_dict["rs"] * 3) + (row_dict["au"] * 2)
+                fanta_voto -= (row_dict["amm"] * 0.5) + (row_dict["esp"] * 1)
+            
+            row_dict["fanta_voto"] = round(fanta_voto, 1) if voto is not None else None
+            rows.append(row_dict)
 
-
-# ============================================================
-# API REQUEST
-# ============================================================
-
-def api_get(endpoint, params):
-    """
-    Esegue una richiesta ad API-Football e controlla
-    sia HTTP status che eventuali errori restituiti dall'API.
-    """
-    try:
-        response = requests.get(
-            endpoint,
-            headers=HEADERS,
-            params=params,
-            timeout=30
-        )
-    except requests.RequestException as e:
-        raise RuntimeError(f"❌ Errore connessione API: {e}")
-
-    print(f"    HTTP {response.status_code}", flush=True)
-
-    if response.status_code != 200:
-        raise RuntimeError(
-            f"❌ API-Football HTTP {response.status_code}: {response.text}"
-        )
-
-    try:
-        data = response.json()
-    except ValueError:
-        raise RuntimeError("❌ Risposta API non JSON")
-
-    errors = data.get("errors")
-    if errors:
-        raise RuntimeError(f"❌ API-Football errors: {errors}")
-
-    return data
-
-
-# ============================================================
-# GET & SAVE TEAMS
-# ============================================================
-
-def sync_serie_a_teams():
-    """Recupera e salva tutte le squadre della stagione corrente."""
-    print("", flush=True)
-    print(f"📡 Recupero e salvataggio squadre Serie A (Stagione {SEASON})", flush=True)
-
-    params = {
-        "league": LEAGUE_ID,
-        "season": SEASON
-    }
-
-    data = api_get(TEAMS_ENDPOINT, params)
-    teams = data.get("response", [])
-
-    if not teams:
-        raise RuntimeError(f"❌ Nessuna squadra trovata per la stagione {SEASON}")
-
-    saved_teams = 0
-    for item in teams:
-        team = item.get("team", {}) or {}
-        team_id = team.get("id")
-
-        if not team_id:
-            continue
-
-        payload = {
-            "api_football_id": team_id,
-            "name": team.get("name"),
-            "code": team.get("code"),
-            "country": team.get("country"),
-            "logo": team.get("logo")
-        }
-
-        supabase.table("teams").upsert(
-            payload,
-            on_conflict="api_football_id"
+    if rows:
+        supabase.table("player_stats_history").upsert(
+            rows, 
+            on_conflict="player_id,stagione,giornata,redazione"
         ).execute()
 
-        saved_teams += 1
-
-    print(f"🏆 Squadre sincronizzate: {saved_teams}", flush=True)
-    return teams
-
+    return len(rows)
 
 # ============================================================
-# SAVE PLAYER
+# MAIN INGESTION WORKFLOW
 # ============================================================
-
-def save_player(player):
-    player_id = player.get("id")
-    if not player_id:
-        return False
-
-    payload = {
-        "api_football_id": player_id,
-        "api_football_name": player.get("name"),
-        "firstname": player.get("firstname"),
-        "lastname": player.get("lastname"),
-        "age": player.get("age"),
-        "nationality": player.get("nationality"),
-        "height": player.get("height"),
-        "weight": player.get("weight"),
-        "photo": player.get("photo")
-    }
-
-    supabase.table("players").upsert(
-        payload,
-        on_conflict="api_football_id"
-    ).execute()
-
-    return True
-
-
-# ============================================================
-# SAVE PLAYER STATS
-# ============================================================
-
-def save_player_stats(player_item):
-    player = player_item.get("player", {}) or {}
-    player_id = player.get("id")
-
-    if not player_id:
-        return False
-
-    statistics = player_item.get("statistics", []) or []
-    if not statistics:
-        return False
-
-    stat = statistics[0] or {}
-
-    team_info = stat.get("team", {}) or {}
-    team_id = team_info.get("id")
-    team_name = team_info.get("name")
-
-    games = stat.get("games", {}) or {}
-    goals = stat.get("goals", {}) or {}
-    cards = stat.get("cards", {}) or {}
-    shots = stat.get("shots", {}) or {}
-    passes = stat.get("passes", {}) or {}
-
-    # Correzione presenze: API-Football usa la chiave "appearences"
-    matches_played = games.get("appearences") if games.get("appearences") is not None else games.get("appearances")
-
-    payload = {
-        "api_football_id": player_id,
-        "season": SEASON,
-        "team_id": team_id,
-        "team": team_name,
-        "matches_played": safe_int(matches_played),
-        "minutes_played": safe_int(games.get("minutes")),
-        "goals": safe_int(goals.get("total")),
-        "assists": safe_int(goals.get("assists")),
-        "yellow_cards": safe_int(cards.get("yellow")),
-        "red_cards": safe_int(cards.get("red")),
-        "shots_total": safe_int(shots.get("total")),
-        "shots_on_target": safe_int(shots.get("on")),
-        "passes_total": safe_int(passes.get("total")),
-        "passes_key": safe_int(passes.get("key")),
-        "rating": safe_float(games.get("rating"))
-    }
-
-    supabase.table("player_stats").upsert(
-        payload,
-        on_conflict="api_football_id,season"
-    ).execute()
-
-    return True
-
-
-# ============================================================
-# MAIN INGESTION
-# ============================================================
-
 def run():
-    print("", flush=True)
-    print("=" * 60, flush=True)
-    print("🚀 API-FOOTBALL PLAYER INGESTION (LEAGUE-WIDE)", flush=True)
-    print("=" * 60, flush=True)
-    print(f"🏆 Campionato : Serie A", flush=True)
-    print(f"🆔 League ID  : {LEAGUE_ID}", flush=True)
-    print(f"📅 Stagione   : {SEASON}", flush=True)
-    print("=" * 60, flush=True)
+    completed_logs = get_completed_days()
+    print(f"📊 Trovate {len(completed_logs)} giornate già elaborate nel log.")
 
-    # 1. Sincronizza prima le squadre
-    sync_serie_a_teams()
+    for stagione in STAGIONI:
+        for giornata in range(1, 39):
+            if (stagione, giornata) in completed_logs:
+                continue
 
-    # 2. Paginazione su tutta la lega per aggirare il blocco page>3 per squadra
-    page = 1
-    total_saved_players = 0
-    total_saved_stats = 0
-    total_api_records = 0
+            # Costruzione URL download Excel ufficiale
+            excel_url = f"https://www.fantacalcio.it/servizi/voti/excel/{stagione}/{giornata}"
+            print(f"📡 Downloading: {stagione} | Giornata {giornata}...", end=" ")
 
-    while True:
-        print("", flush=True)
-        print(f"📄 Richiesta pagina {page} per Serie A...", flush=True)
+            res = requests.get(excel_url, headers=HEADERS)
+            
+            if res.status_code != 200 or len(res.content) < 5000:
+                print(f"⚠️ Non disponibile o stagione futura. Interruzione per {stagione}.")
+                break  # Se la giornata non è ancora stata giocata, passa alla stagione successiva
 
-        params = {
-            "league": LEAGUE_ID,
-            "season": SEASON,
-            "page": page
-        }
+            # 1. Salva copia file Excel per repository GitHub
+            folder_path = f"data/excel/{stagione}"
+            os.makedirs(folder_path, exist_ok=True)
+            file_path = os.path.join(folder_path, f"giornata_{giornata}.xlsx")
+            
+            with open(file_path, "wb") as f:
+                f.write(res.content)
 
-        data = api_get(PLAYERS_ENDPOINT, params)
-        players_list = data.get("response", [])
-        paging = data.get("paging", {}) or {}
+            # 2. Parsing e inserimento in Supabase
+            inserted = parse_excel_and_insert(res.content, stagione, giornata)
 
-        current_page = paging.get("current", page)
-        total_pages = paging.get("total", 1)
+            # 3. Aggiorna Log su Supabase
+            supabase.table("download_logs").upsert({
+                "stagione": stagione,
+                "giornata": giornata,
+                "status": "COMPLETED",
+                "records_inserted": inserted
+            }, on_conflict="stagione,giornata").execute()
 
-        print(
-            f"📊 Pagina {current_page}/{total_pages} → Trovati {len(players_list)} giocatori",
-            flush=True
-        )
-
-        if not players_list:
-            print("⚠️ Nessun giocatore restituito in questa pagina.", flush=True)
-            break
-
-        total_api_records += len(players_list)
-
-        for item in players_list:
-            player = item.get("player", {}) or {}
-
-            if save_player(player):
-                total_saved_players += 1
-
-            if save_player_stats(item):
-                total_saved_stats += 1
-
-        if current_page >= total_pages:
-            print("🎉 Raggiunta l'ultima pagina della lega!", flush=True)
-            break
-
-        page += 1
-        time.sleep(0.3)
-
-    # ========================================================
-    # RISULTATO
-    # ========================================================
-
-    print("", flush=True)
-    print("=" * 60, flush=True)
-    print("🏆 INGESTION COMPLETATA CON SUCCESSO", flush=True)
-    print("=" * 60, flush=True)
-    print(f"📅 Stagione          : {SEASON}", flush=True)
-    print(f"📄 Pagine elaborate  : {page}/{total_pages}", flush=True)
-    print(f"📡 Record letti API  : {total_api_records}", flush=True)
-    print(f"👤 Player upsert     : {total_saved_players}", flush=True)
-    print(f"📊 Stats upsert      : {total_saved_stats}", flush=True)
-    print("=" * 60, flush=True)
-
-
-# ============================================================
-# MAIN
-# ============================================================
+            print(f"✅ OK ({inserted} voti caricati)")
 
 if __name__ == "__main__":
-    try:
-        run()
-    except Exception as e:
-        print("", flush=True)
-        print("=" * 60, flush=True)
-        print("💥 INGESTION FALLITA", flush=True)
-        print("=" * 60, flush=True)
-        print(str(e), flush=True)
-        print("=" * 60, flush=True)
-        sys.exit(1)
+    run()
