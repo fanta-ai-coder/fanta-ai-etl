@@ -157,147 +157,168 @@ def login(driver):
         )
     )
 
+    time.sleep(2)
+
     # ========================================================
-    # TROVA CAMPO USERNAME VISIBILE
+    # USERNAME
     # ========================================================
 
-    username_inputs = driver.find_elements(
-        By.CSS_SELECTOR,
-        "#loginForm input[name='username']",
+    username_input = wait.until(
+        EC.presence_of_element_located(
+            (
+                By.CSS_SELECTOR,
+                "#loginForm input[name='username']",
+            )
+        )
     )
 
-    username_input = None
+    # Impostiamo il valore direttamente nel DOM.
+    # Non usiamo send_keys() perché in GitHub Actions
+    # il campo viene trovato ma Chrome lo considera
+    # non interagibile.
 
-    for element in username_inputs:
-
-        if (
-            element.is_displayed()
-            and element.is_enabled()
-        ):
-            username_input = element
-            break
-
-    if username_input is None:
-
-        raise RuntimeError(
-            "Campo username non interagibile"
-        )
-
-    # Porta al centro dello schermo
     driver.execute_script(
         """
-        arguments[0].scrollIntoView({
-            block: 'center',
-            inline: 'center'
-        });
+        const element = arguments[0];
+        const value = arguments[1];
+
+        const setter = Object.getOwnPropertyDescriptor(
+            HTMLInputElement.prototype,
+            'value'
+        ).set;
+
+        setter.call(element, value);
+
+        element.dispatchEvent(
+            new Event('input', {
+                bubbles: true
+            })
+        );
+
+        element.dispatchEvent(
+            new Event('change', {
+                bubbles: true
+            })
+        );
+
+        element.dispatchEvent(
+            new Event('blur', {
+                bubbles: true
+            })
+        );
         """,
         username_input,
-    )
-
-    # Click
-    username_input.click()
-
-    # Pulisce
-    username_input.clear()
-
-    # Inserisce username
-    username_input.send_keys(
-        username
+        username,
     )
 
     print("   ✓ Username inserito")
 
     # ========================================================
-    # TROVA CAMPO PASSWORD VISIBILE
+    # PASSWORD
     # ========================================================
 
-    password_inputs = driver.find_elements(
-        By.CSS_SELECTOR,
-        "#loginForm input[name='password']",
-    )
-
-    password_input = None
-
-    for element in password_inputs:
-
-        if (
-            element.is_displayed()
-            and element.is_enabled()
-        ):
-            password_input = element
-            break
-
-    if password_input is None:
-
-        raise RuntimeError(
-            "Campo password non interagibile"
+    password_input = wait.until(
+        EC.presence_of_element_located(
+            (
+                By.CSS_SELECTOR,
+                "#loginForm input[name='password']",
+            )
         )
+    )
 
     driver.execute_script(
         """
-        arguments[0].scrollIntoView({
-            block: 'center',
-            inline: 'center'
-        });
+        const element = arguments[0];
+        const value = arguments[1];
+
+        const setter = Object.getOwnPropertyDescriptor(
+            HTMLInputElement.prototype,
+            'value'
+        ).set;
+
+        setter.call(element, value);
+
+        element.dispatchEvent(
+            new Event('input', {
+                bubbles: true
+            })
+        );
+
+        element.dispatchEvent(
+            new Event('change', {
+                bubbles: true
+            })
+        );
+
+        element.dispatchEvent(
+            new Event('blur', {
+                bubbles: true
+            })
+        );
         """,
         password_input,
-    )
-
-    password_input.click()
-
-    password_input.clear()
-
-    password_input.send_keys(
-        password
+        password,
     )
 
     print("   ✓ Password inserita")
 
     # ========================================================
+    # VERIFICA VALORI
+    # ========================================================
+
+    username_value = driver.execute_script(
+        "return arguments[0].value;",
+        username_input,
+    )
+
+    password_value = driver.execute_script(
+        "return arguments[0].value;",
+        password_input,
+    )
+
+    if not username_value:
+        raise RuntimeError(
+            "Username non valorizzato nel campo login"
+        )
+
+    if not password_value:
+        raise RuntimeError(
+            "Password non valorizzata nel campo login"
+        )
+
+    print("   ✓ Campi login valorizzati")
+
+    # ========================================================
     # LOGIN BUTTON
     # ========================================================
 
-    login_buttons = driver.find_elements(
-        By.CSS_SELECTOR,
-        "#loginForm button[type='submit']",
+    login_button = wait.until(
+        EC.presence_of_element_located(
+            (
+                By.CSS_SELECTOR,
+                "#loginForm button[type='submit']",
+            )
+        )
     )
 
-    login_button = None
-
-    for element in login_buttons:
-
-        if (
-            element.is_displayed()
-            and element.is_enabled()
-        ):
-            login_button = element
-            break
-
-    if login_button is None:
-
-        raise RuntimeError(
-            "Pulsante Login non interagibile"
-        )
+    # Click JavaScript.
+    # Evitiamo anche qui problemi di interazione
+    # del browser headless.
 
     driver.execute_script(
         """
-        arguments[0].scrollIntoView({
-            block: 'center',
-            inline: 'center'
-        });
+        arguments[0].click();
         """,
         login_button,
     )
 
-    login_button.click()
-
     print("   ✓ Pulsante Login premuto")
 
     # ========================================================
-    # ATTENDI LOGIN AJAX
+    # ATTESA LOGIN
     # ========================================================
 
-    time.sleep(3)
+    time.sleep(5)
 
     print(
         f"   URL dopo login: "
@@ -307,28 +328,34 @@ def login(driver):
     # ========================================================
     # VERIFICA AUTENTICAZIONE
     # ========================================================
+
+    # Il login di Fantacalcio può essere effettuato
+    # tramite AJAX e quindi l'URL /login può rimanere
+    # invariato.
     #
-    # NON controlliamo più solamente /login.
+    # Per questo NON controlliamo l'URL.
     #
-    # Il sito può effettuare il login tramite AJAX
-    # mantenendo l'URL /login.
-    #
-    # Proviamo quindi una pagina che richiede
-    # autenticazione.
+    # Andiamo direttamente su una pagina protetta.
 
     test_url = (
         f"{VOTES_URL}/2026-27/1"
     )
 
+    print()
     print(
-        f"   🔎 Verifica autenticazione: "
-        f"{test_url}"
+        f"   🔎 Verifica autenticazione..."
     )
 
     driver.get(test_url)
 
-    # Aspetta il caricamento della pagina
-    time.sleep(2)
+    # Aspettiamo il caricamento del documento
+    wait.until(
+        lambda d: d.execute_script(
+            "return document.readyState"
+        ) == "complete"
+    )
+
+    time.sleep(3)
 
     print(
         f"   URL verifica: "
@@ -336,14 +363,14 @@ def login(driver):
     )
 
     # ========================================================
-    # CERCA DOWNLOAD CONTROL
+    # CERCA DOWNLOAD EXCEL
     # ========================================================
 
     try:
 
         download_control = WebDriverWait(
             driver,
-            15,
+            20,
         ).until(
             EC.presence_of_element_located(
                 (
@@ -358,60 +385,85 @@ def login(driver):
             .get_attribute("href")
         )
 
-        if href:
+        if not href:
 
-            print(
-                "   ✓ Pulsante Excel presente"
-            )
-
-            print(
-                f"   ✓ Excel URL: {href}"
-            )
-
-            print(
-                "✅ Login Fantacalcio effettuato"
-            )
-
-            return True
-
-    except TimeoutException:
-
-        pass
-
-    # ========================================================
-    # LOGIN FALLITO
-    # ========================================================
-
-    # Salviamo informazioni diagnostiche.
-    try:
-
-        debug_path = (
-            DOWNLOAD_TEMP
-            / "login_error.html"
-        )
-
-        with open(
-            debug_path,
-            "w",
-            encoding="utf-8",
-        ) as file:
-
-            file.write(
-                driver.page_source
+            raise RuntimeError(
+                "Pulsante Excel trovato ma "
+                "senza href"
             )
 
         print(
-            f"   ⚠️ HTML debug salvato: "
-            f"{debug_path}"
+            "   ✓ Utente autenticato"
         )
 
-    except Exception:
-        pass
+        print(
+            f"   ✓ Excel disponibile: "
+            f"{href}"
+        )
 
-    raise RuntimeError(
-        "Login Fantacalcio non verificato: "
-        "il pulsante Excel non è disponibile."
-    )
+        print(
+            "✅ Login Fantacalcio effettuato"
+        )
+
+        return True
+
+    except TimeoutException:
+
+        # ----------------------------------------------------
+        # DEBUG
+        # ----------------------------------------------------
+
+        print(
+            "   ❌ Pulsante Excel non trovato"
+        )
+
+        try:
+
+            screenshot_path = (
+                DOWNLOAD_TEMP
+                / "login_error.png"
+            )
+
+            html_path = (
+                DOWNLOAD_TEMP
+                / "login_error.html"
+            )
+
+            driver.save_screenshot(
+                str(screenshot_path)
+            )
+
+            with open(
+                html_path,
+                "w",
+                encoding="utf-8",
+            ) as file:
+
+                file.write(
+                    driver.page_source
+                )
+
+            print(
+                f"   📸 Screenshot: "
+                f"{screenshot_path}"
+            )
+
+            print(
+                f"   📄 HTML: "
+                f"{html_path}"
+            )
+
+        except Exception as debug_error:
+
+            print(
+                f"   ⚠️ Debug non disponibile: "
+                f"{debug_error}"
+            )
+
+        raise RuntimeError(
+            "Login Fantacalcio non verificato: "
+            "il pulsante Excel non è disponibile."
+        )
 
 
 
