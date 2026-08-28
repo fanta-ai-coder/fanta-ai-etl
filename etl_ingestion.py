@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 import requests
 from supabase import create_client
 
@@ -36,10 +37,13 @@ except ValueError:
 
 
 # ============================================================
-# CONFIG API
+# API-FOOTBALL
 # ============================================================
 
-API_URL = "https://v3.football.api-sports.io/players"
+BASE_URL = "https://v3.football.api-sports.io"
+
+TEAMS_ENDPOINT = f"{BASE_URL}/teams"
+PLAYERS_ENDPOINT = f"{BASE_URL}/players"
 
 LEAGUE_ID = 135
 
@@ -87,27 +91,19 @@ def safe_float(value):
 
 
 # ============================================================
-# API FOOTBALL
+# API REQUEST
 # ============================================================
 
-def get_page(page):
-
-    params = {
-        "league": LEAGUE_ID,
-        "season": SEASON,
-        "page": page
-    }
-
-    print(
-        f"📡 API-Football → "
-        f"season={SEASON}, page={page}",
-        flush=True
-    )
+def api_get(endpoint, params):
+    """
+    Esegue una richiesta API-Football e controlla
+    sia HTTP status che errors restituiti dall'API.
+    """
 
     try:
 
         response = requests.get(
-            API_URL,
+            endpoint,
             headers=HEADERS,
             params=params,
             timeout=30
@@ -139,13 +135,8 @@ def get_page(page):
     except ValueError:
 
         raise RuntimeError(
-            "❌ API-Football ha restituito "
-            "una risposta non JSON"
+            "❌ Risposta API non JSON"
         )
-
-    # --------------------------------------------------------
-    # ERRORI API
-    # --------------------------------------------------------
 
     errors = data.get("errors")
 
@@ -159,94 +150,359 @@ def get_page(page):
 
 
 # ============================================================
-# PLAYER
+# GET TEAMS
 # ============================================================
 
-def upsert_player(player):
+def get_serie_a_teams():
 
-    api_id = player.get("id")
+    print("")
+    print(
+        f"📡 Recupero squadre Serie A "
+        f"stagione {SEASON}",
+        flush=True
+    )
 
-    if not api_id:
-        return False
-
-    payload = {
-        "api_football_id": api_id,
-        "api_football_name": player.get("name"),
-
-        "firstname": player.get("firstname"),
-        "lastname": player.get("lastname"),
-
-        "age": player.get("age"),
-        "nationality": player.get("nationality"),
-        "height": player.get("height"),
-        "weight": player.get("weight"),
-
-        "photo": player.get("photo")
+    params = {
+        "league": LEAGUE_ID,
+        "season": SEASON
     }
 
-    try:
+    data = api_get(
+        TEAMS_ENDPOINT,
+        params
+    )
 
-        (
-            supabase
-            .table("players")
-            .upsert(
-                payload,
-                on_conflict="api_football_id"
-            )
-            .execute()
+    teams = data.get(
+        "response",
+        []
+    )
+
+    if not teams:
+
+        raise RuntimeError(
+            f"❌ Nessuna squadra trovata "
+            f"per la stagione {SEASON}"
         )
 
-        return True
+    print(
+        f"🏆 Squadre trovate: {len(teams)}",
+        flush=True
+    )
 
-    except Exception as e:
+    return teams
+
+
+# ============================================================
+# SAVE TEAM
+# ============================================================
+
+def save_team(team_data):
+
+    team = team_data.get(
+        "team",
+        {}
+    ) or {}
+
+    team_id = team.get("id")
+
+    if not team_id:
+
+        raise RuntimeError(
+            "❌ Squadra senza API Football ID"
+        )
+
+    payload = {
+
+        "api_football_id": team_id,
+
+        "name": team.get(
+            "name"
+        ),
+
+        "code": team.get(
+            "code"
+        ),
+
+        "country": team.get(
+            "country"
+        ),
+
+        "logo": team.get(
+            "logo"
+        )
+    }
+
+    (
+        supabase
+        .table("teams")
+        .upsert(
+            payload,
+            on_conflict="api_football_id"
+        )
+        .execute()
+    )
+
+
+# ============================================================
+# GET PLAYERS FOR TEAM
+# ============================================================
+
+def get_players_for_team(team_id, team_name):
+
+    print("")
+    print(
+        f"📡 Squadra: {team_name} "
+        f"(ID {team_id})",
+        flush=True
+    )
+
+    all_players = []
+
+    page = 1
+
+    while True:
+
+        params = {
+            "league": LEAGUE_ID,
+            "season": SEASON,
+            "team": team_id,
+            "page": page
+        }
 
         print(
-            f"❌ Errore salvataggio player "
-            f"{player.get('name')}: {e}",
+            f"   📄 Richiesta pagina {page}",
             flush=True
         )
 
-        return False
+        data = api_get(
+            PLAYERS_ENDPOINT,
+            params
+        )
+
+        players = data.get(
+            "response",
+            []
+        )
+
+        paging = data.get(
+            "paging",
+            {}
+        )
+
+        current_page = paging.get(
+            "current",
+            page
+        )
+
+        total_pages = paging.get(
+            "total",
+            1
+        )
+
+        print(
+            f"   📊 Pagina "
+            f"{current_page}/{total_pages} "
+            f"→ {len(players)} giocatori",
+            flush=True
+        )
+
+        # ----------------------------------------------------
+        # PAGINA VUOTA
+        # ----------------------------------------------------
+
+        if not players:
+
+            # Se è la prima pagina significa che
+            # la squadra non ha dati giocatore.
+            if page == 1:
+
+                print(
+                    "   ⚠️ Nessun giocatore restituito",
+                    flush=True
+                )
+
+                break
+
+            raise RuntimeError(
+                f"❌ Pagina {page} vuota "
+                f"prima della fine della paginazione "
+                f"per {team_name}"
+            )
+
+        all_players.extend(players)
+
+        # ----------------------------------------------------
+        # LIMITE PIANO FREE
+        # ----------------------------------------------------
+
+        if total_pages > 3:
+
+            raise RuntimeError(
+                f"❌ API-Football indica {total_pages} "
+                f"pagine per {team_name}. "
+                f"Il piano Free permette massimo "
+                f"page=3."
+            )
+
+        # ----------------------------------------------------
+        # FINE
+        # ----------------------------------------------------
+
+        if current_page >= total_pages:
+
+            break
+
+        page += 1
+
+    return all_players
 
 
 # ============================================================
-# PLAYER STATS
+# SAVE PLAYER
 # ============================================================
 
-def upsert_player_stats(
-    player,
-    statistics
-):
+def save_player(player):
 
-    api_id = player.get("id")
+    player_id = player.get("id")
 
-    if not api_id:
+    if not player_id:
+
         return False
-
-    if not statistics:
-        return False
-
-    # --------------------------------------------------------
-    # Per Serie A utilizziamo la prima statistica restituita
-    # --------------------------------------------------------
-
-    stat = statistics[0] or {}
-
-    team = stat.get("team", {}) or {}
-    games = stat.get("games", {}) or {}
-    goals = stat.get("goals", {}) or {}
-    cards = stat.get("cards", {}) or {}
-    shots = stat.get("shots", {}) or {}
-    passes = stat.get("passes", {}) or {}
 
     payload = {
 
-        "api_football_id": api_id,
+        "api_football_id": player_id,
+
+        "api_football_name": player.get(
+            "name"
+        ),
+
+        "firstname": player.get(
+            "firstname"
+        ),
+
+        "lastname": player.get(
+            "lastname"
+        ),
+
+        "age": player.get(
+            "age"
+        ),
+
+        "nationality": player.get(
+            "nationality"
+        ),
+
+        "height": player.get(
+            "height"
+        ),
+
+        "weight": player.get(
+            "weight"
+        ),
+
+        "photo": player.get(
+            "photo"
+        )
+    }
+
+    (
+        supabase
+        .table("players")
+        .upsert(
+            payload,
+            on_conflict="api_football_id"
+        )
+        .execute()
+    )
+
+    return True
+
+
+# ============================================================
+# SAVE PLAYER STATS
+# ============================================================
+
+def save_player_stats(
+    player,
+    team_id,
+    team_name
+):
+
+    player_id = player.get("id")
+
+    if not player_id:
+
+        return False
+
+    statistics = player.get(
+        "statistics",
+        []
+    ) or []
+
+    if not statistics:
+
+        return False
+
+    # --------------------------------------------------------
+    # Cerchiamo la statistica relativa alla squadra corrente.
+    # --------------------------------------------------------
+
+    selected_stat = None
+
+    for stat in statistics:
+
+        stat_team = stat.get(
+            "team",
+            {}
+        ) or {}
+
+        if stat_team.get("id") == team_id:
+
+            selected_stat = stat
+            break
+
+    # Fallback: prima statistica disponibile
+    if selected_stat is None:
+
+        selected_stat = statistics[0]
+
+    stat = selected_stat or {}
+
+    games = stat.get(
+        "games",
+        {}
+    ) or {}
+
+    goals = stat.get(
+        "goals",
+        {}
+    ) or {}
+
+    cards = stat.get(
+        "cards",
+        {}
+    ) or {}
+
+    shots = stat.get(
+        "shots",
+        {}
+    ) or {}
+
+    passes = stat.get(
+        "passes",
+        {}
+    ) or {}
+
+    payload = {
+
+        "api_football_id": player_id,
 
         "season": SEASON,
 
-        "team_id": team.get("id"),
-        "team": team.get("name"),
+        "team_id": team_id,
+
+        "team": team_name,
 
         "matches_played": safe_int(
             games.get("appearances")
@@ -293,64 +549,71 @@ def upsert_player_stats(
         )
     }
 
-    try:
-
-        (
-            supabase
-            .table("player_stats")
-            .upsert(
-                payload,
-                on_conflict="api_football_id,season"
+    (
+        supabase
+        .table("player_stats")
+        .upsert(
+            payload,
+            on_conflict=(
+                "api_football_id,"
+                "season,"
+                "team_id"
             )
-            .execute()
         )
-
-        return True
-
-    except Exception as e:
-
-        print(
-            f"❌ Errore stats "
-            f"{player.get('name')}: {e}",
-            flush=True
-        )
-
-        return False
-
-
-# ============================================================
-# PROCESS PAGE
-# ============================================================
-
-def process_page(data):
-
-    players = data.get(
-        "response",
-        []
+        .execute()
     )
 
-    paging = data.get(
-        "paging",
+    return True
+
+
+# ============================================================
+# PROCESS TEAM
+# ============================================================
+
+def process_team(team_data):
+
+    team = team_data.get(
+        "team",
         {}
-    )
+    ) or {}
 
-    current_page = paging.get(
-        "current"
-    )
+    team_id = team.get("id")
+    team_name = team.get("name")
 
-    total_pages = paging.get(
-        "total"
-    )
+    if not team_id:
 
+        raise RuntimeError(
+            "❌ Team senza ID"
+        )
+
+    print("")
+    print("=" * 60)
     print(
-        f"📊 Pagina "
-        f"{current_page}/{total_pages} "
-        f"→ {len(players)} giocatori",
-        flush=True
+        f"🏟️ {team_name}"
+    )
+    print("=" * 60)
+
+    # --------------------------------------------------------
+    # Salva squadra
+    # --------------------------------------------------------
+
+    save_team(team_data)
+
+    # --------------------------------------------------------
+    # Recupera giocatori
+    # --------------------------------------------------------
+
+    players = get_players_for_team(
+        team_id,
+        team_name
     )
 
     saved_players = 0
     saved_stats = 0
+
+    # --------------------------------------------------------
+    # Salvataggio
+    # --------------------------------------------------------
 
     for item in players:
 
@@ -359,31 +622,27 @@ def process_page(data):
             {}
         ) or {}
 
-        statistics = item.get(
-            "statistics",
-            []
-        ) or []
+        if save_player(player):
 
-        # ----------------------------------------------------
-        # PLAYER
-        # ----------------------------------------------------
-
-        if upsert_player(player):
             saved_players += 1
 
-        # ----------------------------------------------------
-        # STATS
-        # ----------------------------------------------------
-
-        if upsert_player_stats(
+        if save_player_stats(
             player,
-            statistics
+            team_id,
+            team_name
         ):
+
             saved_stats += 1
 
+    print(
+        f"✅ {team_name}: "
+        f"{len(players)} record API | "
+        f"{saved_players} player | "
+        f"{saved_stats} stats",
+        flush=True
+    )
+
     return (
-        current_page,
-        total_pages,
         len(players),
         saved_players,
         saved_stats
@@ -391,7 +650,7 @@ def process_page(data):
 
 
 # ============================================================
-# INGESTION COMPLETA
+# MAIN INGESTION
 # ============================================================
 
 def run():
@@ -400,65 +659,61 @@ def run():
     print("=" * 60)
     print("🚀 API-FOOTBALL PLAYER INGESTION")
     print("=" * 60)
-
     print(
         f"🏆 Campionato : Serie A"
     )
-
     print(
         f"🆔 League ID  : {LEAGUE_ID}"
     )
-
     print(
-        f"📅 Season     : {SEASON}"
+        f"📅 Stagione   : {SEASON}"
     )
-
     print("=" * 60)
-    print("")
 
-    page = 1
+    # --------------------------------------------------------
+    # 1. Recupera squadre
+    # --------------------------------------------------------
 
-    total_received = 0
+    teams = get_serie_a_teams()
+
     total_players = 0
-    total_stats = 0
+    total_saved_players = 0
+    total_saved_stats = 0
 
-    while True:
+    # --------------------------------------------------------
+    # 2. Processa ogni squadra
+    # --------------------------------------------------------
 
-        data = get_page(page)
+    for index, team_data in enumerate(
+        teams,
+        start=1
+    ):
+
+        team_name = (
+            team_data
+            .get("team", {})
+            .get("name", "Unknown")
+        )
+
+        print("")
+        print(
+            f"🔄 Squadra {index}/{len(teams)}: "
+            f"{team_name}",
+            flush=True
+        )
 
         (
-            current_page,
-            total_pages,
-            received,
+            players_count,
             saved_players,
             saved_stats
-        ) = process_page(data)
+        ) = process_team(team_data)
 
-        total_received += received
-        total_players += saved_players
-        total_stats += saved_stats
+        total_players += players_count
+        total_saved_players += saved_players
+        total_saved_stats += saved_stats
 
-        # ----------------------------------------------------
-        # CONTROLLO RISPOSTA VUOTA
-        # ----------------------------------------------------
-
-        if received == 0:
-
-            raise RuntimeError(
-                f"❌ Pagina {page} vuota "
-                f"prima della fine della paginazione. "
-                f"Non considero la stagione completata."
-            )
-
-        # ----------------------------------------------------
-        # FINE
-        # ----------------------------------------------------
-
-        if current_page >= total_pages:
-
-            break
-
-        page += 1
+        # Piccola pausa
+        time.sleep(0.5)
 
     # ========================================================
     # RISULTATO
@@ -474,19 +729,22 @@ def run():
     )
 
     print(
-        f"📡 Record ricevuti API: {total_received}"
+        f"🏟️ Squadre: {len(teams)}"
     )
 
     print(
-        f"👤 Player upsert: {total_players}"
+        f"📡 Record giocatore ricevuti: "
+        f"{total_players}"
     )
 
     print(
-        f"📊 Stats upsert: {total_stats}"
+        f"👤 Player upsert: "
+        f"{total_saved_players}"
     )
 
     print(
-        f"📄 Pagine elaborate: {page}"
+        f"📊 Stats upsert: "
+        f"{total_saved_stats}"
     )
 
     print("=" * 60)
