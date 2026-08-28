@@ -45,7 +45,10 @@ class SupabaseClient:
 
     def is_completed(self, stagione, giornata):
 
-        log = self.get_log(stagione, giornata)
+        log = self.get_log(
+            stagione,
+            giornata,
+        )
 
         if not log:
             return False
@@ -69,7 +72,9 @@ class SupabaseClient:
         }
 
         if error_message:
-            data["error_message"] = str(error_message)
+            data["error_message"] = str(
+                error_message
+            )
 
         (
             self.client
@@ -82,7 +87,7 @@ class SupabaseClient:
         )
 
     # ============================================================
-    # STATS
+    # PLAYER STATS
     # ============================================================
 
     def insert_stats(self, records):
@@ -113,24 +118,29 @@ class SupabaseClient:
         return len(records)
 
     # ============================================================
-    # NEXT DOWNLOAD
+    # NEXT MISSING DAY
     # ============================================================
 
     def get_next_missing(self, seasons):
 
-    for stagione in seasons:
+        for stagione in seasons:
 
-        for giornata in range(1, 39):
+            for giornata in range(1, 39):
 
-            log = self.get_log(
-                stagione,
-                giornata,
-            )
+                log = self.get_log(
+                    stagione,
+                    giornata,
+                )
 
-            if not log:
-                return stagione, giornata
+                # Nessun log:
+                # giornata mai processata
+                if not log:
+                    return stagione, giornata
 
-            if log.get("status") != "COMPLETED":
-                return stagione, giornata
+                # Log presente ma non completato:
+                # FAILED -> deve essere ritentato
+                if log.get("status") != "COMPLETED":
+                    return stagione, giornata
 
-    return None, None
+        # Tutte le giornate sono completate
+        return None, None
