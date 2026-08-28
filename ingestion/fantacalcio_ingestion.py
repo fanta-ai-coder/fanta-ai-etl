@@ -100,6 +100,7 @@ def create_driver():
 # LOGIN
 # ============================================================
 
+```python
 def login(driver):
 
     username = os.environ.get(
@@ -132,12 +133,22 @@ def login(driver):
         WAIT_SECONDS,
     )
 
-    # --------------------------------------------------------
+    # ========================================================
+    # ASPETTA CHE IL FORM SIA PRESENTE
+    # ========================================================
+
+    wait.until(
+        EC.presence_of_element_located(
+            (By.ID, "loginForm")
+        )
+    )
+
+    # ========================================================
     # USERNAME
-    # --------------------------------------------------------
+    # ========================================================
 
     username_input = wait.until(
-        EC.presence_of_element_located(
+        EC.visibility_of_element_located(
             (
                 By.CSS_SELECTOR,
                 "#loginForm input[name='username']",
@@ -145,15 +156,48 @@ def login(driver):
         )
     )
 
-    username_input.clear()
-    username_input.send_keys(username)
+    # Porta l'elemento al centro dello schermo
+    driver.execute_script(
+        """
+        arguments[0].scrollIntoView({
+            block: 'center',
+            inline: 'center'
+        });
+        """,
+        username_input,
+    )
 
-    # --------------------------------------------------------
+    # Click esplicito
+    wait.until(
+        EC.element_to_be_clickable(
+            (
+                By.CSS_SELECTOR,
+                "#loginForm input[name='username']",
+            )
+        )
+    )
+
+    driver.execute_script(
+        "arguments[0].click();",
+        username_input,
+    )
+
+    # Pulisce il campo
+    username_input.clear()
+
+    # Inserisce username
+    username_input.send_keys(
+        username
+    )
+
+    print("   ✓ Username inserito")
+
+    # ========================================================
     # PASSWORD
-    # --------------------------------------------------------
+    # ========================================================
 
     password_input = wait.until(
-        EC.presence_of_element_located(
+        EC.visibility_of_element_located(
             (
                 By.CSS_SELECTOR,
                 "#loginForm input[name='password']",
@@ -161,12 +205,41 @@ def login(driver):
         )
     )
 
-    password_input.clear()
-    password_input.send_keys(password)
+    driver.execute_script(
+        """
+        arguments[0].scrollIntoView({
+            block: 'center',
+            inline: 'center'
+        });
+        """,
+        password_input,
+    )
 
-    # --------------------------------------------------------
-    # LOGIN
-    # --------------------------------------------------------
+    wait.until(
+        EC.element_to_be_clickable(
+            (
+                By.CSS_SELECTOR,
+                "#loginForm input[name='password']",
+            )
+        )
+    )
+
+    driver.execute_script(
+        "arguments[0].click();",
+        password_input,
+    )
+
+    password_input.clear()
+
+    password_input.send_keys(
+        password
+    )
+
+    print("   ✓ Password inserita")
+
+    # ========================================================
+    # LOGIN BUTTON
+    # ========================================================
 
     login_button = wait.until(
         EC.element_to_be_clickable(
@@ -177,30 +250,78 @@ def login(driver):
         )
     )
 
-    login_button.click()
+    driver.execute_script(
+        """
+        arguments[0].scrollIntoView({
+            block: 'center',
+            inline: 'center'
+        });
+        """,
+        login_button,
+    )
 
-    # Aspettiamo che la navigazione/login venga elaborata
+    driver.execute_script(
+        "arguments[0].click();",
+        login_button,
+    )
+
+    print("   ✓ Pulsante Login premuto")
+
+    # ========================================================
+    # ATTENDI RISPOSTA LOGIN
+    # ========================================================
+
     time.sleep(3)
 
-    # Controllo pagina
-    if "/login" in driver.current_url.lower():
+    current_url = driver.current_url
 
-        page_source = driver.page_source.lower()
+    print(
+        f"   URL dopo login: {current_url}"
+    )
+
+    # ========================================================
+    # VERIFICA LOGIN
+    # ========================================================
+
+    # Se siamo ancora sulla pagina di login,
+    # analizziamo la pagina per capire perché.
+    if "/login" in current_url.lower():
+
+        page_source = (
+            driver.page_source.lower()
+        )
 
         if (
             "password errata" in page_source
-            or "credenziali" in page_source
+            or "credenziali non valide" in page_source
             or "username o password" in page_source
         ):
+
             raise RuntimeError(
-                "Credenziali Fantacalcio non valide"
+                "Login Fantacalcio fallito: "
+                "username o password non validi"
             )
 
-        raise RuntimeError(
-            "Login Fantacalcio fallito"
-        )
+        # Controlliamo se il form è ancora presente
+        try:
+
+            login_form = driver.find_element(
+                By.ID,
+                "loginForm",
+            )
+
+            if login_form.is_displayed():
+
+                raise RuntimeError(
+                    "Login Fantacalcio non riuscito: "
+                    "il form di login è ancora presente"
+                )
+
+        except Exception:
+            pass
 
     print("✅ Login effettuato")
+```
 
 
 # ============================================================
