@@ -1,14 +1,21 @@
 name: Fantacalcio Ingestion
 
 on:
-
   workflow_dispatch:
+    inputs:
+      mode:
+        description: "Modalità ingestion"
+        required: true
+        default: "next"
+        type: choice
+        options:
+          - next
+          - all
 
   schedule:
     - cron: "0 4 * * *"
 
 jobs:
-
   ingestion:
 
     runs-on: ubuntu-latest
@@ -17,10 +24,8 @@ jobs:
       contents: write
 
     env:
-
       FANTACALCIO_USERNAME: ${{ secrets.FANTACALCIO_USERNAME }}
       FANTACALCIO_PASSWORD: ${{ secrets.FANTACALCIO_PASSWORD }}
-
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
 
@@ -38,11 +43,13 @@ jobs:
         run: |
           pip install -r ingestion/requirements.txt
 
-      - name: Run Fantacalcio ingestion
+      - name: Run ingestion
+        env:
+          INGESTION_MODE: ${{ inputs.mode || 'next' }}
         run: |
           python ingestion/fantacalcio_ingestion.py
 
-      - name: Commit downloaded Excel files
+      - name: Commit Excel files
         run: |
 
           git config user.name "github-actions[bot]"
@@ -51,7 +58,7 @@ jobs:
           git add data/
 
           if git diff --cached --quiet; then
-            echo "Nessun nuovo file da committare"
+            echo "Nessun nuovo Excel"
           else
             git commit -m "Update Fantacalcio historical data"
             git push
