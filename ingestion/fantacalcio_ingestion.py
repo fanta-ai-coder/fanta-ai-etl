@@ -1,49 +1,20 @@
-print("### 1 - SCRIPT AVVIATO ###", flush=True)
-
 import os
-print("### 2 - OS OK ###", flush=True)
-
 import shutil
-print("### 3 - SHUTIL OK ###", flush=True)
-
 import time
-print("### 4 - TIME OK ###", flush=True)
-
 from pathlib import Path
-print("### 5 - PATHLIB OK ###", flush=True)
-
 from urllib.parse import urlsplit
-print("### 6 - URLSPLIT OK ###", flush=True)
 
 import requests
-print("### 7 - REQUESTS OK ###", flush=True)
 
 from selenium import webdriver
-print("### 8 - SELENIUM WEBDRIVER OK ###", flush=True)
-
 from selenium.common.exceptions import TimeoutException
-print("### 9 - SELENIUM EXCEPTIONS OK ###", flush=True)
-
 from selenium.webdriver.common.by import By
-print("### 10 - SELENIUM BY OK ###", flush=True)
-
 from selenium.webdriver.chrome.options import Options
-print("### 11 - CHROME OPTIONS OK ###", flush=True)
-
 from selenium.webdriver.support.ui import WebDriverWait
-print("### 12 - WEBDRIVERWAIT OK ###", flush=True)
-
 from selenium.webdriver.support import expected_conditions as EC
-print("### 13 - EXPECTED CONDITIONS OK ###", flush=True)
 
 from fantacalcio_parser import parse_excel
-print("### 14 - FANTACALCIO PARSER OK ###", flush=True)
-
 from supabase_client import SupabaseClient
-print("### 15 - SUPABASE CLIENT OK ###", flush=True)
-
-print("### 16 - TUTTI GLI IMPORT COMPLETATI ###", flush=True)
-
 
 
 # ============================================================
@@ -112,6 +83,14 @@ def create_driver():
 
     options = Options()
 
+    # IMPORTANTE: "eager" fa considerare conclusa la navigazione
+    # appena il DOM è interagibile (DOMContentLoaded), senza aspettare
+    # che finiscano di caricare TUTTE le risorse della pagina
+    # (inclusi script pubblicitari/tracker di terze parti, spesso
+    # lenti o che non terminano mai). Senza questo, driver.get() può
+    # restare bloccata diversi minuti su una pagina con annunci lenti.
+    options.page_load_strategy = "eager"
+
     options.add_argument("--headless=new")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
@@ -136,6 +115,27 @@ def create_driver():
 
     driver = webdriver.Chrome(
         options=options
+    )
+
+    # Rete di sicurezza aggiuntiva: anche con "eager", in casi rari
+    # driver.get() può restare bloccata. Impostiamo un tetto massimo
+    # esplicito, oltre il quale Selenium solleva TimeoutException
+    # invece di restare ferma indefinitamente.
+    driver.set_page_load_timeout(WAIT_SECONDS)
+
+    # IMPORTANTE: Chrome in modalità headless (--headless=new) blocca
+    # i download automatici per default, indipendentemente dalle
+    # "prefs" impostate sopra. Vanno riabilitati esplicitamente via
+    # DevTools Protocol, altrimenti il click su #download-control
+    # parte regolarmente ma il file non arriva mai a scriversi su
+    # disco (motivo per cui in locale, senza headless, funzionava
+    # e su GitHub Actions no).
+    driver.execute_cdp_cmd(
+        "Page.setDownloadBehavior",
+        {
+            "behavior": "allow",
+            "downloadPath": str(DOWNLOAD_TEMP.resolve()),
+        },
     )
 
     return driver
