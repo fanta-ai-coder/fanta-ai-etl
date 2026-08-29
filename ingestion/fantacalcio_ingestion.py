@@ -183,17 +183,79 @@ return null;
 """
 
 
-def _find_overlay_close_element(driver):
+def _find_overlay_close_element_here(driver):
+    """
+    Cerca l'elemento di chiusura SOLO nel contesto (frame) in cui il
+    driver è attualmente posizionato.
+    """
     try:
         return driver.execute_script(_FIND_OVERLAY_CLOSE_JS, _CLOSE_TEXTS_JS)
     except Exception:
         return None
 
 
+def _search_close_element_all_frames(driver):
+    """
+    Cerca l'elemento di chiusura nel documento principale e, se non
+    trovato, dentro ogni <iframe> di primo livello.
+
+    Necessario perché la maggior parte degli interstitial pubblicitari
+    (Google Ads/Vignette, "Pulse", ecc.) vengono renderizzati dentro un
+    <iframe>: una ricerca DOM lanciata dal documento principale non può
+    vedere al suo interno (un iframe è un document separato, a
+    prescindere da cross-origin), motivo per cui chiudere il popup a
+    mano funziona sempre (un umano vede e clicca visivamente) mentre
+    la chiusura automatica può fallire in silenzio.
+
+    Selenium invece PUÒ raggiungere il contenuto di un iframe, anche
+    cross-origin, tramite driver.switch_to.frame(): opera a livello di
+    protocollo WebDriver/browser, non è soggetto alla same-origin
+    policy che limita il JS di pagina.
+
+    Se trovato, il driver resta "switchato" nel frame contenente
+    l'elemento: il chiamante deve poi richiamare
+    driver.switch_to.default_content() dopo averlo usato.
+    """
+
+    driver.switch_to.default_content()
+
+    element = _find_overlay_close_element_here(driver)
+    if element is not None:
+        return element
+
+    try:
+        iframes = driver.find_elements(By.TAG_NAME, "iframe")
+    except Exception:
+        iframes = []
+
+    for iframe in iframes:
+        try:
+            driver.switch_to.frame(iframe)
+        except Exception:
+            driver.switch_to.default_content()
+            continue
+
+        element = _find_overlay_close_element_here(driver)
+        if element is not None:
+            return element  # driver resta switchato in questo frame
+
+        driver.switch_to.default_content()
+
+    return None
+
+
+def _overlay_close_element_present(driver) -> bool:
+    """Versione booleana, sicura da usare dentro una WebDriverWait."""
+    element = _search_close_element_all_frames(driver)
+    driver.switch_to.default_content()
+    return element is not None
+
+
 def _try_click_close_overlay(driver) -> bool:
-    element = _find_overlay_close_element(driver)
+    element = _search_close_element_all_frames(driver)
 
     if element is None:
+        driver.switch_to.default_content()
         return False
 
     try:
@@ -217,6 +279,11 @@ def _try_click_close_overlay(driver) -> bool:
     except Exception as exc:
         print(f"   ⚠️ Click sull'elemento di chiusura fallito: {exc}")
         return False
+    finally:
+        # Fondamentale: senza questo, tutte le operazioni successive
+        # (find_element su #download-control, ecc.) continuerebbero
+        # a cercare dentro l'iframe invece che nella pagina principale.
+        driver.switch_to.default_content()
 
 
 def dismiss_navigation_popup(driver, wait_seconds=POPUP_WAIT_SECONDS):
@@ -231,7 +298,7 @@ def dismiss_navigation_popup(driver, wait_seconds=POPUP_WAIT_SECONDS):
     def popup_present(d):
         if "google_vignette" in d.current_url.lower():
             return True
-        return _find_overlay_close_element(d) is not None
+        return _overlay_close_element_present(d)
 
     try:
         WebDriverWait(driver, wait_seconds).until(popup_present)
@@ -275,9 +342,7 @@ def dismiss_click_popup(driver, wait_seconds=POPUP_WAIT_SECONDS):
     """
 
     try:
-        WebDriverWait(driver, wait_seconds).until(
-            lambda d: _find_overlay_close_element(d) is not None
-        )
+        WebDriverWait(driver, wait_seconds).until(_overlay_close_element_present)
     except TimeoutException:
         return  # nessun popup dopo il click: si prosegue
 
