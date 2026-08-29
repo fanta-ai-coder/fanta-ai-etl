@@ -969,6 +969,29 @@ def download_excel(
 
     if downloaded_file is None:
 
+        # Debug diagnostico: cosa c'è REALMENTE nella cartella di
+        # download e in che stato è la pagina, per capire se il
+        # click ha anche solo avviato qualcosa lato browser oppure
+        # no (utile per distinguere: annuncio non chiuso vs URL/
+        # sessione non valida vs download bloccato da Chrome).
+        try:
+            remaining_files = list(DOWNLOAD_TEMP.iterdir())
+            print(
+                f"   🔎 Debug: file in {DOWNLOAD_TEMP} al momento "
+                f"del timeout: "
+                f"{[f.name for f in remaining_files] or 'NESSUNO'}"
+            )
+            print(f"   🔎 Debug: URL corrente: {driver.current_url}")
+
+            screenshot_path = (
+                DOWNLOAD_TEMP
+                / f"download_timeout_{stagione}_g{giornata}.png"
+            )
+            driver.save_screenshot(str(screenshot_path))
+            print(f"   📸 Screenshot: {screenshot_path}")
+        except Exception as debug_error:
+            print(f"   ⚠️ Debug non disponibile: {debug_error}")
+
         raise RuntimeError(
             "Download Excel non completato "
             f"entro {WAIT_SECONDS} secondi"
