@@ -1,4 +1,3 @@
-```python
 import os
 import streamlit as st
 import pandas as pd
@@ -1487,4 +1486,4 @@ with col_detail:
             df,
             quot,
         )
-```
+
