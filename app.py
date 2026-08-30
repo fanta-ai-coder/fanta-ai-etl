@@ -1,14 +1,157 @@
 import os
 import streamlit as st
 import pandas as pd
-import plotly.express as px
+import plotly.graph_objects as go
 from supabase import create_client
 
-st.set_page_config(page_title="Fantacalcio Analytics Dashboard", layout="wide")
+
+# ============================================================
+# CONFIGURAZIONE
+# ============================================================
+
+st.set_page_config(
+    page_title="FantaAI Analytics",
+    page_icon="⚽",
+    layout="wide",
+    initial_sidebar_state="collapsed",
+)
+
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
+
+# ============================================================
+# CSS
+# ============================================================
+
+st.markdown(
+    """
+    <style>
+
+    /* ---------- GENERALE ---------- */
+
+    .block-container {
+        padding-top: 2rem;
+        padding-bottom: 3rem;
+        max-width: 1600px;
+    }
+
+    h1 {
+        font-weight: 700;
+        letter-spacing: -0.5px;
+    }
+
+    h2, h3 {
+        font-weight: 600;
+    }
+
+    /* ---------- CARD ---------- */
+
+    .info-card {
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+        border-radius: 14px;
+        padding: 18px 20px;
+        margin-bottom: 14px;
+    }
+
+    .player-name {
+        font-size: 30px;
+        font-weight: 700;
+        margin-bottom: 3px;
+    }
+
+    .player-team {
+        color: #64748b;
+        font-size: 16px;
+    }
+
+    .quote-card {
+        background: linear-gradient(135deg, #111827, #1f2937);
+        color: white;
+        border-radius: 16px;
+        padding: 20px;
+        text-align: center;
+        height: 100%;
+    }
+
+    .quote-label {
+        font-size: 13px;
+        opacity: 0.75;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .quote-value {
+        font-size: 36px;
+        font-weight: 700;
+        margin-top: 5px;
+    }
+
+    .quote-sub {
+        font-size: 14px;
+        opacity: 0.8;
+    }
+
+    /* ---------- STAT BOX ---------- */
+
+    .stat-box {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 14px;
+        padding: 15px;
+        min-height: 100px;
+    }
+
+    .stat-label {
+        color: #64748b;
+        font-size: 13px;
+        margin-bottom: 7px;
+    }
+
+    .stat-value {
+        font-size: 25px;
+        font-weight: 700;
+    }
+
+    /* ---------- PLAYER LIST ---------- */
+
+    div[data-testid="stRadio"] label {
+        padding: 8px 10px;
+        border-radius: 8px;
+    }
+
+    /* ---------- SEPARATOR ---------- */
+
+    .section-title {
+        margin-top: 25px;
+        margin-bottom: 10px;
+        font-size: 20px;
+        font-weight: 650;
+    }
+
+    /* ---------- BADGE ---------- */
+
+    .role-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 20px;
+        background: #eef2ff;
+        color: #4338ca;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+
+# ============================================================
+# SUPABASE
+# ============================================================
 
 @st.cache_resource
 def init_supabase():
@@ -18,187 +161,517 @@ def init_supabase():
 supabase = init_supabase()
 
 
+# ============================================================
+# CARICAMENTO DATI
+# ============================================================
+
 @st.cache_data(ttl=600)
 def load_stats():
-    """Statistiche voto/fantavoto per giocatore e giornata."""
-    res = supabase.table("player_stats_history").select("*").execute()
+    """Carica tutte le statistiche storiche."""
+    res = (
+        supabase
+        .table("player_stats_history")
+        .select("*")
+        .execute()
+    )
+
     return pd.DataFrame(res.data)
 
 
 @st.cache_data(ttl=600)
 def load_quotazioni():
-    """Anagrafica/quotazioni giocatori per stagione (rosa quotata)."""
-    res = supabase.table("giocatori_quotazioni").select("*").execute()
+    """
+    Carica le quotazioni.
+    
+    La tabella contiene la rosa attuale.
+    Se dovessero essere presenti più stagioni,
+    viene utilizzata automaticamente quella più recente.
+    """
+    res = (
+        supabase
+        .table("giocatori_quotazioni")
+        .select("*")
+        .execute()
+    )
+
     return pd.DataFrame(res.data)
 
 
 # ============================================================
-# DETTAGLIO GIOCATORE (usato dal nuovo tab "Rosa & Quotazioni")
+# FUNZIONI UTILITY
 # ============================================================
 
-def render_player_detail(player_id, df, quot, df_filtered, sidebar_seasons):
-    p_all = df[df["player_id"] == player_id].sort_values(["stagione", "giornata"])
-    p_quot_rows = quot[quot["player_id"] == player_id].sort_values("stagione")
+def safe_sum(df, column):
+    if column not in df.columns:
+        return 0
 
-    if p_quot_rows.empty and p_all.empty:
-        st.warning("Nessun dato disponibile per questo giocatore.")
-        return
+    return int(
+        pd.to_numeric(df[column], errors="coerce")
+        .fillna(0)
+        .sum()
+    )
 
-    # ---- Header: anagrafica dall'ultima quotazione disponibile ----
-    last_quot = p_quot_rows.iloc[-1] if not p_quot_rows.empty else None
-    nome = last_quot["nome"] if last_quot is not None else p_all.iloc[-1]["nome"]
 
-    st.markdown(f"### {nome}")
+def safe_mean(df, column):
+    if column not in df.columns:
+        return 0
 
-    if last_quot is not None:
-        h1, h2, h3, h4 = st.columns(4)
-        h1.metric("Ruolo", last_quot["ruolo"])
-        h2.metric("Squadra", last_quot["squadra"])
-        h3.metric("Quotazione", last_quot["quotazione_attuale"])
-        h4.metric("FVM", last_quot["fvm"])
-        if bool(last_quot.get("ceduto", False)):
-            st.warning(
-                f"⚠️ Segnato come CEDUTO nell'ultima stagione quotata "
-                f"({last_quot['stagione']})."
+    value = pd.to_numeric(df[column], errors="coerce").mean()
+
+    if pd.isna(value):
+        return 0
+
+    return round(float(value), 2)
+
+
+def safe_std(df, column):
+    if column not in df.columns:
+        return None
+
+    value = pd.to_numeric(df[column], errors="coerce").std()
+
+    if pd.isna(value):
+        return None
+
+    return round(float(value), 2)
+
+
+def format_season(season):
+    """
+    Mantiene la stagione così come presente nel DB.
+    """
+    return str(season)
+
+
+def get_latest_quote_row(quot_player):
+    """
+    Restituisce la quotazione più recente disponibile
+    per il giocatore.
+    """
+
+    if quot_player.empty:
+        return None
+
+    if "stagione" in quot_player.columns:
+        try:
+            quot_player = quot_player.sort_values("stagione")
+        except Exception:
+            pass
+
+    return quot_player.iloc[-1]
+
+
+# ============================================================
+# PROFILO GIOCATORE
+# ============================================================
+
+def render_player_detail(player_id, stats, quotations):
+
+    # --------------------------------------------------------
+    # DATI QUOTAZIONE
+    # --------------------------------------------------------
+
+    p_quotes = quotations[
+        quotations["player_id"] == player_id
+    ].copy()
+
+    current_quote = get_latest_quote_row(p_quotes)
+
+    # --------------------------------------------------------
+    # DATI STORICI
+    # --------------------------------------------------------
+
+    p_stats = stats[
+        stats["player_id"] == player_id
+    ].copy()
+
+    if "giornata" in p_stats.columns:
+        p_stats["giornata"] = pd.to_numeric(
+            p_stats["giornata"],
+            errors="coerce"
+        )
+
+    if "stagione" in p_stats.columns:
+        p_stats["stagione"] = p_stats["stagione"].astype(str)
+
+    p_stats = p_stats.sort_values(
+        ["stagione", "giornata"]
+    )
+
+    # --------------------------------------------------------
+    # NOME
+    # --------------------------------------------------------
+
+    if current_quote is not None:
+        nome = current_quote.get("nome", "Giocatore")
+        ruolo = current_quote.get("ruolo", "-")
+        squadra = current_quote.get("squadra", "-")
+    elif not p_stats.empty:
+        nome = p_stats.iloc[-1].get("nome", "Giocatore")
+        ruolo = p_stats.iloc[-1].get("ruolo", "-")
+        squadra = p_stats.iloc[-1].get("squadra", "-")
+    else:
+        nome = "Giocatore"
+        ruolo = "-"
+        squadra = "-"
+
+    # ========================================================
+    # HEADER
+    # ========================================================
+
+    left, right = st.columns([2.4, 1])
+
+    with left:
+
+        st.markdown(
+            f"""
+            <div class="info-card">
+                <div class="player-name">{nome}</div>
+                <div class="player-team">
+                    {squadra} &nbsp; • &nbsp;
+                    <span class="role-badge">{ruolo}</span>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with right:
+
+        if current_quote is not None:
+
+            quota = current_quote.get("quotazione_attuale", "-")
+            fvm = current_quote.get("fvm", "-")
+
+            st.markdown(
+                f"""
+                <div class="quote-card">
+                    <div class="quote-label">Quotazione attuale</div>
+                    <div class="quote-value">{quota}</div>
+                    <div class="quote-sub">FVM: {fvm}</div>
+                </div>
+                """,
+                unsafe_allow_html=True,
             )
 
-    if p_all.empty:
-        st.info("Nessuna statistica storica (voti) trovata per questo giocatore.")
+    # ========================================================
+    # CEDUTO
+    # ========================================================
+
+    if current_quote is not None:
+
+        ceduto = current_quote.get("ceduto", False)
+
+        if bool(ceduto):
+            st.warning(
+                "⚠️ Questo giocatore risulta marcato come ceduto "
+                "nella tabella delle quotazioni."
+            )
+
+    # ========================================================
+    # NESSUNA STATISTICA
+    # ========================================================
+
+    if p_stats.empty:
+
+        st.info(
+            "Non sono presenti statistiche storiche per questo giocatore."
+        )
+
         return
 
-    # Statistiche calcolate sul periodo selezionato nella sidebar
-    # (stesso filtro Stagione/Ruolo usato dalle altre tab).
-    p_view = p_all[p_all["stagione"].isin(sidebar_seasons)] if sidebar_seasons else p_all
+    # ========================================================
+    # STATISTICHE PRINCIPALI
+    # ========================================================
 
-    if p_view.empty:
-        st.info("Nessuna partita di questo giocatore nel periodo selezionato in sidebar.")
-        return
-
-    # ---- KPI principali ----
-    st.markdown("#### Riepilogo periodo selezionato (sidebar)")
-    k1, k2, k3, k4 = st.columns(4)
-    k1.metric("Partite", int(p_view["voto"].count()))
-    k2.metric("Media voto", round(p_view["voto"].mean(), 2))
-    k3.metric("Gol", int(p_view["gf"].sum()))
-    k4.metric("Assist", int(p_view["ass"].sum()))
-
-    # ---- Bonus / Malus (conteggi grezzi, non punteggio fantacalcio:
-    # le regole di punteggio variano da lega a lega) ----
-    st.markdown("#### Bonus")
-    b1, b2, b3 = st.columns(3)
-    b1.metric("Gol fatti", int(p_view["gf"].sum()))
-    b2.metric("Assist", int(p_view["ass"].sum()))
-    b3.metric("Rigori segnati", int(p_view["rf"].sum()))
-
-    st.markdown("#### Malus")
-    m1, m2, m3, m4, m5 = st.columns(5)
-    m1.metric("Ammonizioni", int(p_view["amm"].sum()))
-    m2.metric("Espulsioni", int(p_view["esp"].sum()))
-    m3.metric("Autogol", int(p_view["au"].sum()))
-    m4.metric("Rigori sbagliati", int(p_view["rs"].sum()))
-    m5.metric("Gol subiti", int(p_view["gs"].sum()))
-    st.caption(
-        "Nota: 'Gol subiti' ha senso solo per i portieri, mostrato a 0 per gli altri ruoli."
+    st.markdown(
+        '<div class="section-title">📊 Rendimento storico</div>',
+        unsafe_allow_html=True,
     )
 
-    # ---- Presenze / assenze stimate ----
-    st.markdown("#### Presenze")
-    presenze_rows = []
-    for season in sorted(p_view["stagione"].unique()):
-        giornate_totali = df[df["stagione"] == season]["giornata"].nunique()
-        giornate_giocate = p_view[p_view["stagione"] == season]["giornata"].nunique()
-        presenze_rows.append({
-            "Stagione": season,
-            "Giornate nel dataset": giornate_totali,
-            "Presenze": giornate_giocate,
-            "Assenze (stimate)": giornate_totali - giornate_giocate,
-        })
-    st.dataframe(pd.DataFrame(presenze_rows), use_container_width=True, hide_index=True)
-    st.caption(
-        "⚠️ 'Assenze stimate' = giornate del dataset in cui il giocatore non ha un voto "
-        "registrato. Non è un dato di infortunio: nei dati attuali non esiste un campo "
-        "specifico che distingua infortunio, squalifica o esclusione tecnica."
+    partite = int(p_stats["voto"].count())
+
+    media_voto = safe_mean(p_stats, "voto")
+
+    media_fanta = safe_mean(p_stats, "fanta_voto")
+
+    gol = safe_sum(p_stats, "gf")
+
+    assist = safe_sum(p_stats, "ass")
+
+    c1, c2, c3, c4, c5 = st.columns(5)
+
+    with c1:
+        st.metric("Presenze", partite)
+
+    with c2:
+        st.metric("Media voto", f"{media_voto:.2f}")
+
+    with c3:
+        st.metric("Media fantavoto", f"{media_fanta:.2f}")
+
+    with c4:
+        st.metric("Gol", gol)
+
+    with c5:
+        st.metric("Assist", assist)
+
+    # ========================================================
+    # BONUS / MALUS
+    # ========================================================
+
+    st.markdown(
+        '<div class="section-title">⚽ Bonus e malus</div>',
+        unsafe_allow_html=True,
     )
 
-    # ---- Statistiche per anno: storico COMPLETO, non filtrato dalla sidebar ----
-    st.markdown("#### Statistiche per anno (storico completo)")
-    per_anno = (
-        p_all.groupby("stagione")
+    b1, b2, b3, b4, b5, b6 = st.columns(6)
+
+    with b1:
+        st.metric("Gol", safe_sum(p_stats, "gf"))
+
+    with b2:
+        st.metric("Assist", safe_sum(p_stats, "ass"))
+
+    with b3:
+        st.metric("Rigori segnati", safe_sum(p_stats, "rf"))
+
+    with b4:
+        st.metric("Ammonizioni", safe_sum(p_stats, "amm"))
+
+    with b5:
+        st.metric("Espulsioni", safe_sum(p_stats, "esp"))
+
+    with b6:
+        st.metric("Autogol", safe_sum(p_stats, "au"))
+
+    # ========================================================
+    # ANDAMENTO NEL TEMPO
+    # ========================================================
+
+    st.markdown(
+        '<div class="section-title">📈 Andamento nel tempo</div>',
+        unsafe_allow_html=True,
+    )
+
+    chart_df = p_stats.copy()
+
+    chart_df["periodo"] = (
+        chart_df["stagione"].astype(str)
+        + " • G"
+        + chart_df["giornata"].astype(int).astype(str)
+    )
+
+    fig = go.Figure()
+
+    if "voto" in chart_df.columns:
+
+        fig.add_trace(
+            go.Scatter(
+                x=chart_df["periodo"],
+                y=chart_df["voto"],
+                mode="lines+markers",
+                name="Voto",
+                line=dict(width=2),
+            )
+        )
+
+    if "fanta_voto" in chart_df.columns:
+
+        fig.add_trace(
+            go.Scatter(
+                x=chart_df["periodo"],
+                y=chart_df["fanta_voto"],
+                mode="lines+markers",
+                name="Fantavoto",
+                line=dict(width=2),
+            )
+        )
+
+    fig.update_layout(
+        title="Voto e Fantavoto giornata per giornata",
+        xaxis_title="Stagione / Giornata",
+        yaxis_title="Valutazione",
+        hovermode="x unified",
+        height=450,
+        margin=dict(l=20, r=20, t=60, b=20),
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="right",
+            x=1,
+        ),
+    )
+
+    st.plotly_chart(
+        fig,
+        use_container_width=True
+    )
+
+    # ========================================================
+    # MEDIA PER STAGIONE
+    # ========================================================
+
+    st.markdown(
+        '<div class="section-title">📅 Rendimento per stagione</div>',
+        unsafe_allow_html=True,
+    )
+
+    season_agg = (
+        p_stats
+        .groupby("stagione")
         .agg(
-            Partite=("voto", "count"),
+            Presenze=("voto", "count"),
             Media_Voto=("voto", "mean"),
-            Dev_Std_Voto=("voto", "std"),
+            Media_Fantavoto=("fanta_voto", "mean"),
             Gol=("gf", "sum"),
             Assist=("ass", "sum"),
             Ammonizioni=("amm", "sum"),
             Espulsioni=("esp", "sum"),
         )
         .reset_index()
-        .round(2)
     )
-    st.dataframe(per_anno, use_container_width=True, hide_index=True)
 
-    # ---- Trend voto/fantavoto (storico completo) ----
-    st.markdown("#### Andamento voto/fantavoto")
-    fig_trend = px.line(
-        p_all, x="giornata", y=["voto", "fanta_voto"], color="stagione",
-        markers=True, title=f"Andamento per {nome}",
+    season_agg[
+        [
+            "Media_Voto",
+            "Media_Fantavoto",
+        ]
+    ] = season_agg[
+        [
+            "Media_Voto",
+            "Media_Fantavoto",
+        ]
+    ].round(2)
+
+    st.dataframe(
+        season_agg,
+        use_container_width=True,
+        hide_index=True,
     )
-    st.plotly_chart(fig_trend, use_container_width=True)
 
-    # ---- Distribuzione gol (periodo selezionato) ----
-    st.markdown("#### Distribuzione gol per partita (periodo selezionato)")
-    if p_view["gf"].sum() == 0:
-        st.info("Nessun gol segnato nel periodo selezionato.")
-    else:
-        dist = p_view["gf"].value_counts().sort_index().reset_index()
-        dist.columns = ["Gol nella partita", "Numero partite"]
-        fig_dist = px.bar(
-            dist, x="Gol nella partita", y="Numero partite",
-            title="Distribuzione gol a partita",
+    # ========================================================
+    # GRAFICO MEDIA VOTO PER STAGIONE
+    # ========================================================
+
+    fig_season = go.Figure()
+
+    fig_season.add_trace(
+        go.Bar(
+            x=season_agg["stagione"],
+            y=season_agg["Media_Voto"],
+            name="Media voto",
         )
-        st.plotly_chart(fig_dist, use_container_width=True)
+    )
 
-    # ---- Continuità di rendimento (deviazione standard del voto) ----
-    st.markdown("#### Continuità di rendimento (voto)")
-    player_std = p_view["voto"].std()
+    fig_season.add_trace(
+        go.Scatter(
+            x=season_agg["stagione"],
+            y=season_agg["Media_Fantavoto"],
+            name="Media fantavoto",
+            mode="lines+markers",
+        )
+    )
 
-    if pd.isna(player_std):
-        st.info("Non ci sono abbastanza partite nel periodo selezionato per calcolare la continuità.")
-    else:
-        peer_std = df_filtered.groupby("player_id")["voto"].std().dropna()
+    fig_season.update_layout(
+        title="Evoluzione del rendimento medio",
+        xaxis_title="Stagione",
+        yaxis_title="Media",
+        height=400,
+        margin=dict(l=20, r=20, t=60, b=20),
+    )
 
-        col_a, col_b = st.columns(2)
-        col_a.metric("Deviazione standard voto", round(player_std, 2))
+    st.plotly_chart(
+        fig_season,
+        use_container_width=True,
+    )
 
-        if len(peer_std) > 3:
-            pct_std = (peer_std < player_std).mean() * 100
-            if pct_std >= 66:
-                label = "🔴 Altalenante (rendimento meno prevedibile della media)"
-            elif pct_std <= 33:
-                label = "🟢 Continuo (rendimento più stabile della media)"
-            else:
-                label = "🟡 Nella media"
-            col_b.metric("Percentile variabilità", f"{pct_std:.0f}°")
-            st.markdown(f"**Valutazione:** {label}")
-            st.caption(
-                "Calcolato confrontando la deviazione standard del voto di questo "
-                "giocatore con quella di tutti i giocatori nel filtro Stagione/Ruolo "
-                "attivo in sidebar. Percentile alto = variabilità più alta della "
-                "maggior parte dei colleghi nello stesso filtro (voti altalenanti); "
-                "percentile basso = rendimento più costante."
-            )
+    # ========================================================
+    # CONTINUITÀ
+    # ========================================================
+
+    st.markdown(
+        '<div class="section-title">🎯 Continuità di rendimento</div>',
+        unsafe_allow_html=True,
+    )
+
+    std = safe_std(p_stats, "voto")
+
+    if std is not None:
+
+        if std < 0.6:
+            giudizio = "🟢 Molto continuo"
+        elif std < 0.9:
+            giudizio = "🟡 Abbastanza continuo"
         else:
-            st.caption(
-                "Non ci sono abbastanza giocatori nel filtro corrente per un confronto significativo."
+            giudizio = "🔴 Altalenante"
+
+        c1, c2 = st.columns(2)
+
+        with c1:
+            st.metric(
+                "Deviazione standard voto",
+                f"{std:.2f}"
             )
 
-    # ---- Dati grezzi + export ----
-    with st.expander("📄 Dati grezzi (storico completo)"):
-        st.dataframe(p_all, use_container_width=True, hide_index=True)
-        csv = p_all.to_csv(index=False).encode("utf-8")
+        with c2:
+            st.metric(
+                "Valutazione",
+                giudizio
+            )
+
+    # ========================================================
+    # DETTAGLIO QUOTAZIONE
+    # ========================================================
+
+    if current_quote is not None:
+
+        st.markdown(
+            '<div class="section-title">💰 Quotazione attuale</div>',
+            unsafe_allow_html=True,
+        )
+
+        q1, q2, q3, q4 = st.columns(4)
+
+        q1.metric(
+            "Quotazione",
+            current_quote.get("quotazione_attuale", "-")
+        )
+
+        q2.metric(
+            "FVM",
+            current_quote.get("fvm", "-")
+        )
+
+        q3.metric(
+            "Ruolo",
+            current_quote.get("ruolo", "-")
+        )
+
+        q4.metric(
+            "Squadra",
+            current_quote.get("squadra", "-")
+        )
+
+    # ========================================================
+    # DATI GREZZI
+    # ========================================================
+
+    with st.expander("📄 Visualizza statistiche storiche complete"):
+
+        st.dataframe(
+            p_stats,
+            use_container_width=True,
+            hide_index=True,
+        )
+
+        csv = p_stats.to_csv(
+            index=False
+        ).encode("utf-8")
+
         st.download_button(
-            "⬇️ Scarica storico completo (CSV)",
+            "⬇️ Scarica CSV",
             data=csv,
             file_name=f"{nome}_storico.csv",
             mime="text/csv",
@@ -206,157 +679,232 @@ def render_player_detail(player_id, df, quot, df_filtered, sidebar_seasons):
 
 
 # ============================================================
-# APP
+# CARICAMENTO
 # ============================================================
 
-st.title("⚽ Dashboard Analitica Voti & Fantavoti Serie A")
-
 try:
+
     df = load_stats()
     quot = load_quotazioni()
+
 except Exception as e:
-    st.error(f"Errore nel caricamento dei dati da Supabase: {e}")
+
+    st.error(
+        f"Errore nel caricamento dei dati da Supabase: {e}"
+    )
+
     st.stop()
 
-if df.empty:
-    st.warning("Nessun dato presente in player_stats_history. Esegui prima lo script di ingestion.")
+
+if quot.empty:
+
+    st.warning(
+        "La tabella giocatori_quotazioni è vuota."
+    )
+
     st.stop()
 
-# Sidebar filtri globali (validi per tutte le tab)
-st.sidebar.header("🎯 Filtri Globali")
-all_seasons = sorted(df["stagione"].unique())
-selected_season = st.sidebar.multiselect(
-    "Stagione", options=all_seasons, default=all_seasons[-1:]
+
+# ============================================================
+# NORMALIZZAZIONE
+# ============================================================
+
+quot["player_id"] = pd.to_numeric(
+    quot["player_id"],
+    errors="coerce"
 )
-selected_role = st.sidebar.multiselect(
-    "Ruolo", options=["P", "D", "C", "A"], default=["P", "D", "C", "A"]
+
+df["player_id"] = pd.to_numeric(
+    df["player_id"],
+    errors="coerce"
 )
 
-df_filtered = df[
-    (df["stagione"].isin(selected_season)) & (df["ruolo"].isin(selected_role))
-]
 
-tab0, tab1, tab2, tab3 = st.tabs([
-    "📇 Rosa & Quotazioni",
-    "👤 Profilo Singolo Giocatore",
-    "⚔️ Confronto Giocatori",
-    "🛡️ Analisi Squadre",
-])
+# ============================================================
+# ROSA ATTUALE
+# ============================================================
 
-# ------------------------------------------------------------
-# TAB 0: ROSA & QUOTAZIONI (nuovo)
-# ------------------------------------------------------------
-with tab0:
-    st.subheader("Rosa quotata")
+if "stagione" in quot.columns:
 
-    if quot.empty:
-        st.warning(
-            "Nessun dato in giocatori_quotazioni. Esegui prima "
-            "fantacalcio_quotazioni_load.py per la stagione desiderata."
-        )
+    seasons = quot["stagione"].dropna().unique()
+
+    if len(seasons) > 1:
+
+        try:
+            latest_season = sorted(
+                seasons,
+                key=lambda x: str(x)
+            )[-1]
+
+            current_quot = quot[
+                quot["stagione"] == latest_season
+            ].copy()
+
+        except Exception:
+
+            current_quot = quot.copy()
+
     else:
-        col_list, col_detail = st.columns([1, 2])
 
-        with col_list:
-            quot_seasons = sorted(quot["stagione"].unique())
-            quot_season_sel = st.multiselect(
-                "Stagione quotazioni", options=quot_seasons,
-                default=quot_seasons[-1:], key="quot_season",
-            )
-            quot_role_sel = st.multiselect(
-                "Ruolo", options=["P", "D", "C", "A"],
-                default=["P", "D", "C", "A"], key="quot_role",
-            )
-            show_ceduti = st.checkbox("Includi giocatori ceduti", value=False)
+        current_quot = quot.copy()
 
-            quot_view = quot[
-                quot["stagione"].isin(quot_season_sel)
-                & quot["ruolo"].isin(quot_role_sel)
+else:
+
+    current_quot = quot.copy()
+
+
+# ============================================================
+# HEADER APP
+# ============================================================
+
+st.title("⚽ FantaAI")
+
+st.markdown(
+    """
+    ### Analisi dei giocatori della rosa attuale
+
+    Seleziona un ruolo e un giocatore per visualizzare
+    **quotazione attuale, FVM e rendimento storico completo**.
+    """
+)
+
+
+# ============================================================
+# FILTRO RUOLO
+# ============================================================
+
+role_col, info_col = st.columns([1, 3])
+
+with role_col:
+
+    selected_role = st.selectbox(
+        "Filtra per ruolo",
+        options=[
+            "Tutti",
+            "P",
+            "D",
+            "C",
+            "A",
+        ],
+    )
+
+
+with info_col:
+
+    st.markdown(
+        f"""
+        **Rosa attuale:** {len(current_quot)} giocatori
+        """
+    )
+
+
+# ============================================================
+# FILTRO ROSA
+# ============================================================
+
+quot_view = current_quot.copy()
+
+if selected_role != "Tutti":
+
+    quot_view = quot_view[
+        quot_view["ruolo"] == selected_role
+    ]
+
+
+quot_view = quot_view.sort_values(
+    "nome"
+)
+
+
+# ============================================================
+# LAYOUT PRINCIPALE
+# ============================================================
+
+col_players, col_detail = st.columns(
+    [1, 3.2],
+    gap="large"
+)
+
+
+# ============================================================
+# LISTA GIOCATORI
+# ============================================================
+
+with col_players:
+
+    st.markdown("### 👥 Giocatori")
+
+    st.caption(
+        f"{len(quot_view)} giocatori disponibili"
+    )
+
+    if quot_view.empty:
+
+        st.info(
+            "Nessun giocatore trovato per questo ruolo."
+        )
+
+        selected_id = None
+
+    else:
+
+        options_df = (
+            quot_view[
+                [
+                    "player_id",
+                    "nome",
+                    "squadra",
+                    "ruolo",
+                    "quotazione_attuale",
+                ]
             ]
-            if not show_ceduti:
-                quot_view = quot_view[~quot_view["ceduto"]]
-
-            quot_view = quot_view.sort_values("nome")
-            st.caption(f"{len(quot_view)} giocatori")
-
-            options_df = quot_view[["player_id", "nome", "squadra"]].drop_duplicates(
+            .drop_duplicates(
                 subset="player_id"
             )
+        )
 
-            if options_df.empty:
-                st.info("Nessun giocatore con questi filtri.")
-                selected_id = None
-            else:
-                labels = [
-                    f"{row.nome} ({row.squadra})" for row in options_df.itertuples()
-                ]
-                label_to_id = dict(zip(labels, options_df["player_id"]))
-                selected_label = st.radio(
-                    "Seleziona giocatore", options=labels,
-                    label_visibility="collapsed",
-                )
-                selected_id = label_to_id[selected_label]
+        labels = []
 
-        with col_detail:
-            if selected_id is None:
-                st.info("Seleziona un giocatore dalla lista a sinistra.")
-            else:
-                render_player_detail(
-                    selected_id, df, quot, df_filtered, selected_season
-                )
+        for row in options_df.itertuples():
 
-# ------------------------------------------------------------
-# TAB 1: PROFILO GIOCATORE (esistente, invariato)
-# ------------------------------------------------------------
-with tab1:
-    player_list = sorted(df_filtered["nome"].unique())
-    selected_player = st.selectbox("Seleziona Calciatore", options=player_list)
+            labels.append(
+                f"{row.nome}  •  {row.squadra}"
+            )
 
-    p_df = df_filtered[df_filtered["nome"] == selected_player].sort_values(by=["stagione", "giornata"])
+        label_to_id = dict(
+            zip(
+                labels,
+                options_df["player_id"]
+            )
+        )
 
-    col1, col2, col3, col4 = st.columns(4)
-    col1.metric("Media Voto", round(p_df["voto"].mean(), 2))
-    col2.metric("Media FantaVoto", round(p_df["fanta_voto"].mean(), 2))
-    col3.metric("Gol Fatti Totali", int(p_df["gf"].sum()))
-    col4.metric("Assist Totali", int(p_df["ass"].sum()))
+        selected_label = st.radio(
+            "Seleziona giocatore",
+            options=labels,
+            label_visibility="collapsed",
+        )
 
-    fig = px.line(p_df, x="giornata", y=["voto", "fanta_voto"], color="stagione",
-                  title=f"Andamento Voti per {selected_player}", markers=True)
-    st.plotly_chart(fig, use_container_width=True)
+        selected_id = label_to_id[
+            selected_label
+        ]
 
-# ------------------------------------------------------------
-# TAB 2: CONFRONTO GIOCATORI (esistente, invariato)
-# ------------------------------------------------------------
-with tab2:
-    st.subheader("Confronta fino a 4 Giocatori")
-    comp_players = st.multiselect("Scegli Giocatori da Confrontare", options=sorted(df_filtered["nome"].unique()), max_selections=4)
 
-    if comp_players:
-        c_df = df_filtered[df_filtered["nome"].isin(comp_players)]
-        summary = c_df.groupby("nome").agg(
-            Partite=('voto', 'count'),
-            Media_Voto=('voto', 'mean'),
-            Media_Fantavoto=('fanta_voto', 'mean'),
-            Gol=('gf', 'sum'),
-            Assist=('ass', 'sum'),
-            Ammonizioni=('amm', 'sum')
-        ).reset_index()
+# ============================================================
+# DETTAGLIO
+# ============================================================
 
-        st.dataframe(summary.style.highlight_max(axis=0, color='lightgreen'))
+with col_detail:
 
-        fig_bar = px.bar(c_df, x="nome", y="fanta_voto", color="nome", barmode="group", title="Distribuzione FantaVoti")
-        st.plotly_chart(fig_bar, use_container_width=True)
+    if selected_id is None:
 
-# ------------------------------------------------------------
-# TAB 3: ANALISI SQUADRE (esistente, invariato)
-# ------------------------------------------------------------
-with tab3:
-    st.subheader("Rendimento Medio per Squadra e Ruolo")
-    team_summary = df_filtered.groupby(["squadra", "ruolo"]).agg(
-        Media_Voto=('voto', 'mean'),
-        Media_Fantavoto=('fanta_voto', 'mean')
-    ).reset_index()
+        st.info(
+            "Seleziona un giocatore."
+        )
 
-    fig_heat = px.density_heatmap(team_summary, x="squadra", y="ruolo", z="Media_Fantavoto",
-                                  title="Heatmap Media FantaVoto per Squadra e Ruolo", color_continuous_scale="Viridis")
-    st.plotly_chart(fig_heat, use_container_width=True)
+    else:
+
+        render_player_detail(
+            selected_id,
+            df,
+            quot,
+        )
