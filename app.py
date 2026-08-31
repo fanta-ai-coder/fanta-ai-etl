@@ -1,3 +1,4 @@
+```python
 import os
 
 import pandas as pd
@@ -68,7 +69,6 @@ st.markdown(
 
 @st.cache_resource
 def init_supabase():
-
     return create_client(
         SUPABASE_URL,
         SUPABASE_KEY,
@@ -79,7 +79,7 @@ supabase = init_supabase()
 
 
 # ============================================================
-# CARICAMENTO SUPABASE PAGINATO
+# LETTURA SUPABASE
 # ============================================================
 
 def fetch_all_rows(
@@ -87,11 +87,7 @@ def fetch_all_rows(
     page_size=1000,
 ):
     """
-    Scarica tutte le righe da Supabase.
-
-    Supabase/PostgREST normalmente restituisce al massimo
-    un certo numero di righe per richiesta.
-    Usiamo range() per scaricare tutte le pagine.
+    Scarica tutte le righe della tabella usando paginazione.
     """
 
     rows = []
@@ -156,48 +152,45 @@ def load_quotazioni():
 # NORMALIZZAZIONE PLAYER ID
 # ============================================================
 
-def normalize_player_id_series(series):
+def normalize_player_id(value):
     """
-    Normalizza player_id in modo che valori come:
+    Trasforma:
 
         2155
         "2155"
         2155.0
         "2155.0"
 
-    diventino tutti lo stesso identificativo.
-
-    Restituisce una Series di tipo Int64.
+    nello stesso identificativo intero.
     """
 
-    numeric = pd.to_numeric(
-        series,
-        errors="coerce",
-    )
+    if pd.isna(value):
+        return pd.NA
 
-    return numeric.round().astype("Int64")
+    try:
+        return int(float(str(value).strip()))
+    except Exception:
+        return pd.NA
 
 
-def normalize_dataframe(df):
-
-    if df.empty:
-        return df.copy()
+def normalize_player_ids(df):
 
     result = df.copy()
 
-    if "player_id" in result.columns:
+    if "player_id" not in result.columns:
+        return result
 
-        result["player_id"] = (
-            normalize_player_id_series(
-                result["player_id"]
-            )
-        )
+    result["player_id"] = (
+        result["player_id"]
+        .apply(normalize_player_id)
+        .astype("Int64")
+    )
 
     return result
 
 
 # ============================================================
-# UTILITY NUMERICHE
+# UTILITY
 # ============================================================
 
 def numeric_series(
@@ -206,10 +199,10 @@ def numeric_series(
 ):
 
     if column not in df.columns:
-
         return pd.Series(
             0.0,
             index=df.index,
+            dtype="float64",
         )
 
     return pd.to_numeric(
@@ -268,7 +261,10 @@ def safe_std(
     values = numeric_series(
         df,
         column,
-    )
+    ).dropna()
+
+    if len(values) < 2:
+        return None
 
     value = values.std()
 
@@ -284,14 +280,12 @@ def safe_std(
 
 def season_sort_key(value):
 
+    if pd.isna(value):
+        return -1
+
     value = str(value).strip()
 
     try:
-
-        # Esempi:
-        # 2025/26
-        # 2024/25
-        # 2025
 
         first = value.split("/")[0]
 
@@ -304,10 +298,10 @@ def season_sort_key(value):
 
 def get_latest_season(df):
 
-    if (
-        df.empty
-        or "stagione" not in df.columns
-    ):
+    if df.empty:
+        return None
+
+    if "stagione" not in df.columns:
         return None
 
     seasons = (
@@ -331,7 +325,66 @@ def get_latest_season(df):
 
 
 # ============================================================
-# ULTIMA QUOTAZIONE
+# VALORI QUOTAZIONE
+# ============================================================
+
+def get_quote_value(row):
+
+    """
+    Cerca il valore della quotazione attuale
+    anche se la colonna ha un nome leggermente diverso.
+    """
+
+    possible_columns = [
+        "quotazione_attuale",
+        "quotazione",
+        "quota",
+        "quotazione_corrente",
+    ]
+
+    for column in possible_columns:
+
+        if column in row.index:
+
+            value = row.get(column)
+
+            if pd.notna(value):
+                return value
+
+    return "-"
+
+
+def get_fvm_value(row):
+
+    """
+    Cerca i fantamilioni suggeriti.
+
+    Supporta diversi possibili nomi della colonna.
+    """
+
+    possible_columns = [
+        "fvm",
+        "fantamilioni_suggeriti",
+        "fantamilioni",
+        "fm_suggeriti",
+        "prezzo_suggerito",
+        "offerta_suggerita",
+    ]
+
+    for column in possible_columns:
+
+        if column in row.index:
+
+            value = row.get(column)
+
+            if pd.notna(value):
+                return value
+
+    return "-"
+
+
+# ============================================================
+# ULTIMA QUOTAZIONE DEL GIOCATORE
 # ============================================================
 
 def get_latest_quote_row(
@@ -371,30 +424,15 @@ def get_continuity(
     )
 
     if std is None:
-
-        return (
-            None,
-            "N/D",
-        )
+        return None, "N/D"
 
     if std < 0.60:
-
-        return (
-            std,
-            "🟢 Molto continuo",
-        )
+        return std, "🟢 Molto continuo"
 
     if std < 0.90:
+        return std, "🟡 Abbastanza continuo"
 
-        return (
-            std,
-            "🟡 Abbastanza continuo",
-        )
-
-    return (
-        std,
-        "🔴 Altalenante",
-    )
+    return std, "🔴 Altalenante"
 
 
 # ============================================================
@@ -409,22 +447,16 @@ def build_rolling_data(
     if player_stats.empty:
         return pd.DataFrame()
 
-    required = [
-        "stagione",
-        "giornata",
-    ]
+    if "stagione" not in player_stats.columns:
+        return pd.DataFrame()
 
-    if any(
-        column not in player_stats.columns
-        for column in required
-    ):
-
+    if "giornata" not in player_stats.columns:
         return pd.DataFrame()
 
     result = player_stats.copy()
 
     # --------------------------------------------------------
-    # NORMALIZZA GIORNATA
+    # GIORNATA
     # --------------------------------------------------------
 
     result["giornata"] = pd.to_numeric(
@@ -445,7 +477,7 @@ def build_rolling_data(
     )
 
     # --------------------------------------------------------
-    # NORMALIZZA STAGIONE
+    # STAGIONE
     # --------------------------------------------------------
 
     result["stagione"] = (
@@ -453,10 +485,6 @@ def build_rolling_data(
         .astype(str)
         .str.strip()
     )
-
-    # --------------------------------------------------------
-    # ORDINA
-    # --------------------------------------------------------
 
     result["_season_sort"] = (
         result["stagione"]
@@ -468,10 +496,10 @@ def build_rolling_data(
             "_season_sort",
             "giornata",
         ]
-    )
+    ).copy()
 
     # --------------------------------------------------------
-    # VOTO
+    # MEDIA MOBILE VOTO
     # --------------------------------------------------------
 
     if "voto" in result.columns:
@@ -488,7 +516,8 @@ def build_rolling_data(
                 sort=False,
             )["voto"]
             .transform(
-                lambda x: x.rolling(
+                lambda x:
+                x.rolling(
                     window=window,
                     min_periods=1,
                 ).mean()
@@ -496,7 +525,7 @@ def build_rolling_data(
         )
 
     # --------------------------------------------------------
-    # FANTAVOTO
+    # MEDIA MOBILE FANTAVOTO
     # --------------------------------------------------------
 
     if "fanta_voto" in result.columns:
@@ -513,7 +542,8 @@ def build_rolling_data(
                 sort=False,
             )["fanta_voto"]
             .transform(
-                lambda x: x.rolling(
+                lambda x:
+                x.rolling(
                     window=window,
                     min_periods=1,
                 ).mean()
@@ -521,7 +551,7 @@ def build_rolling_data(
         )
 
     # --------------------------------------------------------
-    # LABEL GRAFICO
+    # LABEL
     # --------------------------------------------------------
 
     result["periodo"] = (
@@ -544,25 +574,25 @@ def render_player_detail(
 ):
 
     # ========================================================
-    # SICUREZZA PLAYER ID
+    # NORMALIZZAZIONE ID
     # ========================================================
 
-    try:
+    player_id = normalize_player_id(
+        player_id
+    )
 
-        player_id = int(
-            float(player_id)
-        )
-
-    except Exception:
+    if pd.isna(player_id):
 
         st.error(
-            f"Player ID non valido: {player_id}"
+            "❌ Player ID non valido."
         )
 
         return
 
+    player_id = int(player_id)
+
     # ========================================================
-    # QUOTAZIONE
+    # QUOTAZIONI
     # ========================================================
 
     p_quotes = quotations[
@@ -582,7 +612,7 @@ def render_player_detail(
     ].copy()
 
     # ========================================================
-    # DIAGNOSTICA PLAYER
+    # DIAGNOSTICA
     # ========================================================
 
     with st.expander(
@@ -608,31 +638,41 @@ def render_player_detail(
                 "✅ Quotazione trovata."
             )
 
-            st.json(
-                {
-                    "player_id": current_quote.get(
-                        "player_id"
-                    ),
-                    "nome": current_quote.get(
-                        "nome"
-                    ),
-                    "stagione": current_quote.get(
-                        "stagione"
-                    ),
-                    "quotazione_attuale": current_quote.get(
-                        "quotazione_attuale"
-                    ),
-                    "fvm": current_quote.get(
-                        "fvm"
-                    ),
-                }
+            st.write(
+                "**Nome:**",
+                current_quote.get(
+                    "nome",
+                    "-"
+                ),
+            )
+
+            st.write(
+                "**Stagione quotazione:**",
+                current_quote.get(
+                    "stagione",
+                    "-"
+                ),
+            )
+
+            st.write(
+                "**Quotazione:**",
+                get_quote_value(
+                    current_quote
+                ),
+            )
+
+            st.write(
+                "**Fantamilioni suggeriti:**",
+                get_fvm_value(
+                    current_quote
+                ),
             )
 
         else:
 
             st.error(
-                "❌ Nessuna quotazione trovata "
-                f"per player_id {player_id}."
+                f"❌ Nessuna quotazione per "
+                f"player_id {player_id}."
             )
 
         if not p_stats.empty:
@@ -641,15 +681,28 @@ def render_player_detail(
                 "✅ Storico trovato."
             )
 
+            if "stagione" in p_stats.columns:
+
+                st.write(
+                    "**Stagioni presenti:**",
+                    sorted(
+                        p_stats["stagione"]
+                        .dropna()
+                        .astype(str)
+                        .unique(),
+                        key=season_sort_key,
+                    ),
+                )
+
         else:
 
             st.error(
-                "❌ Nessuna statistica storica trovata "
-                f"per player_id {player_id}."
+                f"❌ Nessuno storico per "
+                f"player_id {player_id}."
             )
 
     # ========================================================
-    # DATI ANAGRAFICI
+    # ANAGRAFICA
     # ========================================================
 
     if current_quote is not None:
@@ -697,7 +750,7 @@ def render_player_detail(
     # ========================================================
 
     header_left, header_right = st.columns(
-        [3, 1]
+        [3, 1.4]
     )
 
     with header_left:
@@ -719,20 +772,13 @@ def render_player_detail(
 
         if current_quote is not None:
 
-            quota = current_quote.get(
-                "quotazione_attuale",
-                "-",
+            quota = get_quote_value(
+                current_quote
             )
 
-            fvm = current_quote.get(
-                "fvm",
-                "-",
+            fvm = get_fvm_value(
+                current_quote
             )
-
-            # ------------------------------------------------
-            # IMPORTANTE:
-            # niente HTML per i valori.
-            # ------------------------------------------------
 
             q1, q2 = st.columns(2)
 
@@ -763,12 +809,16 @@ def render_player_detail(
 
         ceduto_string = str(
             ceduto
-        ).lower()
+        ).strip().lower()
 
         if (
             ceduto is True
-            or ceduto_string == "true"
-            or ceduto_string == "1"
+            or ceduto_string in [
+                "true",
+                "1",
+                "yes",
+                "si",
+            ]
         ):
 
             st.warning(
@@ -777,14 +827,14 @@ def render_player_detail(
             )
 
     # ========================================================
-    # NESSUN STORICO
+    # NESSUNO STORICO
     # ========================================================
 
     if p_stats.empty:
 
-        st.info(
-            "Non sono presenti statistiche storiche "
-            "per questo giocatore."
+        st.error(
+            "❌ Nessuna statistica storica trovata "
+            f"per player_id {player_id}."
         )
 
         return
@@ -809,7 +859,7 @@ def render_player_detail(
         )
 
     # ========================================================
-    # KPI PRINCIPALI
+    # KPI
     # ========================================================
 
     st.markdown(
@@ -876,14 +926,13 @@ def render_player_detail(
     # CONTINUITÀ
     # --------------------------------------------------------
 
-    std,
-    continuity_label = get_continuity(
+    std, continuity_label = get_continuity(
         p_stats
     )
 
-    # --------------------------------------------------------
-    # KPI
-    # --------------------------------------------------------
+    # ========================================================
+    # KPI PRINCIPALI
+    # ========================================================
 
     k1, k2, k3, k4, k5, k6 = st.columns(6)
 
@@ -917,8 +966,8 @@ def render_player_detail(
                 f"{std:.2f}",
                 help=(
                     "Deviazione standard del voto. "
-                    "Più il valore è basso, più il "
-                    "rendimento è continuo."
+                    "Più è bassa, più il rendimento "
+                    "è continuo."
                 ),
             )
 
@@ -948,12 +997,12 @@ def render_player_detail(
         )
 
     # ========================================================
-    # FORMA - MEDIA MOBILE 5
+    # FORMA
     # ========================================================
 
     st.markdown(
         '<div class="section-title">'
-        '📈 Andamento della forma'
+        '📈 Forma recente'
         '</div>',
         unsafe_allow_html=True,
     )
@@ -966,8 +1015,8 @@ def render_player_detail(
     if rolling_df.empty:
 
         st.info(
-            "Dati insufficienti per calcolare "
-            "la media mobile."
+            "Non ci sono dati sufficienti "
+            "per costruire il grafico."
         )
 
     else:
@@ -975,13 +1024,10 @@ def render_player_detail(
         fig = go.Figure()
 
         # ----------------------------------------------------
-        # MEDIA VOTO
+        # MEDIA MOBILE VOTO
         # ----------------------------------------------------
 
-        if (
-            "media_mobile_voto"
-            in rolling_df.columns
-        ):
+        if "media_mobile_voto" in rolling_df.columns:
 
             fig.add_trace(
                 go.Scatter(
@@ -990,7 +1036,7 @@ def render_player_detail(
                         "media_mobile_voto"
                     ],
                     mode="lines",
-                    name="Media voto — 5 giornate",
+                    name="Media voto",
                     line=dict(
                         width=3
                     ),
@@ -1003,13 +1049,10 @@ def render_player_detail(
             )
 
         # ----------------------------------------------------
-        # FANTAMEDIA
+        # MEDIA MOBILE FANTAVOTO
         # ----------------------------------------------------
 
-        if (
-            "media_mobile_fanta"
-            in rolling_df.columns
-        ):
+        if "media_mobile_fanta" in rolling_df.columns:
 
             fig.add_trace(
                 go.Scatter(
@@ -1018,7 +1061,7 @@ def render_player_detail(
                         "media_mobile_fanta"
                     ],
                     mode="lines",
-                    name="Fantamedia — 5 giornate",
+                    name="Fantamedia",
                     line=dict(
                         width=3
                     ),
@@ -1031,9 +1074,9 @@ def render_player_detail(
             )
 
         fig.update_layout(
-            title="Media mobile a 5 giornate",
+            title="Andamento della forma — media mobile 5 giornate",
             xaxis_title="Stagione / Giornata",
-            yaxis_title="Valutazione",
+            yaxis_title="Media",
             hovermode="x unified",
             height=430,
             margin=dict(
@@ -1069,53 +1112,53 @@ def render_player_detail(
 
     if "stagione" in p_stats.columns:
 
-        grouped = (
-            p_stats
-            .groupby("stagione")
-        )
-
         season_rows = []
 
-        for season, group in grouped:
+        for season, group in p_stats.groupby(
+            "stagione",
+            sort=False,
+        ):
 
-            row = {
-                "stagione": season,
-                "Presenze": (
-                    int(
-                        numeric_series(
-                            group,
-                            "voto",
-                        ).count()
-                    )
-                    if "voto" in group.columns
-                    else 0
-                ),
-                "Media voto": round(
-                    safe_mean(
+            if "voto" in group.columns:
+
+                season_presenze = int(
+                    numeric_series(
                         group,
                         "voto",
-                    ),
-                    2,
-                ),
-                "Fantamedia": round(
-                    safe_mean(
-                        group,
-                        "fanta_voto",
-                    ),
-                    2,
-                ),
-                "Gol": safe_sum(
-                    group,
-                    "gf",
-                ),
-                "Assist": safe_sum(
-                    group,
-                    "ass",
-                ),
-            }
+                    ).count()
+                )
+
+            else:
+
+                season_presenze = 0
 
             season_rows.append(
-                row
+                {
+                    "Stagione": season,
+                    "Presenze": season_presenze,
+                    "Media voto": round(
+                        safe_mean(
+                            group,
+                            "voto",
+                        ),
+                        2,
+                    ),
+                    "Fantamedia": round(
+                        safe_mean(
+                            group,
+                            "fanta_voto",
+                        ),
+                        2,
+                    ),
+                    "Gol": safe_sum(
+                        group,
+                        "gf",
+                    ),
+                    "Assist": safe_sum(
+                        group,
+                        "ass",
+                    ),
+                }
             )
 
         season_agg = pd.DataFrame(
@@ -1125,14 +1168,19 @@ def render_player_detail(
         if not season_agg.empty:
 
             season_agg["_sort"] = (
-                season_agg["stagione"]
+                season_agg["Stagione"]
                 .apply(season_sort_key)
             )
 
             season_agg = (
                 season_agg
-                .sort_values("_sort")
-                .drop(columns="_sort")
+                .sort_values(
+                    "_sort",
+                    ascending=False,
+                )
+                .drop(
+                    columns="_sort"
+                )
             )
 
             st.dataframe(
@@ -1142,12 +1190,12 @@ def render_player_detail(
             )
 
     # ========================================================
-    # BONUS / MALUS SECONDARI
+    # BONUS / MALUS
     # ========================================================
 
     st.markdown(
         '<div class="section-title">'
-        '⚽ Bonus e malus'
+        '⚽ Altri bonus e malus'
         '</div>',
         unsafe_allow_html=True,
     )
@@ -1208,28 +1256,27 @@ def render_player_detail(
             hide_index=True,
         )
 
-        csv = p_stats.to_csv(
-            index=False
-        ).encode("utf-8")
+        csv = (
+            p_stats
+            .to_csv(index=False)
+            .encode("utf-8")
+        )
 
         st.download_button(
             "⬇️ Scarica CSV",
             data=csv,
-            file_name=(
-                f"{nome}_storico.csv"
-            ),
+            file_name=f"{nome}_storico.csv",
             mime="text/csv",
         )
 
 
 # ============================================================
-# CARICAMENTO DATI
+# CARICAMENTO
 # ============================================================
 
 try:
 
     df = load_stats()
-
     quot = load_quotazioni()
 
 except Exception as e:
@@ -1246,13 +1293,14 @@ except Exception as e:
 
 
 # ============================================================
-# CONTROLLO DATI
+# CONTROLLO TABELLE
 # ============================================================
 
 if df.empty:
 
     st.error(
-        "❌ player_stats_history non contiene dati."
+        "❌ La tabella player_stats_history "
+        "non contiene dati."
     )
 
     st.stop()
@@ -1261,7 +1309,8 @@ if df.empty:
 if quot.empty:
 
     st.error(
-        "❌ giocatori_quotazioni non contiene dati."
+        "❌ La tabella giocatori_quotazioni "
+        "non contiene dati."
     )
 
     st.stop()
@@ -1271,24 +1320,24 @@ if quot.empty:
 # NORMALIZZAZIONE
 # ============================================================
 
-df = normalize_dataframe(
+df = normalize_player_ids(
     df
 )
 
-quot = normalize_dataframe(
+quot = normalize_player_ids(
     quot
 )
 
 
 # ============================================================
-# CONTROLLO PLAYER_ID
+# CONTROLLO COLONNE
 # ============================================================
 
 if "player_id" not in df.columns:
 
     st.error(
-        "❌ La tabella player_stats_history "
-        "non contiene la colonna player_id."
+        "❌ player_stats_history non contiene "
+        "la colonna player_id."
     )
 
     st.stop()
@@ -1297,15 +1346,15 @@ if "player_id" not in df.columns:
 if "player_id" not in quot.columns:
 
     st.error(
-        "❌ La tabella giocatori_quotazioni "
-        "non contiene la colonna player_id."
+        "❌ giocatori_quotazioni non contiene "
+        "la colonna player_id."
     )
 
     st.stop()
 
 
 # ============================================================
-# RIMUOVI ID NULL
+# RIMOZIONE ID NULL
 # ============================================================
 
 df = df[
@@ -1323,20 +1372,19 @@ quot = quot[
 
 stats_ids = set(
     df["player_id"]
-    .dropna()
     .astype(int)
     .unique()
 )
 
 quote_ids = set(
     quot["player_id"]
-    .dropna()
     .astype(int)
     .unique()
 )
 
-common_ids = stats_ids.intersection(
-    quote_ids
+common_ids = (
+    stats_ids
+    .intersection(quote_ids)
 )
 
 
@@ -1358,12 +1406,12 @@ with st.expander(
     )
 
     st.write(
-        f"**Player ID distinti storico:** "
+        f"**Player ID distinti nello storico:** "
         f"{len(stats_ids):,}"
     )
 
     st.write(
-        f"**Player ID distinti quotazioni:** "
+        f"**Player ID distinti nelle quotazioni:** "
         f"{len(quote_ids):,}"
     )
 
@@ -1373,26 +1421,60 @@ with st.expander(
     )
 
     # --------------------------------------------------------
-    # CUTRONE
+    # COLONNE
     # --------------------------------------------------------
 
-    cutrone_id = 2155
-
-    cutrone_stats = df[
-        df["player_id"] == cutrone_id
-    ]
-
-    cutrone_quote = quot[
-        quot["player_id"] == cutrone_id
-    ]
-
     st.markdown(
-        "#### Test Cutrone — player_id 2155"
+        "#### Colonne database"
     )
 
     c1, c2 = st.columns(2)
 
     with c1:
+
+        st.write(
+            "**player_stats_history:**"
+        )
+
+        st.code(
+            ", ".join(df.columns)
+        )
+
+    with c2:
+
+        st.write(
+            "**giocatori_quotazioni:**"
+        )
+
+        st.code(
+            ", ".join(quot.columns)
+        )
+
+    # --------------------------------------------------------
+    # TEST CUTRONE
+    # --------------------------------------------------------
+
+    st.markdown(
+        "#### Test Cutrone — player_id 2155"
+    )
+
+    cutrone_id = 2155
+
+    cutrone_stats = df[
+        df["player_id"] == cutrone_id
+    ].copy()
+
+    cutrone_quote = quot[
+        quot["player_id"] == cutrone_id
+    ].copy()
+
+    c1, c2 = st.columns(2)
+
+    with c1:
+
+        st.write(
+            "### Storico"
+        )
 
         if cutrone_stats.empty:
 
@@ -1403,27 +1485,36 @@ with st.expander(
         else:
 
             st.success(
-                f"✅ Cutrone trovato nello storico: "
+                f"✅ Trovato: "
                 f"{len(cutrone_stats)} righe"
             )
 
-            st.write(
-                cutrone_stats[
-                    [
-                        column
-                        for column in [
-                            "player_id",
-                            "nome",
-                            "stagione",
-                            "giornata",
-                        ]
-                        if column
-                        in cutrone_stats.columns
-                    ]
-                ].head(10)
+            columns = [
+                "player_id",
+                "nome",
+                "stagione",
+                "giornata",
+                "voto",
+                "fanta_voto",
+            ]
+
+            columns = [
+                c
+                for c in columns
+                if c in cutrone_stats.columns
+            ]
+
+            st.dataframe(
+                cutrone_stats[columns].head(20),
+                use_container_width=True,
+                hide_index=True,
             )
 
     with c2:
+
+        st.write(
+            "### Quotazione"
+        )
 
         if cutrone_quote.empty:
 
@@ -1434,25 +1525,29 @@ with st.expander(
         else:
 
             st.success(
-                f"✅ Cutrone trovato nelle quotazioni: "
+                f"✅ Trovato: "
                 f"{len(cutrone_quote)} righe"
             )
 
-            st.write(
-                cutrone_quote[
-                    [
-                        column
-                        for column in [
-                            "player_id",
-                            "nome",
-                            "stagione",
-                            "quotazione_attuale",
-                            "fvm",
-                        ]
-                        if column
-                        in cutrone_quote.columns
-                    ]
-                ].head(10)
+            columns = [
+                "player_id",
+                "nome",
+                "stagione",
+                "quotazione_attuale",
+                "fvm",
+                "fantamilioni_suggeriti",
+            ]
+
+            columns = [
+                c
+                for c in columns
+                if c in cutrone_quote.columns
+            ]
+
+            st.dataframe(
+                cutrone_quote[columns].head(20),
+                use_container_width=True,
+                hide_index=True,
             )
 
 
@@ -1463,7 +1558,6 @@ with st.expander(
 latest_season = get_latest_season(
     quot
 )
-
 
 if latest_season is not None:
 
@@ -1527,16 +1621,16 @@ with role_col:
         ],
     )
 
-
 with info_col:
 
     st.markdown(
-        f"**Rosa attuale:** {len(current_quot)} giocatori"
+        f"**Rosa attuale:** "
+        f"{len(current_quot)} giocatori"
     )
 
 
 # ============================================================
-# FILTRO
+# FILTRO ROSA
 # ============================================================
 
 quot_view = current_quot.copy()
@@ -1551,6 +1645,10 @@ if (
         == selected_role
     ]
 
+
+# ============================================================
+# ORDINAMENTO
+# ============================================================
 
 if "nome" in quot_view.columns:
 
@@ -1586,8 +1684,9 @@ with col_players:
 
     if quot_view.empty:
 
-        st.info(
-            "Nessun giocatore trovato."
+        st.warning(
+            "⚠️ Nessun giocatore trovato "
+            "nella stagione corrente."
         )
 
         selected_id = None
@@ -1595,7 +1694,7 @@ with col_players:
     else:
 
         # ----------------------------------------------------
-        # Teniamo una sola riga per player_id.
+        # Una sola riga per player_id
         # ----------------------------------------------------
 
         options_df = (
@@ -1609,24 +1708,21 @@ with col_players:
         labels = []
         ids = []
 
-        for row in options_df.itertuples():
+        for _, row in options_df.iterrows():
 
-            nome = getattr(
-                row,
+            nome = row.get(
                 "nome",
                 "Giocatore",
             )
 
-            squadra = getattr(
-                row,
+            squadra = row.get(
                 "squadra",
                 "-",
             )
 
-            player_id = getattr(
-                row,
-                "player_id",
-            )
+            player_id = row[
+                "player_id"
+            ]
 
             labels.append(
                 f"{nome} • {squadra}"
@@ -1673,3 +1769,4 @@ with col_detail:
             df,
             quot,
         )
+```
