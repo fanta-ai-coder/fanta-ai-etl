@@ -1,4 +1,3 @@
-```python
 import os
 
 import pandas as pd
@@ -1769,4 +1768,3 @@ with col_detail:
             df,
             quot,
         )
-```
