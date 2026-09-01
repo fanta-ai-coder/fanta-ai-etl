@@ -77,29 +77,197 @@ def normalize_player_id_series(series):
     numeric = pd.to_numeric(series, errors="coerce")
     return numeric.round().astype("Int64")
 
-
 def normalize_dataframe(df):
     if df.empty:
         return df.copy()
-
     result = df.copy()
-
     if "player_id" in result.columns:
         result["player_id"] = normalize_player_id_series(result["player_id"])
-
     return result
 
+def numeric_series(df, column):
+    if column not in df.columns:
+        return pd.Series(float("nan"), index=df.index, dtype="float64")
+    return pd.to_numeric(df[column], errors="coerce")
 
-# ============================================================
-# FUNZIONI DI UTILITÀ (simili al tuo originale)
-# ... [Mantieni le funzioni: numeric_series, safe_sum, safe_mean, safe_variance,
-# remove_starred_vote_rows, calculate_fantavoto, calculate_bonus_malus,
-# get_continuity, build_rolling_data, calculate_relative_metrics, get_latest_quote_row, season_sort_key, get_latest_season]
-# Copia esattamente come nel tuo codice originale per brevità qui
-# ============================================================
+def safe_sum(df, column):
+    if column not in df.columns:
+        return 0.0
+    values = numeric_series(df, column).fillna(0)
+    return float(values.sum())
 
-# Per brevità qui suppongo che tu inserisca tutte le funzioni originali di utilità esattamente come sono
+def safe_mean(df, column):
+    if column not in df.columns:
+        return 0.0
+    values = numeric_series(df, column).dropna()
+    if values.empty:
+        return 0.0
+    return float(values.mean())
 
+def safe_variance(df, column):
+    if column not in df.columns:
+        return None
+    values = numeric_series(df, column).dropna()
+    if len(values) < 2:
+        return None
+    value = values.var(ddof=1)
+    if pd.isna(value):
+        return None
+    return float(value)
+
+def format_number(value, decimals=2):
+    if value is None or pd.isna(value):
+        return "N/D"
+    return f"{value:.{decimals}f}"
+
+def remove_starred_vote_rows(df):
+    if df.empty or "voto" not in df.columns:
+        return df.copy()
+    result = df.copy()
+    raw_vote = result["voto"].astype(str).str.strip()
+    starred = raw_vote.str.contains(r"\*", regex=True, na=False)
+    if starred.any():
+        result = result.loc[~starred].copy()
+    return result
+
+def calculate_fantavoto(df):
+    result = df.copy()
+    if "voto" not in result.columns:
+        result["fanta_voto_calcolato"] = float("nan")
+        return result
+
+    voto = numeric_series(result, "voto").fillna(0)
+    gf = numeric_series(result, "gf").fillna(0)
+    ass = numeric_series(result, "ass").fillna(0)
+    rf = numeric_series(result, "rf").fillna(0)
+    au = numeric_series(result, "au").fillna(0)
+    esp = numeric_series(result, "esp").fillna(0)
+    amm = numeric_series(result, "amm").fillna(0)
+
+    clean_sheet = pd.Series(0.0, index=result.index)
+    penalty_saved = pd.Series(0.0, index=result.index)
+
+    for column in ["pi", "porta_inviolata", "clean_sheet", "imbattuto"]:
+        if column in result.columns:
+            clean_sheet = numeric_series(result, column).fillna(0)
+            break
+
+    for column in ["rp", "rigori_parati", "rigore_parato"]:
+        if column in result.columns:
+            penalty_saved = numeric_series(result, column).fillna(0)
+            break
+
+    if "ruolo" in result.columns:
+        is_goalkeeper = result["ruolo"].astype(str).str.strip().str.upper().eq("P")
+        clean_sheet = clean_sheet.where(is_goalkeeper, 0)
+
+    result["fanta_voto_calcolato"] = (
+        voto
+        + gf * 3
+        + ass
+        + rf * 3
+        - au * 2
+        - esp
+        - amm * 0.5
+        + clean_sheet
+        + penalty_saved * 3
+    )
+
+    result.loc[numeric_series(result, "voto").isna(), "fanta_voto_calcolato"] = float("nan")
+    return result
+
+def calculate_bonus_malus(df):
+    result = calculate_fantavoto(df)
+    result["bonus_malus"] = result["fanta_voto_calcolato"] - numeric_series(result, "voto")
+    return result
+
+def get_continuity(player_stats):
+    std = numeric_series(player_stats, "voto").dropna().std()
+    if pd.isna(std):
+        return None, "N/D"
+    if std < 0.60:
+        return float(std), "🟢 Molto continuo"
+    if std < 0.90:
+        return float(std), "🟡 Abbastanza continuo"
+    return float(std), "🔴 Altalenante"
+
+def season_sort_key(value):
+    value = str(value).strip()
+    try:
+        return int(value.split("/")[0])
+    except Exception:
+        return -1
+
+def get_latest_season(df):
+    if df.empty or "stagione" not in df.columns:
+        return None
+    seasons = df["stagione"].dropna().astype(str).str.strip()
+    seasons = seasons[seasons != ""]
+    if seasons.empty:
+        return None
+    return max(seasons.unique(), key=season_sort_key)
+
+def get_latest_quote_row(player_quotes):
+    if player_quotes.empty:
+        return None
+    result = player_quotes.copy()
+    if "stagione" in result.columns:
+        result["_season_sort"] = result["stagione"].apply(season_sort_key)
+        result = result.sort_values("_season_sort")
+    return result.iloc[-1]
+
+def build_rolling_data(player_stats, window=5):
+    if player_stats.empty:
+        return pd.DataFrame()
+    required = ["stagione", "giornata"]
+    if any(column not in player_stats.columns for column in required):
+        return pd.DataFrame()
+    result = player_stats.copy()
+    result["giornata"] = pd.to_numeric(result["giornata"], errors="coerce")
+    result = result[result["giornata"].notna()].copy()
+    if result.empty:
+        return pd.DataFrame()
+    result["giornata"] = result["giornata"].astype(int)
+    result["stagione"] = result["stagione"].astype(str).str.strip()
+    result["_season_sort"] = result["stagione"].apply(season_sort_key)
+    result = result.sort_values(["_season_sort", "giornata"]).reset_index(drop=True)
+    result = calculate_fantavoto(result)
+    if "voto" in result.columns:
+        result["voto"] = pd.to_numeric(result["voto"], errors="coerce")
+        result["media_mobile_voto"] = result.groupby("stagione", sort=False)["voto"].transform(lambda x: x.rolling(window=window, min_periods=1).mean())
+    result["media_mobile_fanta"] = result.groupby("stagione", sort=False)["fanta_voto_calcolato"].transform(lambda x: x.rolling(window=window, min_periods=1).mean())
+    result["periodo"] = result["stagione"] + " • G" + result["giornata"].astype(str)
+    return result
+
+def calculate_relative_metrics(p_stats):
+    seasons = 0
+    if "stagione" in p_stats.columns:
+        seasons = p_stats["stagione"].dropna().astype(str).str.strip().nunique()
+    if seasons <= 0:
+        return {
+            "stagioni": 0,
+            "presenze_medie": 0.0,
+            "presenza_pct": 0.0,
+            "gol_stagione": 0.0,
+            "gol_38": 0.0,
+            "assist_stagione": 0.0,
+            "assist_38": 0.0,
+        }
+    presenze_totali = numeric_series(p_stats, "voto").count()
+    gol_totali = safe_sum(p_stats, "gf")
+    assist_totali = safe_sum(p_stats, "ass")
+    presenze_medie = presenze_totali / seasons
+    gol_stagione = gol_totali / seasons
+    assist_stagione = assist_totali / seasons
+    return {
+        "stagioni": seasons,
+        "presenze_medie": presenze_medie,
+        "presenza_pct": (presenze_medie / 38) * 100,
+        "gol_stagione": gol_stagione,
+        "gol_38": gol_stagione,
+        "assist_stagione": assist_stagione,
+        "assist_38": assist_stagione,
+    }
 
 
 # ============================================================
@@ -149,8 +317,8 @@ def render_player_detail(player_id, stats, quotations):
 
     with st.expander("🔎 Diagnostica giocatore", expanded=False):
         st.write(f"**Player ID:** `{player_id}`")
-        st.write(f"**Righe quotazioni:** `{len(p_quotes)}`")
-        st.write(f"**Righe storico:** `{len(p_stats)}`")
+        st.write(f"**Righe quotazioni:** {len(p_quotes):,}")
+        st.write(f"**Righe storico:** {len(p_stats):,}")
 
         if current_quote is not None:
             st.success("✅ Quotazione trovata.")
@@ -194,7 +362,6 @@ def render_player_detail(player_id, stats, quotations):
             quota = current_quote.get("quotazione_attuale", "-")
             fvm = current_quote.get("fvm", "-")
 
-            # Normalizza valori in int o "-"
             try:
                 quota_val = int(float(quota))
             except:
@@ -206,7 +373,6 @@ def render_player_detail(player_id, stats, quotations):
 
             render_quote_card_with_elements(quota_val, fvm_val)
 
-    # Mostra alert se ceduto
     if current_quote is not None:
         ceduto = current_quote.get("ceduto", False)
         ceduto_string = str(ceduto).lower()
@@ -404,4 +570,72 @@ quote_ids = set(quot["player_id"].dropna().astype(int).unique())
 common_ids = stats_ids.intersection(quote_ids)
 
 with st.expander("🔎 Diagnostica database", expanded=False):
-    st.write(f"**Righe storico valide:** {
+    st.write(f"**Righe storico valide:** {len(df):,}")
+    st.write(f"**Righe quotazioni:** {len(quot):,}")
+    st.write(f"**Player ID distinti storico:** {len(stats_ids):,}")
+    st.write(f"**Player ID distinti quotazioni:** {len(quote_ids):,}")
+    st.write(f"**Player ID presenti in entrambe:** {len(common_ids):,}")
+
+latest_season = get_latest_season(quot)
+if latest_season is not None:
+    current_quot = quot[quot["stagione"].astype(str).str.strip() == str(latest_season).strip()].copy()
+else:
+    current_quot = quot.copy()
+
+st.title("⚽ FantaAI")
+
+if latest_season:
+    st.markdown(f"### Analisi dei giocatori della rosa attuale\n\nQuotazioni stagione **{latest_season}**")
+else:
+    st.markdown("### Analisi dei giocatori della rosa attuale")
+
+role_col, info_col = st.columns([1, 3])
+
+with role_col:
+    selected_role = st.selectbox("Filtra per ruolo", ["Tutti", "P", "D", "C", "A"])
+
+with info_col:
+    st.markdown(f"**Rosa attuale:** {len(current_quot)} giocatori")
+
+quot_view = current_quot.copy()
+if selected_role != "Tutti" and "ruolo" in quot_view.columns:
+    quot_view = quot_view[quot_view["ruolo"].astype(str).str.upper().str.strip() == selected_role]
+
+if "nome" in quot_view.columns:
+    quot_view = quot_view.sort_values("nome", na_position="last")
+
+col_players, col_detail = st.columns([1, 3.2], gap="large")
+
+with col_players:
+    st.markdown("### 👥 Giocatori")
+    st.caption(f"{len(quot_view)} giocatori disponibili")
+
+    if quot_view.empty:
+        st.info("Nessun giocatore trovato.")
+        selected_id = None
+    else:
+        options_df = quot_view.drop_duplicates(subset="player_id").copy()
+        labels = []
+        ids = []
+        for row in options_df.itertuples():
+            nome_row = getattr(row, "nome", "Giocatore")
+            squadra_row = getattr(row, "squadra", "-")
+            player_id_row = getattr(row, "player_id")
+            label = f"{nome_row} • {squadra_row}"
+            if label in labels:
+                label = f"{label} • ID {int(player_id_row)}"
+            labels.append(label)
+            ids.append(int(player_id_row))
+
+        label_to_id = dict(zip(labels, ids))
+
+        with st.container(height=640, border=True):
+            selected_label = st.radio("Seleziona giocatore", options=labels, label_visibility="collapsed")
+
+        selected_id = label_to_id[selected_label]
+
+with col_detail:
+    if selected_id is None:
+        st.info("Seleziona un giocatore.")
+    else:
+        render_player_detail(selected_id, df, quot)
