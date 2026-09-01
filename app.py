@@ -661,82 +661,62 @@ if "nome" in quot_view.columns:
     quot_view = quot_view.sort_values("nome", na_position="last")
 
 # Main 2-Column Layout
-col_players, col_detail = st.columns([1.1, 2.9], gap="medium")
+col_players, col_detail = st.columns([1.15, 2.85], gap="medium")
 
 with col_players:
-    st.markdown(f'<div style="font-size:0.85rem; font-weight:700; color:#94A3B8; margin-bottom:8px;">SELEZIONE GIOCATORE ({len(quot_view)})</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="font-size:0.85rem; font-weight:700; color:#94A3B8; margin-bottom:8px;">LISTA GIOCATORI ({len(quot_view)})</div>', unsafe_allow_html=True)
     
     if quot_view.empty:
         st.info("Nessun giocatore trovato con questi filtri.")
         selected_id = None
     else:
         options_df = quot_view.drop_duplicates(subset="player_id").copy()
-        labels, ids = [], []
-        for row in options_df.itertuples():
-            n = getattr(row, "nome", "Giocatore")
-            s = getattr(row, "squadra", "-")
-            r = getattr(row, "ruolo", "-")
-            pid = getattr(row, "player_id")
-            lbl = f"[{r}] {n} ({s})"
-            if lbl in labels:
-                lbl = f"{lbl} #{int(pid)}"
-            labels.append(lbl)
-            ids.append(int(pid))
         
-        label_to_id = dict(zip(labels, ids))
+        # Prepara la tabella interattiva
+        display_df = options_df[["ruolo", "nome", "squadra", "quotazione_attuale", "fvm", "player_id"]].copy()
+        display_df["ruolo"] = display_df["ruolo"].astype(str).str.upper().str.strip()
+        display_df["quotazione_attuale"] = pd.to_numeric(display_df["quotazione_attuale"], errors="coerce").fillna(0).astype(int)
+        display_df["fvm"] = pd.to_numeric(display_df["fvm"], errors="coerce").fillna(0).astype(int)
         
-        # Selectbox con ricerca integrata: NON causa salti di scroll della pagina
-        selected_label = st.selectbox(
-            "Cerca e seleziona giocatore",
-            options=labels,
-            index=0,
-            label_visibility="collapsed",
-            help="Digita il nome o la squadra per trovare subito il giocatore"
-        )
-        selected_id = label_to_id.get(selected_label)
+        display_df.rename(columns={
+            "ruolo": "R",
+            "nome": "Giocatore",
+            "squadra": "Squadra",
+            "quotazione_attuale": "Qt",
+            "fvm": "FVM"
+        }, inplace=True)
 
-        # Quick Player Info Card nella colonna sinistra
-        if selected_id is not None:
-            sel_row = options_df[options_df["player_id"] == selected_id]
-            if not sel_row.empty:
-                r_val = str(sel_row.iloc[0].get("ruolo", "-")).upper().strip()
-                s_val = sel_row.iloc[0].get("squadra", "-")
-                q_val = sel_row.iloc[0].get("quotazione_attuale", "-")
-                fvm_val = sel_row.iloc[0].get("fvm", "-")
-                r_meta = ROLE_COLORS.get(r_val, {"bg": "#374151", "text": "#E5E7EB", "border": "#4B5563", "label": r_val})
-                
-                st.markdown(
-                    f"""
-                    <div style="
-                        background: #111827;
-                        border: 1px solid rgba(255,255,255,0.08);
-                        border-radius: 12px;
-                        padding: 16px;
-                        margin-top: 14px;
-                    ">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                            <span style="background:{r_meta['bg']}; color:{r_meta['text']}; border:1px solid {r_meta['border']}; padding:2px 8px; border-radius:6px; font-size:0.75rem; font-weight:700;">
-                                {r_val} — {r_meta['label']}
-                            </span>
-                            <span style="color:#94A3B8; font-size:0.8rem; font-weight:600;">{html.escape(str(s_val))}</span>
-                        </div>
-                        <div style="display:flex; justify-content:space-between; margin-top:12px; border-top:1px solid rgba(255,255,255,0.06); padding-top:10px;">
-                            <div>
-                                <div style="color:#64748B; font-size:0.7rem; text-transform:uppercase;">Quotazione</div>
-                                <div style="color:#F8FAFC; font-weight:700; font-size:1.1rem;">{q_val} FM</div>
-                            </div>
-                            <div style="text-align:right;">
-                                <div style="color:#64748B; font-size:0.7rem; text-transform:uppercase;">FVM</div>
-                                <div style="color:#10B981; font-weight:700; font-size:1.1rem;">{fvm_val} FM</div>
-                            </div>
-                        </div>
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
+        # Tabella Interattiva: Scrollabile, Navigabile con Freccette (↑ / ↓), Zero Scroll Jump
+        event = st.dataframe(
+            display_df[["R", "Giocatore", "Squadra", "Qt", "FVM"]],
+            use_container_width=True,
+            hide_index=True,
+            height=620,
+            on_select="rerun",
+            selection_mode="single-row",
+            column_config={
+                "R": st.column_config.TextColumn("R", width="small"),
+                "Giocatore": st.column_config.TextColumn("Giocatore", width="medium"),
+                "Squadra": st.column_config.TextColumn("Squadra", width="small"),
+                "Qt": st.column_config.NumberColumn("Qt", format="%d FM", width="small"),
+                "FVM": st.column_config.NumberColumn("FVM", format="%d FM", width="small"),
+            }
+        )
+
+        selected_rows = event.selection.rows if (event and hasattr(event, "selection") and event.selection) else []
+        
+        if selected_rows:
+            selected_idx = selected_rows[0]
+            selected_id = int(options_df.iloc[selected_idx]["player_id"])
+            st.session_state["active_player_id"] = selected_id
+        elif "active_player_id" in st.session_state and st.session_state["active_player_id"] in options_df["player_id"].values:
+            selected_id = int(st.session_state["active_player_id"])
+        else:
+            selected_id = int(options_df.iloc[0]["player_id"])
+            st.session_state["active_player_id"] = selected_id
 
 with col_detail:
     if selected_id is None:
-        st.info("👈 Seleziona un giocatore dal menu a sinistra per visualizzare la scheda analitica.")
+        st.info("👈 Seleziona un giocatore dalla lista a sinistra per visualizzare la scheda analitica.")
     else:
         render_player_detail(selected_id, df, quot)
