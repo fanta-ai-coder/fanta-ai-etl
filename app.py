@@ -49,70 +49,7 @@ st.markdown(
         background: #10B981;
     }
 
-    /* ===================================================
-       LISTA GIOCATORI: COLONNA SINGOLA E TESTO AD ALTO CONTRASTO
-       =================================================== */
-    [data-testid="stRadio"] div[role="radiogroup"],
-    [data-testid="stRadio"] > div {
-        display: flex !important;
-        flex-direction: column !important; /* Forza una sola colonna verticale */
-        flex-wrap: nowrap !important;
-        width: 100% !important;
-        max-height: 580px !important;       /* Altezza fissa con scroll */
-        overflow-y: auto !important;        /* Scorrimento solo verticale */
-        overflow-x: hidden !important;      /* Niente scorrimento orizzontale */
-        background-color: #0F172A !important;
-        border: 1px solid rgba(255, 255, 255, 0.08) !important;
-        border-radius: 12px !important;
-        padding: 8px !important;
-        gap: 6px !important;
-    }
-
-    /* Card di ogni giocatore */
-    [data-testid="stRadio"] label {
-        display: flex !important;
-        align-items: center !important;
-        width: 100% !important;
-        background-color: #1E293B !important;
-        border: 1px solid rgba(255, 255, 255, 0.06) !important;
-        border-radius: 8px !important;
-        padding: 10px 14px !important;
-        margin: 0 !important;
-        cursor: pointer !important;
-        transition: all 0.15s ease !important;
-        min-height: 44px !important; /* Touch target conforme HIG/WCAG */
-    }
-
-    [data-testid="stRadio"] label:hover {
-        background-color: #334155 !important;
-        border-color: rgba(16, 185, 129, 0.4) !important;
-    }
-
-    /* Testo del nome: BIANCO PURO (#FFFFFF) super leggibile */
-    [data-testid="stRadio"] label *,
-    [data-testid="stRadio"] label p,
-    [data-testid="stRadio"] label span,
-    [data-testid="stRadio"] label div {
-        color: #FFFFFF !important;
-        font-size: 14px !important;
-        font-weight: 600 !important;
-        opacity: 1 !important;
-    }
-
-    /* Elemento selezionato (Verde Smeraldo) */
-    [data-testid="stRadio"] label:has(input:checked) {
-        background-color: rgba(16, 185, 129, 0.2) !important;
-        border: 1.5px solid #10B981 !important;
-    }
-
-    [data-testid="stRadio"] label:has(input:checked) *,
-    [data-testid="stRadio"] label:has(input:checked) p,
-    [data-testid="stRadio"] label:has(input:checked) span {
-        color: #34D399 !important;
-        font-weight: 700 !important;
-    }
-
-    /* Input & Select */
+    /* Input & Selectboxes */
     .stTextInput input, .stSelectbox [data-baseweb="select"] {
         background-color: #111827 !important;
         border: 1px solid #374151 !important;
@@ -120,7 +57,7 @@ st.markdown(
         color: #F9FAFB !important;
     }
 
-    /* Metrics */
+    /* Streamlit Metrics */
     [data-testid="stMetric"] {
         background-color: #111827;
         border: 1px solid rgba(255, 255, 255, 0.06);
@@ -138,13 +75,6 @@ st.markdown(
     }
 
     /* Evita salti di scroll / focus jump */
-    [data-testid="stRadio"] input,
-    [data-testid="stRadio"] label {
-        scroll-margin: 0 !important;
-        scroll-padding: 0 !important;
-    }
-
-    /* Colonna sinistra sticky per mantenere i controlli e la dashboard sempre allineati in alto */
     div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:first-child {
         position: sticky !important;
         top: 12px !important;
@@ -734,7 +664,8 @@ if "nome" in quot_view.columns:
 col_players, col_detail = st.columns([1.1, 2.9], gap="medium")
 
 with col_players:
-    st.markdown(f'<div style="font-size:0.85rem; font-weight:700; color:#94A3B8; margin-bottom:8px;">GIOCATORI ({len(quot_view)})</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="font-size:0.85rem; font-weight:700; color:#94A3B8; margin-bottom:8px;">SELEZIONE GIOCATORE ({len(quot_view)})</div>', unsafe_allow_html=True)
+    
     if quot_view.empty:
         st.info("Nessun giocatore trovato con questi filtri.")
         selected_id = None
@@ -753,11 +684,59 @@ with col_players:
             ids.append(int(pid))
         
         label_to_id = dict(zip(labels, ids))
-        selected_label = st.radio("Giocatore", options=labels, label_visibility="collapsed")
-        selected_id = label_to_id[selected_label]
+        
+        # Selectbox con ricerca integrata: NON causa salti di scroll della pagina
+        selected_label = st.selectbox(
+            "Cerca e seleziona giocatore",
+            options=labels,
+            index=0,
+            label_visibility="collapsed",
+            help="Digita il nome o la squadra per trovare subito il giocatore"
+        )
+        selected_id = label_to_id.get(selected_label)
+
+        # Quick Player Info Card nella colonna sinistra
+        if selected_id is not None:
+            sel_row = options_df[options_df["player_id"] == selected_id]
+            if not sel_row.empty:
+                r_val = str(sel_row.iloc[0].get("ruolo", "-")).upper().strip()
+                s_val = sel_row.iloc[0].get("squadra", "-")
+                q_val = sel_row.iloc[0].get("quotazione_attuale", "-")
+                fvm_val = sel_row.iloc[0].get("fvm", "-")
+                r_meta = ROLE_COLORS.get(r_val, {"bg": "#374151", "text": "#E5E7EB", "border": "#4B5563", "label": r_val})
+                
+                st.markdown(
+                    f"""
+                    <div style="
+                        background: #111827;
+                        border: 1px solid rgba(255,255,255,0.08);
+                        border-radius: 12px;
+                        padding: 16px;
+                        margin-top: 14px;
+                    ">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <span style="background:{r_meta['bg']}; color:{r_meta['text']}; border:1px solid {r_meta['border']}; padding:2px 8px; border-radius:6px; font-size:0.75rem; font-weight:700;">
+                                {r_val} — {r_meta['label']}
+                            </span>
+                            <span style="color:#94A3B8; font-size:0.8rem; font-weight:600;">{html.escape(str(s_val))}</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; margin-top:12px; border-top:1px solid rgba(255,255,255,0.06); padding-top:10px;">
+                            <div>
+                                <div style="color:#64748B; font-size:0.7rem; text-transform:uppercase;">Quotazione</div>
+                                <div style="color:#F8FAFC; font-weight:700; font-size:1.1rem;">{q_val} FM</div>
+                            </div>
+                            <div style="text-align:right;">
+                                <div style="color:#64748B; font-size:0.7rem; text-transform:uppercase;">FVM</div>
+                                <div style="color:#10B981; font-weight:700; font-size:1.1rem;">{fvm_val} FM</div>
+                            </div>
+                        </div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
 
 with col_detail:
     if selected_id is None:
-        st.info("👈 Seleziona un giocatore dalla lista a sinistra per visualizzare la scheda analitica.")
+        st.info("👈 Seleziona un giocatore dal menu a sinistra per visualizzare la scheda analitica.")
     else:
         render_player_detail(selected_id, df, quot)
