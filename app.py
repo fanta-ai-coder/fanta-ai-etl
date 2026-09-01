@@ -32,56 +32,155 @@ if not SUPABASE_URL or not SUPABASE_KEY:
 st.markdown(
     """
     <style>
+    /* --------------------------------------------------------
+       TOKEN DI DESIGN
+       Un solo accento cromatico deliberato (verde campo), scala
+       di spaziatura e raggio bordi coerenti. Valori in rgba per
+       restare leggibili sia su tema chiaro che scuro di Streamlit.
+       -------------------------------------------------------- */
+    :root {
+        --fa-accent: #1F7A4D;
+        --fa-accent-soft: rgba(31, 122, 77, .10);
+        --fa-accent-border: rgba(31, 122, 77, .35);
+        --fa-good: #1F7A4D;
+        --fa-warn: #B8860B;
+        --fa-bad: #C0392B;
+        --fa-border: rgba(128, 128, 128, .18);
+        --fa-border-strong: rgba(128, 128, 128, .28);
+        --fa-surface: rgba(128, 128, 128, .05);
+        --fa-muted: #7C8794;
+        --fa-radius: 12px;
+        --fa-space-sm: 10px;
+        --fa-space-md: 16px;
+        --fa-space-lg: 28px;
+    }
+
     .block-container {
         padding-top: 2rem;
         padding-bottom: 3rem;
         max-width: 1600px;
     }
 
+    /* --------------------------------------------------------
+       TITOLI DI SEZIONE
+       Barra di accento a sinistra per ancorare visivamente il
+       titolo al blocco di contenuto che segue.
+       -------------------------------------------------------- */
     .section-title {
-        margin-top: 28px;
-        margin-bottom: 12px;
-        font-size: 20px;
+        margin-top: var(--fa-space-lg);
+        margin-bottom: var(--fa-space-md);
+        padding-left: var(--fa-space-sm);
+        border-left: 3px solid var(--fa-accent);
+        font-size: 19px;
         font-weight: 650;
+        letter-spacing: -0.01em;
+        line-height: 1.3;
     }
 
     .player-subtitle {
-        color: #64748b;
-        font-size: 16px;
-        margin-top: -12px;
-        margin-bottom: 20px;
+        color: var(--fa-muted);
+        font-size: 15px;
+        margin-top: -10px;
+        margin-bottom: var(--fa-space-md);
     }
 
+    /* --------------------------------------------------------
+       CARD DI QUOTAZIONE
+       Gerarchia tra dato primario (quotazione) e secondario (FVM).
+       -------------------------------------------------------- */
     .quote-card {
-        border: 1px solid rgba(128,128,128,.25);
-        border-radius: 14px;
-        padding: 18px 20px;
-        margin-top: 8px;
-        background: rgba(128,128,128,.06);
+        border: 1px solid var(--fa-border-strong);
+        border-top: 3px solid var(--fa-accent);
+        border-radius: var(--fa-radius);
+        padding: 16px 20px;
+        margin-top: 4px;
+        background: var(--fa-surface);
     }
 
     .quote-label {
-        color: #94a3b8;
-        font-size: 13px;
-        margin-bottom: 3px;
+        color: var(--fa-muted);
+        font-size: 12px;
+        text-transform: none;
+        margin-bottom: 2px;
     }
 
     .quote-value {
-        font-size: 30px;
-        font-weight: 650;
+        font-size: 32px;
+        font-weight: 700;
         line-height: 1.1;
+        color: var(--fa-accent);
     }
 
     .quote-divider {
         height: 1px;
-        background: rgba(128,128,128,.20);
-        margin: 14px 0;
+        background: var(--fa-border);
+        margin: 12px 0;
     }
 
     .quote-fvm {
-        color: #94a3b8;
+        color: var(--fa-muted);
+        font-size: 12px;
+        margin-bottom: 2px;
+    }
+
+    .quote-value-secondary {
+        font-size: 20px;
+        font-weight: 600;
+        line-height: 1.1;
+    }
+
+    /* --------------------------------------------------------
+       PANNELLI KPI
+       Raggruppano visivamente i gruppi di st.metric affini,
+       usando il contenitore nativo st.container(border=True)
+       di Streamlit (data-testid stVerticalBlockBorderWrapper).
+       -------------------------------------------------------- */
+    div[data-testid="stVerticalBlockBorderWrapper"] {
+        border-radius: var(--fa-radius) !important;
+        border-color: var(--fa-border-strong) !important;
+        background: var(--fa-surface);
+    }
+
+    div[data-testid="stMetric"] {
+        padding: 4px 2px;
+    }
+
+    div[data-testid="stMetricLabel"] {
         font-size: 13px;
-        margin-bottom: 3px;
+        color: var(--fa-muted);
+    }
+
+    div[data-testid="stMetricValue"] {
+        font-size: 26px;
+        font-weight: 700;
+    }
+
+    /* Badge di continuità: rinforza con colore reale lo stesso
+       giudizio 🟢/🟡/🔴 già calcolato dalla logica esistente
+       (get_continuity), qui reso come elemento HTML sotto il
+       nostro controllo diretto anziché una caption grigia piatta. */
+    .fa-badge {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    /* --------------------------------------------------------
+       LISTA GIOCATORI
+       Il contenitore scrollabile con altezza fissa è nativo
+       (st.container(height=..., border=True)): riceve già lo
+       stile pannello sopra tramite stVerticalBlockBorderWrapper.
+       Qui aggiungiamo solo l'hover sulle singole opzioni.
+       -------------------------------------------------------- */
+    div[role="radiogroup"] label {
+        padding: 5px 6px;
+        border-radius: 8px;
+    }
+
+    div[role="radiogroup"] label:hover {
+        background: var(--fa-accent-soft);
     }
     </style>
     """,
@@ -215,6 +314,36 @@ def format_number(value, decimals=2):
         return "N/D"
 
     return f"{value:.{decimals}f}"
+
+
+# ============================================================
+# BADGE VISIVO (solo presentazione, nessuna nuova logica)
+# ============================================================
+
+_CONTINUITY_BADGE_STYLE = {
+    "🟢 Molto continuo": ("var(--fa-good)", "rgba(31,122,77,.12)"),
+    "🟡 Abbastanza continuo": ("var(--fa-warn)", "rgba(184,134,11,.12)"),
+    "🔴 Altalenante": ("var(--fa-bad)", "rgba(192,57,43,.12)"),
+}
+
+
+def render_continuity_badge(label):
+    """
+    Rende con colore reale il giudizio di continuità già calcolato
+    da get_continuity(): stesso identico testo/etichetta, solo
+    presentato come badge colorato invece di una caption grigia.
+    """
+    color, background = _CONTINUITY_BADGE_STYLE.get(
+        label, ("var(--fa-muted)", "rgba(128,128,128,.10)")
+    )
+    st.markdown(
+        f"""
+        <span class="fa-badge" style="background:{background}; color:{color};">
+            {html.escape(str(label))}
+        </span>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 # ============================================================
@@ -708,7 +837,7 @@ def render_player_detail(player_id, stats, quotations):
                     <div class="quote-divider"></div>
 
                     <div class="quote-fvm">Fantamilioni suggeriti</div>
-                    <div class="quote-value">{html.escape(fvm_text)}</div>
+                    <div class="quote-value-secondary">{html.escape(fvm_text)}</div>
                 </div>
                 """,
                 unsafe_allow_html=True,
@@ -805,80 +934,82 @@ def render_player_detail(player_id, stats, quotations):
         "bonus_malus",
     )
 
-    # --------------------------------------------------------
-    # KPI PRINCIPALI
-    # Continuità volutamente in alto
-    # --------------------------------------------------------
+    with st.container(border=True):
 
-    k1, k2, k3, k4 = st.columns(4)
+        # ----------------------------------------------------
+        # KPI PRINCIPALI
+        # Continuità volutamente in alto
+        # ----------------------------------------------------
 
-    with k1:
-        st.metric(
-            "Continuità",
-            format_number(std),
-            help=(
-                "Deviazione standard del voto. "
-                "Più il valore è basso, più il rendimento "
-                "è continuo."
-            ),
-        )
-        st.caption(continuity_label)
+        k1, k2, k3, k4 = st.columns(4)
 
-    with k2:
-        st.metric(
-            "Presenza media",
-            f"{relative['presenza_pct']:.1f}%",
-            help=(
-                "Presenze medie per stagione rapportate "
-                "alle 38 giornate disponibili."
-            ),
-        )
+        with k1:
+            st.metric(
+                "Continuità",
+                format_number(std),
+                help=(
+                    "Deviazione standard del voto. "
+                    "Più il valore è basso, più il rendimento "
+                    "è continuo."
+                ),
+            )
+            render_continuity_badge(continuity_label)
 
-    with k3:
-        st.metric(
-            "Media voto",
-            f"{media_voto:.2f}",
-        )
+        with k2:
+            st.metric(
+                "Presenza media",
+                f"{relative['presenza_pct']:.1f}%",
+                help=(
+                    "Presenze medie per stagione rapportate "
+                    "alle 38 giornate disponibili."
+                ),
+            )
 
-    with k4:
-        st.metric(
-            "Fantamedia",
-            f"{fantamedia:.2f}",
-            help=(
-                "Calcolata da voto + bonus/malus "
-                "secondo le regole classiche."
-            ),
-        )
+        with k3:
+            st.metric(
+                "Media voto",
+                f"{media_voto:.2f}",
+            )
 
-    # --------------------------------------------------------
-    # KPI RELATIVI
-    # --------------------------------------------------------
+        with k4:
+            st.metric(
+                "Fantamedia",
+                f"{fantamedia:.2f}",
+                help=(
+                    "Calcolata da voto + bonus/malus "
+                    "secondo le regole classiche."
+                ),
+            )
 
-    r1, r2, r3, r4 = st.columns(4)
+        # ----------------------------------------------------
+        # KPI RELATIVI
+        # ----------------------------------------------------
 
-    with r1:
-        st.metric(
-            "Presenze medie / stagione",
-            f"{relative['presenze_medie']:.1f}",
-        )
+        r1, r2, r3, r4 = st.columns(4)
 
-    with r2:
-        st.metric(
-            "Gol medi / stagione",
-            f"{relative['gol_stagione']:.2f}",
-        )
+        with r1:
+            st.metric(
+                "Presenze medie / stagione",
+                f"{relative['presenze_medie']:.1f}",
+            )
 
-    with r3:
-        st.metric(
-            "Assist medi / stagione",
-            f"{relative['assist_stagione']:.2f}",
-        )
+        with r2:
+            st.metric(
+                "Gol medi / stagione",
+                f"{relative['gol_stagione']:.2f}",
+            )
 
-    with r4:
-        st.metric(
-            "Stagioni analizzate",
-            relative["stagioni"],
-        )
+        with r3:
+            st.metric(
+                "Assist medi / stagione",
+                f"{relative['assist_stagione']:.2f}",
+            )
+
+        with r4:
+            st.metric(
+                "Stagioni analizzate",
+                relative["stagioni"],
+            )
 
     # --------------------------------------------------------
     # VARIANZA
@@ -889,28 +1020,30 @@ def render_player_detail(player_id, stats, quotations):
         unsafe_allow_html=True,
     )
 
-    v1, v2 = st.columns(2)
+    with st.container(border=True):
 
-    with v1:
-        st.metric(
-            "Varianza voto",
-            format_number(varianza_voto),
-            help=(
-                "Varianza statistica dei voti. "
-                "Più è bassa, più i voti sono concentrati "
-                "intorno alla media."
-            ),
-        )
+        v1, v2 = st.columns(2)
 
-    with v2:
-        st.metric(
-            "Varianza bonus/malus",
-            format_number(varianza_bonus_malus),
-            help=(
-                "Varianza del bonus/malus netto per prestazione. "
-                "Il bonus/malus netto è Fantavoto - Voto."
-            ),
-        )
+        with v1:
+            st.metric(
+                "Varianza voto",
+                format_number(varianza_voto),
+                help=(
+                    "Varianza statistica dei voti. "
+                    "Più è bassa, più i voti sono concentrati "
+                    "intorno alla media."
+                ),
+            )
+
+        with v2:
+            st.metric(
+                "Varianza bonus/malus",
+                format_number(varianza_bonus_malus),
+                help=(
+                    "Varianza del bonus/malus netto per prestazione. "
+                    "Il bonus/malus netto è Fantavoto - Voto."
+                ),
+            )
 
     # ========================================================
     # FORMA — MEDIA MOBILE 5 GIORNATE
@@ -1069,31 +1202,33 @@ def render_player_detail(player_id, stats, quotations):
         unsafe_allow_html=True,
     )
 
-    b1, b2, b3, b4 = st.columns(4)
+    with st.container(border=True):
 
-    with b1:
-        st.metric(
-            "Rigori segnati",
-            int(safe_sum(p_stats, "rf")),
-        )
+        b1, b2, b3, b4 = st.columns(4)
 
-    with b2:
-        st.metric(
-            "Rigori sbagliati",
-            int(safe_sum(p_stats, "rs")),
-        )
+        with b1:
+            st.metric(
+                "Rigori segnati",
+                int(safe_sum(p_stats, "rf")),
+            )
 
-    with b3:
-        st.metric(
-            "Ammonizioni",
-            int(safe_sum(p_stats, "amm")),
-        )
+        with b2:
+            st.metric(
+                "Rigori sbagliati",
+                int(safe_sum(p_stats, "rs")),
+            )
 
-    with b4:
-        st.metric(
-            "Espulsioni",
-            int(safe_sum(p_stats, "esp")),
-        )
+        with b3:
+            st.metric(
+                "Ammonizioni",
+                int(safe_sum(p_stats, "amm")),
+            )
+
+        with b4:
+            st.metric(
+                "Espulsioni",
+                int(safe_sum(p_stats, "esp")),
+            )
 
     # ========================================================
     # DATI COMPLETI
@@ -1426,11 +1561,12 @@ with col_players:
 
         label_to_id = dict(zip(labels, ids))
 
-        selected_label = st.radio(
-            "Seleziona giocatore",
-            options=labels,
-            label_visibility="collapsed",
-        )
+        with st.container(height=640, border=True):
+            selected_label = st.radio(
+                "Seleziona giocatore",
+                options=labels,
+                label_visibility="collapsed",
+            )
 
         selected_id = label_to_id[selected_label]
 
