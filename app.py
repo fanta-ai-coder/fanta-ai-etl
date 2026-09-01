@@ -13,6 +13,48 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
+# CSS per tema scuro personalizzato
+st.markdown(
+    """
+    <style>
+    /* Background scuro e testo chiaro */
+    .main {
+        background-color: #121212;
+        color: #E0E0E0;
+    }
+    .css-18e3th9 {
+        background-color: #121212;
+        color: #E0E0E0;
+    }
+    /* Card elementi */
+    .stContainer > div {
+        background-color: #1E1E1E;
+        border-radius: 12px;
+        padding: 16px;
+        box-shadow: 0 0 10px rgba(255,255,255,0.1);
+    }
+    /* Titoli e testo */
+    h1, h2, h3, h4, h5, h6, .css-1v0mbdj, .css-hxt7ib {
+        color: #FAFAFA;
+    }
+    /* Link */
+    a {
+        color: #1F7A4D;
+    }
+    /* Scrollbar personalizzata */
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    ::-webkit-scrollbar-thumb {
+        background-color: #1F7A4D;
+        border-radius: 10px;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
@@ -149,7 +191,6 @@ def calculate_fantavoto(df):
             penalty_saved = numeric_series(result, column).fillna(0)
             break
 
-    # Aggiungi qui la colonna gol_subiti per penalità
     for column in ["gs", "gol_subiti"]:
         if column in result.columns:
             gol_subiti = numeric_series(result, column).fillna(0)
@@ -178,7 +219,6 @@ def calculate_fantavoto(df):
     result.loc[numeric_series(result, "voto").isna(), "fanta_voto_calcolato"] = float("nan")
 
     return result
-
 
 
 def calculate_bonus_malus(df):
@@ -328,6 +368,15 @@ def calculate_relative_metrics(p_stats, is_goalkeeper=False):
     return result
 
 
+def varianza_gol_binaria(p_stats):
+    gol_giornata = p_stats.groupby("giornata").apply(
+        lambda df: 1 if (safe_sum(df, "gf") + safe_sum(df, "rf")) > 0 else 0
+    )
+    if len(gol_giornata) <= 1:
+        return 0.0
+    return gol_giornata.var(ddof=1)
+
+
 def render_quote_card_with_elements(quota, fvm):
     with elements("quote_card"):
         mui.Card(
@@ -416,8 +465,6 @@ def render_player_detail(player_id, stats, quotations):
 
     is_goalkeeper = ruolo.upper() == "P"
 
-    # Rendimento storico - KPI principali e relativi
-
     st.markdown('<div style="border-left: 3px solid #1F7A4D; font-size:19px; font-weight:650; margin-top:28px; margin-bottom:16px; padding-left:10px;">📊 Rendimento storico complessivo</div>', unsafe_allow_html=True)
 
     relative = calculate_relative_metrics(p_stats, is_goalkeeper=is_goalkeeper)
@@ -426,7 +473,9 @@ def render_player_detail(player_id, stats, quotations):
     media_voto = safe_mean(p_stats, "voto")
     fantamedia = safe_mean(p_stats, "fanta_voto_calcolato")
     std, continuity_label = get_continuity(p_stats)
-    varianza_gol = safe_variance(p_stats, "gf" if not is_goalkeeper else "gs")
+
+    varianza_binaria = varianza_gol_binaria(p_stats)
+    varianza_voto = safe_variance(p_stats, "voto")
 
     with st.container():
         k1, k2, k3, k4 = st.columns(4)
@@ -456,9 +505,20 @@ def render_player_detail(player_id, stats, quotations):
         with r4:
             st.metric("Stagioni analizzate", relative["stagioni"])
 
-    st.markdown('<div style="border-left: 3px solid #1F7A4D; font-size:19px; font-weight:650; margin-top:28px; margin-bottom:16px; padding-left:10px;">📐 Variabilità del rendimento (Varianza Gol)</div>', unsafe_allow_html=True)
-
-    st.metric("Varianza gol", format_number(varianza_gol), help="Varianza del numero di gol per partita/stagione.")
+    # Mostra le due varianze in colonna orizzontale
+    col_var1, col_var2 = st.columns(2)
+    with col_var1:
+        st.metric(
+            "Varianza media voto",
+            format_number(varianza_voto),
+            help="Quanto i voti si discostano dalla media, misura la continuità delle prestazioni."
+        )
+    with col_var2:
+        st.metric(
+            "Varianza gol (binaria)",
+            format_number(varianza_binaria),
+            help="Varianza binaria gol: misura la continuità nel segnare (gol in quante giornate i gol sono stati fatti)."
+        )
 
     st.markdown('<div style="border-left: 3px solid #1F7A4D; font-size:19px; font-weight:650; margin-top:28px; margin-bottom:16px; padding-left:10px;">⚽ Altri bonus e malus (media/ stagione)</div>', unsafe_allow_html=True)
 
@@ -472,8 +532,6 @@ def render_player_detail(player_id, stats, quotations):
             st.metric("Ammonizioni", f"{relative['ammonizioni']:.2f}")
         with b4:
             st.metric("Espulsioni", f"{relative['espulsioni']:.2f}")
-
-    # Andamento della forma (media mobile)
 
     st.markdown('<div style="border-left: 3px solid #1F7A4D; font-size:19px; font-weight:650; margin-top:28px; margin-bottom:16px; padding-left:10px;">📈 Andamento della forma</div>', unsafe_allow_html=True)
 
@@ -513,8 +571,6 @@ def render_player_detail(player_id, stats, quotations):
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
         )
         st.plotly_chart(fig, use_container_width=True)
-
-    # 📅 Rendimento per stagione (alla fine)
 
     st.markdown('<div style="border-left: 3px solid #1F7A4D; font-size:19px; font-weight:650; margin-top:28px; margin-bottom:16px; padding-left:10px;">📅 Rendimento per stagione</div>', unsafe_allow_html=True)
 
@@ -560,10 +616,6 @@ def render_player_detail(player_id, stats, quotations):
             st.dataframe(season_agg, use_container_width=True, hide_index=True)
 
 
-# ============================================================
-# CARICAMENTO DATI E INTERFACCIA PRINCIPALE
-# ============================================================
-
 try:
     df = load_stats()
     quot = load_quotazioni()
@@ -603,7 +655,7 @@ else:
 
 st.title("⚽ FantaAI")
 
-role_col, info_col = st.columns([1, 3])
+role_col, _ = st.columns([1, 3])
 
 with role_col:
     selected_role = st.selectbox("Filtra per ruolo", ["Tutti", "P", "D", "C", "A"])
