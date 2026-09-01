@@ -50,14 +50,68 @@ st.markdown(
     }
 
     /* ===================================================
-       LISTA GIOCATORI (DATAFRAME DESIGN INTEGRATO)
+       LISTA GIOCATORI: CARD CLICCABILI (SENZA QUADRATINI O PALLINI)
        =================================================== */
-    [data-testid="stDataFrame"] {
+    [data-testid="stRadio"] div[role="radiogroup"] {
+        display: flex !important;
+        flex-direction: column !important;
+        flex-wrap: nowrap !important;
+        width: 100% !important;
+        max-height: 620px !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
         background-color: #111827 !important;
         border: 1px solid rgba(255, 255, 255, 0.08) !important;
         border-radius: 12px !important;
-        overflow: hidden !important;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35) !important;
+        padding: 8px !important;
+        gap: 5px !important;
+    }
+
+    /* Rimuove completamente il cerchietto o quadratino nativo */
+    [data-testid="stRadio"] label > div:first-child,
+    [data-testid="stRadio"] input[type="radio"] {
+        display: none !important;
+    }
+
+    /* Card di ogni giocatore cliccabile per intero */
+    [data-testid="stRadio"] label {
+        display: flex !important;
+        align-items: center !important;
+        width: 100% !important;
+        background-color: #1E293B !important;
+        border: 1px solid rgba(255, 255, 255, 0.05) !important;
+        border-radius: 8px !important;
+        padding: 10px 14px !important;
+        margin: 0 !important;
+        cursor: pointer !important;
+        transition: all 0.15s ease !important;
+    }
+
+    [data-testid="stRadio"] label:hover {
+        background-color: #334155 !important;
+        border-color: rgba(16, 185, 129, 0.4) !important;
+    }
+
+    /* Testo del nome chiaro ed elegante */
+    [data-testid="stRadio"] label p,
+    [data-testid="stRadio"] label span,
+    [data-testid="stRadio"] label div {
+        color: #F1F5F9 !important;
+        font-size: 14px !important;
+        font-weight: 600 !important;
+        margin: 0 !important;
+    }
+
+    /* Giocatore Selezionato (Verde Smeraldo + Glow) */
+    [data-testid="stRadio"] label:has(input:checked) {
+        background-color: rgba(16, 185, 129, 0.2) !important;
+        border: 1.5px solid #10B981 !important;
+    }
+
+    [data-testid="stRadio"] label:has(input:checked) p,
+    [data-testid="stRadio"] label:has(input:checked) span {
+        color: #34D399 !important;
+        font-weight: 700 !important;
     }
 
     /* Input & Selectboxes */
@@ -68,7 +122,7 @@ st.markdown(
         color: #F9FAFB !important;
     }
 
-    /* Streamlit Metrics */
+    /* Metrics */
     [data-testid="stMetric"] {
         background-color: #111827;
         border: 1px solid rgba(255, 255, 255, 0.06);
@@ -86,6 +140,13 @@ st.markdown(
     }
 
     /* Evita salti di scroll / focus jump */
+    [data-testid="stRadio"] input,
+    [data-testid="stRadio"] label {
+        scroll-margin: 0 !important;
+        scroll-padding: 0 !important;
+    }
+
+    /* Colonna sinistra sticky */
     div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:first-child {
         position: sticky !important;
         top: 12px !important;
@@ -682,38 +743,34 @@ with col_players:
         selected_id = None
     else:
         options_df = quot_view.drop_duplicates(subset="player_id").copy()
+        labels, ids = [], []
+        for row in options_df.itertuples():
+            n = getattr(row, "nome", "Giocatore")
+            s = getattr(row, "squadra", "-")
+            pid = getattr(row, "player_id")
+            lbl = str(n)
+            if lbl in labels:
+                lbl = f"{lbl} ({s})"
+            if lbl in labels:
+                lbl = f"{lbl} #{int(pid)}"
+            labels.append(lbl)
+            ids.append(int(pid))
         
-        # Mostra solo il nome del giocatore come richiesto
-        display_df = options_df[["nome", "player_id"]].copy()
-        display_df.rename(columns={"nome": "Giocatore"}, inplace=True)
+        label_to_id = dict(zip(labels, ids))
 
-        # Tabella Interattiva: Solo nome, Scrollabile, Navigabile con Freccette (↑ / ↓)
-        event = st.dataframe(
-            display_df[["Giocatore"]],
-            use_container_width=True,
-            hide_index=True,
-            height=620,
-            on_select="rerun",
-            selection_mode="single-row",
-            column_config={
-                "Giocatore": st.column_config.TextColumn(
-                    "Nome Giocatore",
-                    width="large"
-                )
-            }
+        # Recupera indice attivo per evitare salti
+        current_idx = 0
+        if "active_player_id" in st.session_state and st.session_state["active_player_id"] in ids:
+            current_idx = ids.index(st.session_state["active_player_id"])
+
+        selected_label = st.radio(
+            "Seleziona giocatore",
+            options=labels,
+            index=current_idx,
+            label_visibility="collapsed"
         )
-
-        selected_rows = event.selection.rows if (event and hasattr(event, "selection") and event.selection) else []
-        
-        if selected_rows:
-            selected_idx = selected_rows[0]
-            selected_id = int(options_df.iloc[selected_idx]["player_id"])
-            st.session_state["active_player_id"] = selected_id
-        elif "active_player_id" in st.session_state and st.session_state["active_player_id"] in options_df["player_id"].values:
-            selected_id = int(st.session_state["active_player_id"])
-        else:
-            selected_id = int(options_df.iloc[0]["player_id"])
-            st.session_state["active_player_id"] = selected_id
+        selected_id = label_to_id.get(selected_label)
+        st.session_state["active_player_id"] = selected_id
 
 with col_detail:
     if selected_id is None:
