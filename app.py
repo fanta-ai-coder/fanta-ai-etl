@@ -13,7 +13,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# CSS per tema scuro personalizzato
+# CSS tema scuro personalizzato
 st.markdown(
     """
     <style>
@@ -41,7 +41,7 @@ st.markdown(
     a {
         color: #1F7A4D;
     }
-    /* Scrollbar personalizzata */
+    /* Scrollbar */
     ::-webkit-scrollbar {
         width: 8px;
         height: 8px;
@@ -213,7 +213,7 @@ def calculate_fantavoto(df):
         - amm * 0.5
         + clean_sheet
         + penalty_saved * 3
-        - gol_subiti  # Penalità -1 per ogni gol subito (solo portieri)
+        - gol_subiti 
     )
 
     result.loc[numeric_series(result, "voto").isna(), "fanta_voto_calcolato"] = float("nan")
@@ -227,22 +227,11 @@ def calculate_bonus_malus(df):
     return result
 
 
-def get_continuity(player_stats):
-    std = numeric_series(player_stats, "voto").dropna().std()
-    if pd.isna(std):
-        return None, "N/D"
-    if std < 0.60:
-        return float(std), "🟢 Molto continuo"
-    if std < 0.90:
-        return float(std), "🟡 Abbastanza continuo"
-    return float(std), "🔴 Altalenante"
-
-
 def season_sort_key(value):
     value = str(value).strip()
     try:
         return int(value.split("/")[0])
-    except Exception:
+    except:
         return -1
 
 
@@ -308,9 +297,7 @@ def calculate_relative_metrics(p_stats, is_goalkeeper=False):
             "presenze_medie": 0.0,
             "presenza_pct": 0.0,
             "gol_stagione": 0.0,
-            "gol_38": 0.0,
             "assist_stagione": 0.0,
-            "assist_38": 0.0,
             "rigori_segnati": 0.0,
             "rigori_sbagliati": 0.0,
             "ammonizioni": 0.0,
@@ -331,7 +318,7 @@ def calculate_relative_metrics(p_stats, is_goalkeeper=False):
     else:
         gf_totali = safe_sum(p_stats, "gf")
         rf_totali = safe_sum(p_stats, "rf")
-        gf_totali += rf_totali  # gol totali con rigori segnati
+        gf_totali += rf_totali
         rigori_parati_tot = 0
         rigori_sbagliati_tot = safe_sum(p_stats, "rs")
 
@@ -344,7 +331,6 @@ def calculate_relative_metrics(p_stats, is_goalkeeper=False):
         "presenze_medie": presenze_medie,
         "presenza_pct": presenza_pct,
         "assist_stagione": assist_totali / seasons,
-        "assist_38": assist_totali / seasons,  # per 38 giornate uguale assist_stagione
         "rigori_sbagliati": rigori_sbagliati_tot / seasons,
         "ammonizioni": ammonizioni_tot / seasons,
         "espulsioni": espulsioni_tot / seasons,
@@ -472,52 +458,48 @@ def render_player_detail(player_id, stats, quotations):
     presenze = int(numeric_series(p_stats, "voto").count())
     media_voto = safe_mean(p_stats, "voto")
     fantamedia = safe_mean(p_stats, "fanta_voto_calcolato")
-    std, continuity_label = get_continuity(p_stats)
 
     varianza_binaria = varianza_gol_binaria(p_stats)
     varianza_voto = safe_variance(p_stats, "voto")
 
-    with st.container():
-        k1, k2, k3, k4 = st.columns(4)
-        with k1:
-            st.metric("Continuità", format_number(std), help="Deviazione standard del voto. Più il valore è basso, più il rendimento è continuo.")
-            st.markdown(f'<span style="display:inline-block; padding:3px 10px; border-radius:999px; font-weight:600; font-size:13px; background-color:rgba(31,122,77,.12); color:#1F7A4D;">{continuity_label}</span>', unsafe_allow_html=True)
-        with k2:
-            st.metric("Presenza media", f"{relative['presenza_pct']:.1f}%", help="Presenze medie per stagione rapportate alle 38 giornate disponibili.")
-        with k3:
-            st.metric("Media voto", f"{media_voto:.2f}")
-        with k4:
-            st.metric("Fantamedia", f"{fantamedia:.2f}", help="Calcolata da voto + bonus/malus secondo le regole classiche.")
+    # Descrizione interpretativa basata su media voto e varianza voto
+    descrizione = ""
+    if media_voto >= 6.5:
+        if varianza_voto < 0.3:
+            descrizione = "Giocatore molto continuo con media alta: È affidabile e performante costantemente."
+        elif varianza_voto < 0.6:
+            descrizione = "Giocatore con media alta e variabilità moderata: Può alternare ottime prestazioni e qualche flessione."
+        else:
+            descrizione = "Giocatore con media alta ma variabilità elevata: Può esplodere in alcune partite anche se non sempre stabile."
+    elif media_voto >= 6.0:
+        if varianza_voto < 0.3:
+            descrizione = "Giocatore costante ma con media voto media: Affidabile, ma meno impattante."
+        else:
+            descrizione = "Giocatore altalenante con media voto media: Potenziale risultato altalenante."
+    else:
+        if varianza_voto < 0.3:
+            descrizione = "Giocatore stabile ma con media voto bassa: Rendimento poco incisivo."
+        else:
+            descrizione = "Giocatore altalenante con media voto bassa: Rischio elevato e prestazioni poco consistenti."
 
-        r1, r2, r3, r4 = st.columns(4)
-        with r1:
-            st.metric("Presenze medie / stagione", f"{relative['presenze_medie']:.1f}")
-        with r2:
-            if is_goalkeeper:
-                st.metric("Goal subiti / stagione", f"{relative['gs_stagione']:.2f}")
-            else:
-                st.metric("Gol medi / stagione", f"{relative['gol_stagione']:.2f}")
-        with r3:
-            if is_goalkeeper:
-                st.metric("Rigori parati / stagione", f"{relative['rigori_parati']:.2f}")
-            else:
-                st.metric("Assist medi / stagione", f"{relative['assist_stagione']:.2f}")
-        with r4:
-            st.metric("Stagioni analizzate", relative["stagioni"])
+    st.markdown(
+        f'<div style="border-left: 3px solid #1F7A4D; padding-left: 12px; margin-top:16px; margin-bottom:16px;">'
+        f'<b>Analisi rendimento</b><br>{descrizione}'
+        '</div>', unsafe_allow_html=True)
 
-    # Mostra le due varianze in colonna orizzontale
+    # Mostra varianze affiancate
     col_var1, col_var2 = st.columns(2)
     with col_var1:
         st.metric(
             "Varianza media voto",
             format_number(varianza_voto),
-            help="Quanto i voti si discostano dalla media, misura la continuità delle prestazioni."
+            help="Misura quanto i voti si discostano dalla media, per valutarne la continuità"
         )
     with col_var2:
         st.metric(
             "Varianza gol (binaria)",
             format_number(varianza_binaria),
-            help="Varianza binaria gol: misura la continuità nel segnare (gol in quante giornate i gol sono stati fatti)."
+            help="Misura la continuità nel segnare gol (1 se segna in giornata, 0 se no)"
         )
 
     st.markdown('<div style="border-left: 3px solid #1F7A4D; font-size:19px; font-weight:650; margin-top:28px; margin-bottom:16px; padding-left:10px;">⚽ Altri bonus e malus (media/ stagione)</div>', unsafe_allow_html=True)
