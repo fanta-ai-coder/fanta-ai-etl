@@ -127,7 +127,7 @@ def numeric_series(df, column):
 
 @st.cache_data(ttl=3600)
 def load_rigoristi_csv():
-    url = "https://github.com/fanta-ai-coder/fanta-ai-etl/blob/main/rigoristi.csv"
+    url = "https://github.com/fanta-ai-coder/fanta-ai-etl/main/rigoristi.csv"
     df = pd.read_csv(url, sep=',')
     # Converti i nomi in minuscolo per confronto facile
     df['giocatore_lc'] = df['giocatore'].str.lower()
@@ -135,7 +135,7 @@ def load_rigoristi_csv():
 
 @st.cache_data(ttl=3600)
 def load_punizioni_csv():
-    url = "https://github.com/fanta-ai-coder/fanta-ai-etl/blob/main/punizioni.csv"
+    url = "https://github.com/fanta-ai-coder/fanta-ai-etl/main/punizioni.csv"
     df = pd.read_csv(url, sep=',')
     df['giocatore_lc'] = df['giocatore'].str.lower()
     return df
