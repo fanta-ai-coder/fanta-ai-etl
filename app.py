@@ -497,11 +497,11 @@ def render_player_detail(player_id, stats, quotations):
     with st.container():
         k2, k3, k4 = st.columns(3)
         with k2:
-            render_kpi("Presenza media", f"{relative['presenza_pct']:.1f}%", "Presenze medie per stagione rapportate alle 38 giornate disponibili.")
+            render_kpi("Presenza media", f"{relative['presenza_pct']:.1f}%")
         with k3:
             render_kpi("Media voto", f"{media_voto:.2f}")
         with k4:
-            render_kpi("Fantamedia", f"{fantamedia:.2f}", "Calcolata da voto + bonus/malus secondo le regole classiche.")
+            render_kpi("Fantamedia", f"{fantamedia:.2f}")
 
     with st.container():
         r1, r2, r3, r4 = st.columns(4)
