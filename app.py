@@ -2,7 +2,6 @@ import os
 import html
 import pandas as pd
 import streamlit as st
-import streamlit.components.v1 as components
 import plotly.graph_objects as go
 from supabase import create_client
 
@@ -16,29 +15,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# JavaScript helper per mantenere la visuale sempre in alto dopo ogni selezione
-components.html(
-    """
-    <script>
-    function keepViewAtTop() {
-        try {
-            const pDoc = window.parent.document;
-            const mainContainer = pDoc.querySelector('.stAppViewContainer') || pDoc.querySelector('section.main') || pDoc.documentElement;
-            if (mainContainer) {
-                mainContainer.scrollTop = 0;
-            }
-        } catch (e) {}
-    }
-    keepViewAtTop();
-    setTimeout(keepViewAtTop, 50);
-    setTimeout(keepViewAtTop, 150);
-    </script>
-    """,
-    height=0,
-    width=0,
-)
-
-# CSS Ottimizzato (UI/UX Pro Max: Alto contrasto WCAG + Layout a colonna singola)
+# CSS Ottimizzato (UI/UX Pro Max: Alto contrasto WCAG + Layout a colonna singola + No Scroll Jump)
 st.markdown(
     """
     <style>
@@ -48,10 +25,12 @@ st.markdown(
         font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
         background-color: #0B0F19;
         color: #F8FAFC;
+        overflow-anchor: none !important;
     }
 
-    .stAppViewContainer {
+    .stAppViewContainer, section.main, [data-testid="stMainBlockContainer"] {
         background-color: #0B0F19;
+        overflow-anchor: none !important;
     }
 
     /* Scrollbar moderna verticale */
