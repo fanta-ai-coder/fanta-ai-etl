@@ -2,6 +2,7 @@ import os
 import html
 import pandas as pd
 import streamlit as st
+import streamlit.components.v1 as components
 import plotly.graph_objects as go
 from supabase import create_client
 
@@ -13,6 +14,28 @@ st.set_page_config(
     page_icon="⚽",
     layout="wide",
     initial_sidebar_state="collapsed",
+)
+
+# JavaScript helper per mantenere la visuale sempre in alto dopo ogni selezione
+components.html(
+    """
+    <script>
+    function keepViewAtTop() {
+        try {
+            const pDoc = window.parent.document;
+            const mainContainer = pDoc.querySelector('.stAppViewContainer') || pDoc.querySelector('section.main') || pDoc.documentElement;
+            if (mainContainer) {
+                mainContainer.scrollTop = 0;
+            }
+        } catch (e) {}
+    }
+    keepViewAtTop();
+    setTimeout(keepViewAtTop, 50);
+    setTimeout(keepViewAtTop, 150);
+    </script>
+    """,
+    height=0,
+    width=0,
 )
 
 # CSS Ottimizzato (UI/UX Pro Max: Alto contrasto WCAG + Layout a colonna singola)
@@ -133,6 +156,21 @@ st.markdown(
     [data-testid="stMetricValue"] {
         color: #F8FAFC !important;
         font-weight: 700;
+    }
+
+    /* Evita salti di scroll / focus jump */
+    [data-testid="stRadio"] input,
+    [data-testid="stRadio"] label {
+        scroll-margin: 0 !important;
+        scroll-padding: 0 !important;
+    }
+
+    /* Colonna sinistra sticky per mantenere i controlli e la dashboard sempre allineati in alto */
+    div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:first-child {
+        position: sticky !important;
+        top: 12px !important;
+        align-self: flex-start !important;
+        z-index: 5 !important;
     }
     </style>
     """,
