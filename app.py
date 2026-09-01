@@ -15,7 +15,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# CSS Ottimizzato (UI/UX Pro Max: Alto contrasto WCAG + Layout a colonna singola + No Scroll Jump)
+# CSS Ottimizzato (UI/UX Pro Max: Alto contrasto WCAG + Layout integrato + No Scroll Jump)
 st.markdown(
     """
     <style>
@@ -47,6 +47,17 @@ st.markdown(
     }
     ::-webkit-scrollbar-thumb:hover {
         background: #10B981;
+    }
+
+    /* ===================================================
+       LISTA GIOCATORI (DATAFRAME DESIGN INTEGRATO)
+       =================================================== */
+    [data-testid="stDataFrame"] {
+        background-color: #111827 !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        border-radius: 12px !important;
+        overflow: hidden !important;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35) !important;
     }
 
     /* Input & Selectboxes */
@@ -661,10 +672,10 @@ if "nome" in quot_view.columns:
     quot_view = quot_view.sort_values("nome", na_position="last")
 
 # Main 2-Column Layout
-col_players, col_detail = st.columns([1.15, 2.85], gap="medium")
+col_players, col_detail = st.columns([0.9, 3.1], gap="medium")
 
 with col_players:
-    st.markdown(f'<div style="font-size:0.85rem; font-weight:700; color:#94A3B8; margin-bottom:8px;">LISTA GIOCATORI ({len(quot_view)})</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="font-size:0.85rem; font-weight:700; color:#94A3B8; margin-bottom:8px;">GIOCATORI ({len(quot_view)})</div>', unsafe_allow_html=True)
     
     if quot_view.empty:
         st.info("Nessun giocatore trovato con questi filtri.")
@@ -672,34 +683,23 @@ with col_players:
     else:
         options_df = quot_view.drop_duplicates(subset="player_id").copy()
         
-        # Prepara la tabella interattiva
-        display_df = options_df[["ruolo", "nome", "squadra", "quotazione_attuale", "fvm", "player_id"]].copy()
-        display_df["ruolo"] = display_df["ruolo"].astype(str).str.upper().str.strip()
-        display_df["quotazione_attuale"] = pd.to_numeric(display_df["quotazione_attuale"], errors="coerce").fillna(0).astype(int)
-        display_df["fvm"] = pd.to_numeric(display_df["fvm"], errors="coerce").fillna(0).astype(int)
-        
-        display_df.rename(columns={
-            "ruolo": "R",
-            "nome": "Giocatore",
-            "squadra": "Squadra",
-            "quotazione_attuale": "Qt",
-            "fvm": "FVM"
-        }, inplace=True)
+        # Mostra solo il nome del giocatore come richiesto
+        display_df = options_df[["nome", "player_id"]].copy()
+        display_df.rename(columns={"nome": "Giocatore"}, inplace=True)
 
-        # Tabella Interattiva: Scrollabile, Navigabile con Freccette (↑ / ↓), Zero Scroll Jump
+        # Tabella Interattiva: Solo nome, Scrollabile, Navigabile con Freccette (↑ / ↓)
         event = st.dataframe(
-            display_df[["R", "Giocatore", "Squadra", "Qt", "FVM"]],
+            display_df[["Giocatore"]],
             use_container_width=True,
             hide_index=True,
             height=620,
             on_select="rerun",
             selection_mode="single-row",
             column_config={
-                "R": st.column_config.TextColumn("R", width="small"),
-                "Giocatore": st.column_config.TextColumn("Giocatore", width="medium"),
-                "Squadra": st.column_config.TextColumn("Squadra", width="small"),
-                "Qt": st.column_config.NumberColumn("Qt", format="%d FM", width="small"),
-                "FVM": st.column_config.NumberColumn("FVM", format="%d FM", width="small"),
+                "Giocatore": st.column_config.TextColumn(
+                    "Nome Giocatore",
+                    width="large"
+                )
             }
         )
 
