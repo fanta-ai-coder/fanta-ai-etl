@@ -6,10 +6,6 @@ import plotly.graph_objects as go
 from supabase import create_client
 from streamlit_elements import elements, mui
 
-# ============================================================
-# CONFIGURAZIONE
-# ============================================================
-
 st.set_page_config(
     page_title="FantaAI Analytics",
     page_icon="⚽",
@@ -25,10 +21,6 @@ if not SUPABASE_URL or not SUPABASE_KEY:
     st.stop()
 
 
-# ============================================================
-# SUPABASE
-# ============================================================
-
 @st.cache_resource
 def init_supabase():
     return create_client(SUPABASE_URL, SUPABASE_KEY)
@@ -36,14 +28,9 @@ def init_supabase():
 supabase = init_supabase()
 
 
-# ============================================================
-# CARICAMENTO PAGINATO DATI
-# ============================================================
-
 def fetch_all_rows(table_name, page_size=1000):
     rows = []
     start = 0
-
     while True:
         end = start + page_size - 1
         response = supabase.table(table_name).select("*").range(start, end).execute()
@@ -69,13 +56,10 @@ def load_quotazioni():
     return pd.DataFrame(fetch_all_rows("giocatori_quotazioni"))
 
 
-# ============================================================
-# NORMALIZZAZIONE
-# ============================================================
-
 def normalize_player_id_series(series):
     numeric = pd.to_numeric(series, errors="coerce")
     return numeric.round().astype("Int64")
+
 
 def normalize_dataframe(df):
     if df.empty:
@@ -85,16 +69,19 @@ def normalize_dataframe(df):
         result["player_id"] = normalize_player_id_series(result["player_id"])
     return result
 
+
 def numeric_series(df, column):
     if column not in df.columns:
         return pd.Series(float("nan"), index=df.index, dtype="float64")
     return pd.to_numeric(df[column], errors="coerce")
+
 
 def safe_sum(df, column):
     if column not in df.columns:
         return 0.0
     values = numeric_series(df, column).fillna(0)
     return float(values.sum())
+
 
 def safe_mean(df, column):
     if column not in df.columns:
@@ -103,6 +90,7 @@ def safe_mean(df, column):
     if values.empty:
         return 0.0
     return float(values.mean())
+
 
 def safe_variance(df, column):
     if column not in df.columns:
@@ -115,10 +103,12 @@ def safe_variance(df, column):
         return None
     return float(value)
 
+
 def format_number(value, decimals=2):
     if value is None or pd.isna(value):
         return "N/D"
     return f"{value:.{decimals}f}"
+
 
 def remove_starred_vote_rows(df):
     if df.empty or "voto" not in df.columns:
@@ -129,6 +119,7 @@ def remove_starred_vote_rows(df):
     if starred.any():
         result = result.loc[~starred].copy()
     return result
+
 
 def calculate_fantavoto(df):
     result = df.copy()
@@ -162,24 +153,17 @@ def calculate_fantavoto(df):
         clean_sheet = clean_sheet.where(is_goalkeeper, 0)
 
     result["fanta_voto_calcolato"] = (
-        voto
-        + gf * 3
-        + ass
-        + rf * 3
-        - au * 2
-        - esp
-        - amm * 0.5
-        + clean_sheet
-        + penalty_saved * 3
+        voto + gf * 3 + ass + rf * 3 - au * 2 - esp - amm * 0.5 + clean_sheet + penalty_saved * 3
     )
-
     result.loc[numeric_series(result, "voto").isna(), "fanta_voto_calcolato"] = float("nan")
     return result
+
 
 def calculate_bonus_malus(df):
     result = calculate_fantavoto(df)
     result["bonus_malus"] = result["fanta_voto_calcolato"] - numeric_series(result, "voto")
     return result
+
 
 def get_continuity(player_stats):
     std = numeric_series(player_stats, "voto").dropna().std()
@@ -191,12 +175,14 @@ def get_continuity(player_stats):
         return float(std), "🟡 Abbastanza continuo"
     return float(std), "🔴 Altalenante"
 
+
 def season_sort_key(value):
     value = str(value).strip()
     try:
         return int(value.split("/")[0])
     except Exception:
         return -1
+
 
 def get_latest_season(df):
     if df.empty or "stagione" not in df.columns:
@@ -207,6 +193,7 @@ def get_latest_season(df):
         return None
     return max(seasons.unique(), key=season_sort_key)
 
+
 def get_latest_quote_row(player_quotes):
     if player_quotes.empty:
         return None
@@ -216,12 +203,15 @@ def get_latest_quote_row(player_quotes):
         result = result.sort_values("_season_sort")
     return result.iloc[-1]
 
+
 def build_rolling_data(player_stats, window=5):
     if player_stats.empty:
         return pd.DataFrame()
+
     required = ["stagione", "giornata"]
     if any(column not in player_stats.columns for column in required):
         return pd.DataFrame()
+
     result = player_stats.copy()
     result["giornata"] = pd.to_numeric(result["giornata"], errors="coerce")
     result = result[result["giornata"].notna()].copy()
@@ -232,19 +222,26 @@ def build_rolling_data(player_stats, window=5):
     result["_season_sort"] = result["stagione"].apply(season_sort_key)
     result = result.sort_values(["_season_sort", "giornata"]).reset_index(drop=True)
     result = calculate_fantavoto(result)
+
     if "voto" in result.columns:
         result["voto"] = pd.to_numeric(result["voto"], errors="coerce")
-        result["media_mobile_voto"] = result.groupby("stagione", sort=False)["voto"].transform(lambda x: x.rolling(window=window, min_periods=1).mean())
-    result["media_mobile_fanta"] = result.groupby("stagione", sort=False)["fanta_voto_calcolato"].transform(lambda x: x.rolling(window=window, min_periods=1).mean())
+        result["media_mobile_voto"] = result.groupby("stagione", sort=False)["voto"].transform(
+            lambda x: x.rolling(window=window, min_periods=1).mean()
+        )
+    result["media_mobile_fanta"] = result.groupby("stagione", sort=False)["fanta_voto_calcolato"].transform(
+        lambda x: x.rolling(window=window, min_periods=1).mean()
+    )
     result["periodo"] = result["stagione"] + " • G" + result["giornata"].astype(str)
     return result
 
-def calculate_relative_metrics(p_stats):
+
+def calculate_relative_metrics(p_stats, is_goalkeeper=False):
     seasons = 0
     if "stagione" in p_stats.columns:
         seasons = p_stats["stagione"].dropna().astype(str).str.strip().nunique()
+
     if seasons <= 0:
-        return {
+        zero_metrics = {
             "stagioni": 0,
             "presenze_medie": 0.0,
             "presenza_pct": 0.0,
@@ -252,27 +249,62 @@ def calculate_relative_metrics(p_stats):
             "gol_38": 0.0,
             "assist_stagione": 0.0,
             "assist_38": 0.0,
+            "rigori_segnati": 0.0,
+            "rigori_sbagliati": 0.0,
+            "ammonizioni": 0.0,
+            "espulsioni": 0.0,
+            "gs_stagione": 0.0,
+            "rigori_parati": 0.0,
         }
+        return zero_metrics
+
     presenze_totali = numeric_series(p_stats, "voto").count()
-    gol_totali = safe_sum(p_stats, "gf")
-    assist_totali = safe_sum(p_stats, "ass")
     presenze_medie = presenze_totali / seasons
-    gol_stagione = gol_totali / seasons
-    assist_stagione = assist_totali / seasons
-    return {
+    presenza_pct = (presenze_medie / 38) * 100
+
+    if is_goalkeeper:
+        gs_totali = safe_sum(p_stats, "gs")
+        rigori_parati_tot = safe_sum(p_stats, "rp")
+        rigori_sbagliati_tot = safe_sum(p_stats, "rs")
+    else:
+        gf_totali = safe_sum(p_stats, "gf")
+        rf_totali = safe_sum(p_stats, "rf")
+        gf_totali += rf_totali  # gol totali con rigori segnati
+        rigori_parati_tot = 0
+        rigori_sbagliati_tot = safe_sum(p_stats, "rs")
+
+    assist_totali = safe_sum(p_stats, "ass")
+    ammonizioni_tot = safe_sum(p_stats, "amm")
+    espulsioni_tot = safe_sum(p_stats, "esp")
+
+    result = {
         "stagioni": seasons,
         "presenze_medie": presenze_medie,
-        "presenza_pct": (presenze_medie / 38) * 100,
-        "gol_stagione": gol_stagione,
-        "gol_38": gol_stagione,
-        "assist_stagione": assist_stagione,
-        "assist_38": assist_stagione,
+        "presenza_pct": presenza_pct,
+        "assist_stagione": assist_totali / seasons,
+        "assist_38": assist_totali / seasons,  # per 38 giornate uguale assist_stagione
+        "rigori_sbagliati": rigori_sbagliati_tot / seasons,
+        "ammonizioni": ammonizioni_tot / seasons,
+        "espulsioni": espulsioni_tot / seasons,
     }
 
+    if is_goalkeeper:
+        result.update({
+            "gs_stagione": gs_totali / seasons,
+            "rigori_parati": rigori_parati_tot / seasons,
+            "gol_stagione": 0.0,
+            "rigori_segnati": 0.0,
+        })
+    else:
+        result.update({
+            "gol_stagione": gf_totali / seasons,
+            "rigori_segnati": rf_totali / seasons,
+            "rigori_parati": 0.0,
+            "gs_stagione": 0.0,
+        })
 
-# ============================================================
-# VISUALIZZAZIONE CARD CON streamlit-elements
-# ============================================================
+    return result
+
 
 def render_quote_card_with_elements(quota, fvm):
     with elements("quote_card"):
@@ -294,13 +326,9 @@ def render_quote_card_with_elements(quota, fvm):
                         mui.Typography(str(fvm), variant="h5", sx={"fontWeight": "600"}),
                     ]
                 )
-            ],
+            ]
         )
 
-
-# ============================================================
-# DETTAGLIO GIOCATORE
-# ============================================================
 
 def render_player_detail(player_id, stats, quotations):
 
@@ -315,29 +343,6 @@ def render_player_detail(player_id, stats, quotations):
 
     p_stats = stats[stats["player_id"] == player_id].copy()
 
-    with st.expander("🔎 Diagnostica giocatore", expanded=False):
-        st.write(f"**Player ID:** `{player_id}`")
-        st.write(f"**Righe quotazioni:** {len(p_quotes):,}")
-        st.write(f"**Righe storico:** {len(p_stats):,}")
-
-        if current_quote is not None:
-            st.success("✅ Quotazione trovata.")
-            st.json({
-                "player_id": current_quote.get("player_id"),
-                "nome": current_quote.get("nome"),
-                "stagione": current_quote.get("stagione"),
-                "quotazione_attuale": current_quote.get("quotazione_attuale"),
-                "fvm": current_quote.get("fvm"),
-            })
-        else:
-            st.error(f"❌ Nessuna quotazione trovata per player_id {player_id}.")
-
-        if not p_stats.empty:
-            st.success("✅ Storico trovato.")
-        else:
-            st.error(f"❌ Nessuna statistica storica trovata per player_id {player_id}.")
-
-    # Anagrafica
     if current_quote is not None:
         nome = current_quote.get("nome", "Giocatore")
         ruolo = current_quote.get("ruolo", "-")
@@ -361,7 +366,6 @@ def render_player_detail(player_id, stats, quotations):
         if current_quote is not None:
             quota = current_quote.get("quotazione_attuale", "-")
             fvm = current_quote.get("fvm", "-")
-
             try:
                 quota_val = int(float(quota))
             except:
@@ -370,14 +374,7 @@ def render_player_detail(player_id, stats, quotations):
                 fvm_val = int(float(fvm))
             except:
                 fvm_val = "-"
-
             render_quote_card_with_elements(quota_val, fvm_val)
-
-    if current_quote is not None:
-        ceduto = current_quote.get("ceduto", False)
-        ceduto_string = str(ceduto).lower()
-        if ceduto is True or ceduto_string == "true" or ceduto_string == "1":
-            st.warning("⚠️ Il giocatore risulta marcato come ceduto.")
 
     if p_stats.empty:
         st.info("Non sono presenti statistiche storiche per questo giocatore.")
@@ -395,15 +392,19 @@ def render_player_detail(player_id, stats, quotations):
 
     p_stats = calculate_bonus_malus(p_stats)
 
+    is_goalkeeper = ruolo.upper() == "P"
+
+    # Rendimento storico - KPI principali e relativi
+
     st.markdown('<div style="border-left: 3px solid #1F7A4D; font-size:19px; font-weight:650; margin-top:28px; margin-bottom:16px; padding-left:10px;">📊 Rendimento storico complessivo</div>', unsafe_allow_html=True)
 
-    relative = calculate_relative_metrics(p_stats)
+    relative = calculate_relative_metrics(p_stats, is_goalkeeper=is_goalkeeper)
+
     presenze = int(numeric_series(p_stats, "voto").count())
     media_voto = safe_mean(p_stats, "voto")
     fantamedia = safe_mean(p_stats, "fanta_voto_calcolato")
     std, continuity_label = get_continuity(p_stats)
-    varianza_voto = safe_variance(p_stats, "voto")
-    varianza_bonus_malus = safe_variance(p_stats, "bonus_malus")
+    varianza_gol = safe_variance(p_stats, "gf" if not is_goalkeeper else "gs")
 
     with st.container():
         k1, k2, k3, k4 = st.columns(4)
@@ -421,20 +422,36 @@ def render_player_detail(player_id, stats, quotations):
         with r1:
             st.metric("Presenze medie / stagione", f"{relative['presenze_medie']:.1f}")
         with r2:
-            st.metric("Gol medi / stagione", f"{relative['gol_stagione']:.2f}")
+            if is_goalkeeper:
+                st.metric("Goal subiti / stagione", f"{relative['gs_stagione']:.2f}")
+            else:
+                st.metric("Gol medi / stagione", f"{relative['gol_stagione']:.2f}")
         with r3:
-            st.metric("Assist medi / stagione", f"{relative['assist_stagione']:.2f}")
+            if is_goalkeeper:
+                st.metric("Rigori parati / stagione", f"{relative['rigori_parati']:.2f}")
+            else:
+                st.metric("Assist medi / stagione", f"{relative['assist_stagione']:.2f}")
         with r4:
             st.metric("Stagioni analizzate", relative["stagioni"])
 
-    st.markdown('<div style="border-left: 3px solid #1F7A4D; font-size:19px; font-weight:650; margin-top:28px; margin-bottom:16px; padding-left:10px;">📐 Variabilità del rendimento</div>', unsafe_allow_html=True)
+    st.markdown('<div style="border-left: 3px solid #1F7A4D; font-size:19px; font-weight:650; margin-top:28px; margin-bottom:16px; padding-left:10px;">📐 Variabilità del rendimento (Varianza Gol)</div>', unsafe_allow_html=True)
+
+    st.metric("Varianza gol", format_number(varianza_gol), help="Varianza del numero di gol per partita/stagione.")
+
+    st.markdown('<div style="border-left: 3px solid #1F7A4D; font-size:19px; font-weight:650; margin-top:28px; margin-bottom:16px; padding-left:10px;">⚽ Altri bonus e malus (media/ stagione)</div>', unsafe_allow_html=True)
 
     with st.container():
-        v1, v2 = st.columns(2)
-        with v1:
-            st.metric("Varianza voto", format_number(varianza_voto), help="Varianza statistica dei voti. Più è bassa, più i voti sono concentrati intorno alla media.")
-        with v2:
-            st.metric("Varianza bonus/malus", format_number(varianza_bonus_malus), help="Varianza del bonus/malus netto per prestazione. Il bonus/malus netto è Fantavoto - Voto.")
+        b1, b2, b3, b4 = st.columns(4)
+        with b1:
+            st.metric("Rigori segnati", f"{relative['rigori_segnati']:.2f}")
+        with b2:
+            st.metric("Rigori sbagliati", f"{relative['rigori_sbagliati']:.2f}")
+        with b3:
+            st.metric("Ammonizioni", f"{relative['ammonizioni']:.2f}")
+        with b4:
+            st.metric("Espulsioni", f"{relative['espulsioni']:.2f}")
+
+    # Andamento della forma (media mobile)
 
     st.markdown('<div style="border-left: 3px solid #1F7A4D; font-size:19px; font-weight:650; margin-top:28px; margin-bottom:16px; padding-left:10px;">📈 Andamento della forma</div>', unsafe_allow_html=True)
 
@@ -444,7 +461,6 @@ def render_player_detail(player_id, stats, quotations):
         st.info("Dati insufficienti per calcolare la media mobile.")
     else:
         fig = go.Figure()
-
         if "media_mobile_voto" in rolling_df.columns:
             fig.add_trace(go.Scatter(
                 x=rolling_df["periodo"],
@@ -455,7 +471,6 @@ def render_player_detail(player_id, stats, quotations):
                 hovertemplate="%{x}<br>Media voto: %{y:.2f}<extra></extra>",
                 connectgaps=False,
             ))
-
         if "media_mobile_fanta" in rolling_df.columns:
             fig.add_trace(go.Scatter(
                 x=rolling_df["periodo"],
@@ -466,7 +481,6 @@ def render_player_detail(player_id, stats, quotations):
                 hovertemplate="%{x}<br>Fantamedia: %{y:.2f}<extra></extra>",
                 connectgaps=False,
             ))
-
         fig.update_layout(
             title="Media mobile a 5 giornate",
             xaxis_title="Stagione / Giornata",
@@ -476,8 +490,9 @@ def render_player_detail(player_id, stats, quotations):
             margin=dict(l=20, r=20, t=60, b=20),
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
         )
-
         st.plotly_chart(fig, use_container_width=True)
+
+    # 📅 Rendimento per stagione (alla fine)
 
     st.markdown('<div style="border-left: 3px solid #1F7A4D; font-size:19px; font-weight:650; margin-top:28px; margin-bottom:16px; padding-left:10px;">📅 Rendimento per stagione</div>', unsafe_allow_html=True)
 
@@ -487,14 +502,30 @@ def render_player_detail(player_id, stats, quotations):
         for season, group in p_stats.groupby("stagione"):
             group_fanta = calculate_fantavoto(group)
 
+            gol_stag = safe_sum(group, "gf") + safe_sum(group, "rf")
+            assist_stag = safe_sum(group, "ass")
+
+            rigori_sg = safe_sum(group, "rf")
+            rigori_sb = safe_sum(group, "rs")
+            amm = safe_sum(group, "amm")
+            esp = safe_sum(group, "esp")
+            gs = safe_sum(group, "gs") if is_goalkeeper else 0
+            rig_parati = safe_sum(group, "rp") if is_goalkeeper else 0
+
             season_rows.append({
                 "Stagione": season,
                 "Presenze": int(numeric_series(group, "voto").count()),
                 "% Presenza": round(numeric_series(group, "voto").count() / 38 * 100, 1),
                 "Media voto": round(safe_mean(group, "voto"), 2),
                 "Fantamedia": round(safe_mean(group_fanta, "fanta_voto_calcolato"), 2),
-                "Gol": int(safe_sum(group, "gf")),
-                "Assist": int(safe_sum(group, "ass")),
+                "Gol Totali": int(gol_stag),
+                "Assist": int(assist_stag),
+                "Rigori segnati": int(rigori_sg),
+                "Rigori sbagliati": int(rigori_sb),
+                "Ammonizioni": int(amm),
+                "Espulsioni": int(esp),
+                "Goal subiti": int(gs),
+                "Rigori parati": int(rig_parati),
                 "Bonus/malus medio": round(safe_mean(calculate_bonus_malus(group), "bonus_malus"), 2),
             })
 
@@ -505,29 +536,6 @@ def render_player_detail(player_id, stats, quotations):
             season_agg = season_agg.sort_values("_sort").drop(columns="_sort")
 
             st.dataframe(season_agg, use_container_width=True, hide_index=True)
-
-    st.markdown('<div style="border-left: 3px solid #1F7A4D; font-size:19px; font-weight:650; margin-top:28px; margin-bottom:16px; padding-left:10px;">⚽ Altri bonus e malus</div>', unsafe_allow_html=True)
-
-    with st.container():
-        b1, b2, b3, b4 = st.columns(4)
-        with b1:
-            st.metric("Rigori segnati", int(safe_sum(p_stats, "rf")))
-        with b2:
-            st.metric("Rigori sbagliati", int(safe_sum(p_stats, "rs")))
-        with b3:
-            st.metric("Ammonizioni", int(safe_sum(p_stats, "amm")))
-        with b4:
-            st.metric("Espulsioni", int(safe_sum(p_stats, "esp")))
-
-    with st.expander("📄 Visualizza statistiche storiche complete"):
-        display_stats = p_stats.copy()
-        if "fanta_voto_calcolato" in display_stats.columns:
-            display_stats["fanta_voto"] = display_stats["fanta_voto_calcolato"]
-        st.dataframe(display_stats, use_container_width=True, hide_index=True)
-
-        csv = display_stats.to_csv(index=False).encode("utf-8")
-
-        st.download_button("⬇️ Scarica CSV", data=csv, file_name=f"{nome}_storico.csv", mime="text/csv")
 
 
 # ============================================================
@@ -565,17 +573,6 @@ quot = quot[quot["player_id"].notna()].copy()
 
 df = remove_starred_vote_rows(df)
 
-stats_ids = set(df["player_id"].dropna().astype(int).unique())
-quote_ids = set(quot["player_id"].dropna().astype(int).unique())
-common_ids = stats_ids.intersection(quote_ids)
-
-with st.expander("🔎 Diagnostica database", expanded=False):
-    st.write(f"**Righe storico valide:** {len(df):,}")
-    st.write(f"**Righe quotazioni:** {len(quot):,}")
-    st.write(f"**Player ID distinti storico:** {len(stats_ids):,}")
-    st.write(f"**Player ID distinti quotazioni:** {len(quote_ids):,}")
-    st.write(f"**Player ID presenti in entrambe:** {len(common_ids):,}")
-
 latest_season = get_latest_season(quot)
 if latest_season is not None:
     current_quot = quot[quot["stagione"].astype(str).str.strip() == str(latest_season).strip()].copy()
@@ -584,18 +581,10 @@ else:
 
 st.title("⚽ FantaAI")
 
-if latest_season:
-    st.markdown(f"### Analisi dei giocatori della rosa attuale\n\nQuotazioni stagione **{latest_season}**")
-else:
-    st.markdown("### Analisi dei giocatori della rosa attuale")
-
 role_col, info_col = st.columns([1, 3])
 
 with role_col:
     selected_role = st.selectbox("Filtra per ruolo", ["Tutti", "P", "D", "C", "A"])
-
-with info_col:
-    st.markdown(f"**Rosa attuale:** {len(current_quot)} giocatori")
 
 quot_view = current_quot.copy()
 if selected_role != "Tutti" and "ruolo" in quot_view.columns:
