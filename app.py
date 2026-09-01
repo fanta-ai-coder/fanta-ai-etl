@@ -15,7 +15,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# Design System CSS (UI/UX Pro Max Spec: Modern Sports Analytics Dark)
+# CSS Ottimizzato (UI/UX Pro Max: Alto contrasto WCAG + Layout a colonna singola)
 st.markdown(
     """
     <style>
@@ -24,20 +24,14 @@ st.markdown(
     html, body, [class*="css"], .stApp {
         font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
         background-color: #0B0F19;
-        color: #F1F5F9;
+        color: #F8FAFC;
     }
 
-    /* Background App */
     .stAppViewContainer {
         background-color: #0B0F19;
     }
 
-    /* Custom Container / Card Elevation */
-    [data-testid="stVerticalBlock"] > div:has(div.fanta-card) {
-        background: transparent;
-    }
-
-    /* Scrollbar moderna */
+    /* Scrollbar moderna verticale */
     ::-webkit-scrollbar {
         width: 6px;
         height: 6px;
@@ -53,40 +47,70 @@ st.markdown(
         background: #10B981;
     }
 
-    /* Radio lista giocatori */
+    /* ===================================================
+       LISTA GIOCATORI: COLONNA SINGOLA E TESTO AD ALTO CONTRASTO
+       =================================================== */
+    [data-testid="stRadio"] div[role="radiogroup"],
     [data-testid="stRadio"] > div {
-        background-color: #111827;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 12px;
-        padding: 8px;
-        max-height: 620px;
-        overflow-y: auto;
-        gap: 4px;
-    }
-    [data-testid="stRadio"] label {
-        background-color: #1F2937;
-        border-radius: 8px;
-        padding: 10px 14px !important;
-        margin-bottom: 4px !important;
-        border: 1px solid rgba(255, 255, 255, 0.04);
-        transition: all 0.15s ease;
-        cursor: pointer;
-    }
-    [data-testid="stRadio"] label:hover {
-        background-color: #374151;
-        border-color: rgba(16, 185, 129, 0.3);
-    }
-    [data-testid="stRadio"] label[data-checked="true"] {
-        background-color: rgba(16, 185, 129, 0.15) !important;
-        border-color: #10B981 !important;
-    }
-    [data-testid="stRadio"] label span {
-        color: #F3F4F6 !important;
-        font-weight: 600 !important;
-        font-size: 14px !important;
+        display: flex !important;
+        flex-direction: column !important; /* Forza una sola colonna verticale */
+        flex-wrap: nowrap !important;
+        width: 100% !important;
+        max-height: 580px !important;       /* Altezza fissa con scroll */
+        overflow-y: auto !important;        /* Scorrimento solo verticale */
+        overflow-x: hidden !important;      /* Niente scorrimento orizzontale */
+        background-color: #0F172A !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        border-radius: 12px !important;
+        padding: 8px !important;
+        gap: 6px !important;
     }
 
-    /* Input & Select boxes */
+    /* Card di ogni giocatore */
+    [data-testid="stRadio"] label {
+        display: flex !important;
+        align-items: center !important;
+        width: 100% !important;
+        background-color: #1E293B !important;
+        border: 1px solid rgba(255, 255, 255, 0.06) !important;
+        border-radius: 8px !important;
+        padding: 10px 14px !important;
+        margin: 0 !important;
+        cursor: pointer !important;
+        transition: all 0.15s ease !important;
+        min-height: 44px !important; /* Touch target conforme HIG/WCAG */
+    }
+
+    [data-testid="stRadio"] label:hover {
+        background-color: #334155 !important;
+        border-color: rgba(16, 185, 129, 0.4) !important;
+    }
+
+    /* Testo del nome: BIANCO PURO (#FFFFFF) super leggibile */
+    [data-testid="stRadio"] label *,
+    [data-testid="stRadio"] label p,
+    [data-testid="stRadio"] label span,
+    [data-testid="stRadio"] label div {
+        color: #FFFFFF !important;
+        font-size: 14px !important;
+        font-weight: 600 !important;
+        opacity: 1 !important;
+    }
+
+    /* Elemento selezionato (Verde Smeraldo) */
+    [data-testid="stRadio"] label:has(input:checked) {
+        background-color: rgba(16, 185, 129, 0.2) !important;
+        border: 1.5px solid #10B981 !important;
+    }
+
+    [data-testid="stRadio"] label:has(input:checked) *,
+    [data-testid="stRadio"] label:has(input:checked) p,
+    [data-testid="stRadio"] label:has(input:checked) span {
+        color: #34D399 !important;
+        font-weight: 700 !important;
+    }
+
+    /* Input & Select */
     .stTextInput input, .stSelectbox [data-baseweb="select"] {
         background-color: #111827 !important;
         border: 1px solid #374151 !important;
@@ -94,7 +118,7 @@ st.markdown(
         color: #F9FAFB !important;
     }
 
-    /* Streamlit Metrics */
+    /* Metrics */
     [data-testid="stMetric"] {
         background-color: #111827;
         border: 1px solid rgba(255, 255, 255, 0.06);
