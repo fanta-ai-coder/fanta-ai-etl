@@ -103,6 +103,20 @@ def load_stats():
 def load_quotazioni():
     return pd.DataFrame(fetch_all_rows("giocatori_quotazioni"))
 
+@st.cache_data(ttl=3600)
+def load_rigoristi_csv():
+    url = "https://raw.githubusercontent.com/fanta-ai-coder/fanta-ai-etl/main/rigoristi.csv"
+    df = pd.read_csv(url, sep=',', skip_blank_lines=True, on_bad_lines='skip')
+    df['giocatore_lc'] = df['giocatore'].str.lower()
+    return df
+
+@st.cache_data(ttl=3600)
+def load_punizioni_csv():
+    url = "https://raw.githubusercontent.com/fanta-ai-coder/fanta-ai-etl/main/punizioni.csv"
+    df = pd.read_csv(url, sep=',', skip_blank_lines=True, on_bad_lines='skip')
+    df['giocatore_lc'] = df['giocatore'].str.lower()
+    return df
+
 def normalize_player_id_series(series):
     numeric = pd.to_numeric(series, errors="coerce")
     return numeric.round().astype("Int64")
@@ -130,13 +144,11 @@ def remove_starred_vote_rows(df):
         result = result.loc[~starred].copy()
     return result
 
-# Funzioni placeholder (sostituisci con le tue implementazioni complete)
+# Placeholder funzioni (sostituisci con implementazioni complete)
 def calculate_bonus_malus(df): return df
 def get_latest_quote_row(df): return df.iloc[-1] if not df.empty else None
 def calculate_relative_metrics(p_stats, is_goalkeeper=False): 
-    return {"presenza_pct": 75.3, "presenze_medie": 28.5, "gol_stagione": 0, "gs_stagione":0,
-            "rigori_parati":0, "rigori_segnati":0, "rigori_sbagliati":0, "assist_stagione":0,
-            "ammonizioni":0, "espulsioni":0, "stagioni":1}
+    return {"presenza_pct": 75.3, "presenze_medie": 28.5}
 def varianza_gol_binaria(df): return 0.1
 def safe_mean(df, col): return 6.5
 
@@ -292,9 +304,9 @@ def render_player_detail(player_id, stats, quotations, rigoristi_df, punitori_df
             st.markdown(f'<div style="{kpi_styles} font-size: 1.1rem;">Fantamedia</div>'
                         f'<div style="{kpi_styles} font-size: 1.8rem;">{fantamedia:.2f}</div>', unsafe_allow_html=True)
 
-    # Continua con gli altri dettagli come nel tuo codice originale...
+    # Continua con il resto del tuo codice come grafici, tabelle etc...
 
-# Caricamento dati e setup
+# Caricamento dati principali
 try:
     df = load_stats()
     quot = load_quotazioni()
