@@ -137,6 +137,7 @@ def calculate_fantavoto(df):
 
     clean_sheet = pd.Series(0.0, index=result.index)
     penalty_saved = pd.Series(0.0, index=result.index)
+    gol_subiti = pd.Series(0.0, index=result.index)
 
     for column in ["pi", "porta_inviolata", "clean_sheet", "imbattuto"]:
         if column in result.columns:
@@ -148,15 +149,36 @@ def calculate_fantavoto(df):
             penalty_saved = numeric_series(result, column).fillna(0)
             break
 
+    # Aggiungi qui la colonna gol_subiti per penalità
+    for column in ["gs", "gol_subiti"]:
+        if column in result.columns:
+            gol_subiti = numeric_series(result, column).fillna(0)
+            break
+
     if "ruolo" in result.columns:
         is_goalkeeper = result["ruolo"].astype(str).str.strip().str.upper().eq("P")
         clean_sheet = clean_sheet.where(is_goalkeeper, 0)
+        gol_subiti = gol_subiti.where(is_goalkeeper, 0)
+    else:
+        is_goalkeeper = pd.Series(False, index=result.index)
 
     result["fanta_voto_calcolato"] = (
-        voto + gf * 3 + ass + rf * 3 - au * 2 - esp - amm * 0.5 + clean_sheet + penalty_saved * 3
+        voto
+        + gf * 3
+        + ass
+        + rf * 3
+        - au * 2
+        - esp
+        - amm * 0.5
+        + clean_sheet
+        + penalty_saved * 3
+        - gol_subiti  # Penalità -1 per ogni gol subito (solo portieri)
     )
+
     result.loc[numeric_series(result, "voto").isna(), "fanta_voto_calcolato"] = float("nan")
+
     return result
+
 
 
 def calculate_bonus_malus(df):
