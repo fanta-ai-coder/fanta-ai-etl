@@ -105,6 +105,27 @@ def load_stats():
 def load_quotazioni():
     return pd.DataFrame(fetch_all_rows("giocatori_quotazioni"))
 
+@st.cache_data(ttl=600)
+def load_rigoristi():
+    url = "https://raw.githubusercontent.com/fanta-ai-coder/fanta-ai-etl/refs/heads/main/rigoristi.csv"
+    df = pd.read_csv(url)
+    # Normalizza testo per un confronto più sicuro
+    df["giocatore"] = df["giocatore"].str.upper().str.strip()
+    df["squadra"] = df["squadra"].str.upper().str.strip()
+    return df
+
+@st.cache_data(ttl=600)
+def load_punizioni():
+    url = "https://raw.githubusercontent.com/fanta-ai-coder/fanta-ai-etl/refs/heads/main/punizioni.csv"
+    df = pd.read_csv(url)
+    df["giocatore"] = df["giocatore"].str.upper().str.strip()
+    df["squadra"] = df["squadra"].str.upper().str.strip()
+    return df
+
+# Carica dati esterni
+rigoristi_df = load_rigoristi()
+punizioni_df = load_punizioni()
+
 def normalize_player_id_series(series):
     numeric = pd.to_numeric(series, errors="coerce")
     return numeric.round().astype("Int64")
@@ -167,7 +188,6 @@ def calculate_fantavoto(df):
     if "voto" not in result.columns:
         result["fanta_voto_calcolato"] = float("nan")
         return result
-
     voto = numeric_series(result, "voto").fillna(0)
     gf = numeric_series(result, "gf").fillna(0)
     ass = numeric_series(result, "ass").fillna(0)
@@ -175,33 +195,27 @@ def calculate_fantavoto(df):
     au = numeric_series(result, "au").fillna(0)
     esp = numeric_series(result, "esp").fillna(0)
     amm = numeric_series(result, "amm").fillna(0)
-
     clean_sheet = pd.Series(0.0, index=result.index)
     penalty_saved = pd.Series(0.0, index=result.index)
     gol_subiti = pd.Series(0.0, index=result.index)
-
     for column in ["pi", "porta_inviolata", "clean_sheet", "imbattuto"]:
         if column in result.columns:
             clean_sheet = numeric_series(result, column).fillna(0)
             break
-
     for column in ["rp", "rigori_parati", "rigore_parato"]:
         if column in result.columns:
             penalty_saved = numeric_series(result, column).fillna(0)
             break
-
     for column in ["gs", "gol_subiti"]:
         if column in result.columns:
             gol_subiti = numeric_series(result, column).fillna(0)
             break
-
     if "ruolo" in result.columns:
         is_goalkeeper = result["ruolo"].astype(str).str.strip().str.upper().eq("P")
         clean_sheet = clean_sheet.where(is_goalkeeper, 0)
         gol_subiti = gol_subiti.where(is_goalkeeper, 0)
     else:
         is_goalkeeper = pd.Series(False, index=result.index)
-
     result["fanta_voto_calcolato"] = (
         voto
         + gf * 3
@@ -214,9 +228,7 @@ def calculate_fantavoto(df):
         + penalty_saved * 3
         - gol_subiti
     )
-
     result.loc[numeric_series(result, "voto").isna(), "fanta_voto_calcolato"] = float("nan")
-
     return result
 
 def calculate_bonus_malus(df):
@@ -225,11 +237,9 @@ def calculate_bonus_malus(df):
     return result
 
 def calculate_relative_metrics(p_stats, is_goalkeeper=False):
-    # Funzione essenziale definita qui
     seasons = 0
     if "stagione" in p_stats.columns:
         seasons = p_stats["stagione"].dropna().astype(str).str.strip().nunique()
-
     if seasons <= 0:
         zero_metrics = {
             "stagioni": 0,
@@ -245,11 +255,9 @@ def calculate_relative_metrics(p_stats, is_goalkeeper=False):
             "rigori_parati": 0.0,
         }
         return zero_metrics
-
     presenze_totali = numeric_series(p_stats, "voto").count()
     presenze_medie = presenze_totali / seasons
     presenza_pct = (presenze_medie / 38) * 100
-
     if is_goalkeeper:
         gs_totali = safe_sum(p_stats, "gs")
         rigori_parati_tot = safe_sum(p_stats, "rp")
@@ -260,11 +268,9 @@ def calculate_relative_metrics(p_stats, is_goalkeeper=False):
         gf_totali += rf_totali
         rigori_parati_tot = 0
         rigori_sbagliati_tot = safe_sum(p_stats, "rs")
-
     assist_totali = safe_sum(p_stats, "ass")
     ammonizioni_tot = safe_sum(p_stats, "amm")
     espulsioni_tot = safe_sum(p_stats, "esp")
-
     result = {
         "stagioni": seasons,
         "presenze_medie": presenze_medie,
@@ -274,7 +280,6 @@ def calculate_relative_metrics(p_stats, is_goalkeeper=False):
         "ammonizioni": ammonizioni_tot / seasons,
         "espulsioni": espulsioni_tot / seasons,
     }
-
     if is_goalkeeper:
         result.update({
             "gs_stagione": gs_totali / seasons,
@@ -289,7 +294,6 @@ def calculate_relative_metrics(p_stats, is_goalkeeper=False):
             "rigori_parati": 0.0,
             "gs_stagione": 0.0,
         })
-
     return result
 
 def varianza_gol_binaria(p_stats):
@@ -303,11 +307,9 @@ def varianza_gol_binaria(p_stats):
 def build_rolling_data(player_stats, window=5):
     if player_stats.empty:
         return pd.DataFrame()
-
     required = ["stagione", "giornata"]
     if any(column not in player_stats.columns for column in required):
         return pd.DataFrame()
-
     result = player_stats.copy()
     result["giornata"] = pd.to_numeric(result["giornata"], errors="coerce")
     result = result[result["giornata"].notna()].copy()
@@ -318,7 +320,6 @@ def build_rolling_data(player_stats, window=5):
     result["_season_sort"] = result["stagione"].apply(season_sort_key)
     result = result.sort_values(["_season_sort", "giornata"]).reset_index(drop=True)
     result = calculate_fantavoto(result)
-
     if "voto" in result.columns:
         result["voto"] = pd.to_numeric(result["voto"], errors="coerce")
         result["media_mobile_voto"] = result.groupby("stagione", sort=False)["voto"].transform(
@@ -451,11 +452,44 @@ def render_player_detail(player_id, stats, quotations):
         ruolo = "-"
         squadra = "-"
 
+    # Normalizza per matching con CSV
+    nome_upper = str(nome).upper().strip()
+    squadra_upper = str(squadra).upper().strip()
+
+    # Controllo rigorista
+    rigor_info = rigoristi_df[
+        (rigoristi_df["giocatore"] == nome_upper) & (rigoristi_df["squadra"] == squadra_upper)
+    ]
+    tiratore_rigori = False
+    pos_rigori = None
+    if not rigor_info.empty:
+        tiratore_rigori = True
+        pos_rigori = int(rigor_info["posizione"].values[0])
+
+    # Controllo punizioni
+    punizioni_info = punizioni_df[
+        (punizioni_df["giocatore"] == nome_upper) & (punizioni_df["squadra"] == squadra_upper)
+    ]
+    tiratore_punizioni = False
+    pos_punizioni = None
+    if not punizioni_info.empty:
+        tiratore_punizioni = True
+        pos_punizioni = int(punizioni_info["posizione"].values[0])
+
+    # Crea descrizione da mostrare sotto nome
+    info_bonus = []
+    if tiratore_rigori:
+        info_bonus.append(f"Rigorista (posizione ranking: {pos_rigori})")
+    if tiratore_punizioni:
+        info_bonus.append(f"Tira punizioni (posizione ranking: {pos_punizioni})")
+    bonus_descr = " • ".join(info_bonus) if info_bonus else "-"
+
     header_left, header_right = st.columns([2.6, 1])
 
     with header_left:
         st.markdown(f'<h1 style="font-weight:bold; font-size:2.5rem; margin-bottom:0.1rem;">{html.escape(str(nome))}</h1>', unsafe_allow_html=True)
-        st.markdown(f'<div style="color:#7C8794; font-size:15px; margin-top:-10px; margin-bottom:16px;">{html.escape(str(squadra))} • {html.escape(str(ruolo))}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div style="color:#7C8794; font-size:15px; margin-top:-10px; margin-bottom:8px;">{html.escape(str(squadra))} • {html.escape(str(ruolo))}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div style="color:#74b274; font-size:14px; font-weight:600; margin-top:-6px; margin-bottom:16px;">{html.escape(bonus_descr)}</div>', unsafe_allow_html=True)
 
     with header_right:
         if current_quote is not None:
@@ -656,8 +690,7 @@ def render_player_detail(player_id, stats, quotations):
 
             st.dataframe(season_agg, use_container_width=True, hide_index=True)
 
-
-# Caricamento dati e UI generale
+# Caricamento dati e UI
 
 try:
     df = load_stats()
