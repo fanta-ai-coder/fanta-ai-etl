@@ -666,11 +666,10 @@ render_kpi_card("Indice Affidabilità/Convenienza", f"{indice_val:.3f}", highlig
             render_kpi_card("Media GS / Stagione", f"{rel['gs_stagione']:.2f}", highlight=True)
         else:
             render_kpi_card("Gol Medi / Anno", f"{rel['gol_stagione']:.1f}", f"{rel['assist_stagione']:.1f} assist medi")
-
+    
     # Nuova riga per indice
     st.markdown("<br>", unsafe_allow_html=True)
     render_kpi_card("Indice Affidabilità/Convenienza", f"{indice_val:.3f}", highlight=True)
-
 
     # Seconda riga: solo per portieri, per bilanciare il layout
     if is_goalkeeper:
