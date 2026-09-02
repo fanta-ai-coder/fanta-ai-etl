@@ -656,17 +656,32 @@ def render_player_detail(player_id, stats, quotations):
         rows = []
         for s, g in p_stats.groupby("stagione"):
             gfanta = calculate_fantavoto(g)
-            rows.append({
-                "Stagione": s,
-                "Presenze": int(numeric_series(g, "voto").count()),
-                "Media Voto": round(safe_mean(g, "voto"), 2),
-                "Fantamedia": round(safe_mean(gfanta, "fanta_voto_calcolato"), 2),
-                "Gol": int(safe_sum(g, "gf") + safe_sum(g, "rf")),
-                "Assist": int(safe_sum(g, "ass")),
-                "Amm": int(safe_sum(g, "amm")),
-                "Esp": int(safe_sum(g, "esp")),
-                "Malus/Bonus Medio": round(safe_mean(calculate_bonus_malus(g), "bonus_malus"), 2),
-            })
+            if is_goalkeeper:
+                gol_subiti = int(safe_sum(g, "gs"))
+                rows.append({
+                    "Stagione": s,
+                    "Presenze": int(numeric_series(g, "voto").count()),
+                    "Media Voto": round(safe_mean(g, "voto"), 2),
+                    "Fantamedia": round(safe_mean(gfanta, "fanta_voto_calcolato"), 2),
+                    "Gol Subiti": gol_subiti,
+                    "Assist": int(safe_sum(g, "ass")),
+                    "Amm": int(safe_sum(g, "amm")),
+                    "Esp": int(safe_sum(g, "esp")),
+                    "Malus/Bonus Medio": round(safe_mean(calculate_bonus_malus(g), "bonus_malus"), 2),
+                })
+            else:
+                rows.append({
+                    "Stagione": s,
+                    "Presenze": int(numeric_series(g, "voto").count()),
+                    "Media Voto": round(safe_mean(g, "voto"), 2),
+                    "Fantamedia": round(safe_mean(gfanta, "fanta_voto_calcolato"), 2),
+                    "Gol": int(safe_sum(g, "gf") + safe_sum(g, "rf")),
+                    "Assist": int(safe_sum(g, "ass")),
+                    "Amm": int(safe_sum(g, "amm")),
+                    "Esp": int(safe_sum(g, "esp")),
+                    "Malus/Bonus Medio": round(safe_mean(calculate_bonus_malus(g), "bonus_malus"), 2),
+                })
+
         season_df = pd.DataFrame(rows)
         if not season_df.empty:
             season_df["_sort"] = season_df["Stagione"].apply(season_sort_key)
