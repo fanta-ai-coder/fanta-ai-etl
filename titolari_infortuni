@@ -1,0 +1,71 @@
+nome_giocatore,squadra,titolarita,squalificato,infortunato,desc_infortunio
+Bijlow,Genoa,titolare,no,no,
+Marcandalli,Genoa,titolare,no,no,
+Ostigard,Genoa,titolare,no,no,
+Vasquez,Genoa,titolare,no,no,
+Ellertsson,Genoa,titolare,no,no,
+Frendrup,Genoa,titolare,no,no,
+Sow,Genoa,titolare,no,no,
+Mitaj,Genoa,titolare,no,no,
+Baldanzi,Genoa,titolare,no,no,
+Vitinha O.,Genoa,panchina,no,no,
+Colombo,Genoa,titolare,no,no,
+Stolz,Genoa,panchina,no,no,
+Sommariva,Genoa,panchina,no,no,
+Otoa,Genoa,panchina,no,no,
+Sabelli,Genoa,panchina,no,no,
+Drameh,Genoa,panchina,no,no,
+Puczka,Genoa,panchina,no,no,
+Amorim,Genoa,panchina,no,no,
+Messias,Genoa,panchina,no,no,
+Traorè Hj.,Genoa,panchina,no,no,
+Meichtry,Genoa,panchina,no,no,
+Zulevic,Genoa,panchina,no,no,
+Havel,Genoa,panchina,no,no,
+Robinho Junior,Genoa,panchina,no,no,
+Osmajic,Genoa,panchina,no,no,
+Butez,Como,titolare,no,no,
+Couto,Como,titolare,no,no,
+Chalobah T.,Como,titolare,no,no,
+Ramon,Como,titolare,no,no,
+Valle,Como,titolare,no,no,
+Da Cunha,Como,titolare,no,no,
+Perrone,Como,titolare,no,no,
+Diao,Como,titolare,no,no,
+Paz N.,Como,titolare,no,no,
+Baturina,Como,titolare,no,no,
+Kean,Como,panchina,no,no,
+Venturino,Genoa,panchina,no,si,"problema al tendine rotuleo, ipotesi rientro fine settembre"
+Addai,Como,panchina,no,si,"rottura tendine d'Achille, rientro dalla seconda metà di settembre"
+Parisi,Fiorentina,panchina,no,si,"infortunio al legamento crociato, rientro da novembre"
+Casadei,Torino,panchina,no,si,"affaticamento muscolare, da valutare per Firenze"
+Buongiorno,Napoli,panchina,no,si,"problema al menisco del ginocchio destro, ipotesi rientro da metà novembre"
+Marianucci,Napoli,panchina,no,si,"lesione di alto grado del collaterale mediale del ginocchio sinistro, ipotesi rientro da ottobre"
+McTominay,Napoli,panchina,no,si,"lieve aritmia benigna, rientro da inizio ottobre"
+N'Dicka,Roma,panchina,no,si,"fastidio all'adduttore, da valutare contro Atalanta"
+Rensch,Roma,panchina,no,si,"risentimento muscolare al flessore sinistro, da valutare contro Atalanta"
+Hien,Atalanta,panchina,no,si,"lesione del tendine prossimale del muscolo semimembranoso della coscia sinistra, rientro inizio ottobre"
+Sulemana K.,Atalanta,panchina,no,si,"lesione del collaterale mediale di secondo grado del ginocchio sinistro, rientro da inizio ottobre"
+Kristensen T.,Atalanta,panchina,no,si,"problema alla caviglia, da valutare contro la Roma"
+Moreno M.,Venezia,panchina,no,si,"noie fisiche, da valutare rientro dalla 3a giornata"
+Sverko,Venezia,panchina,no,si,"problema all'anca, rientro fine ottobre"
+Franjic,Venezia,panchina,no,si,"problema fisico, out contro il Frosinone"
+Adorante,Venezia,panchina,no,si,"problema alla schiena, rientro da ottobre"
+El Azzouzi O.,Bologna,panchina,no,si,"lesione del bicipite femorale della coscia sinistra, rientro dalla seconda metà di settembre"
+Orsolini,Bologna,panchina,no,si,"risentimento ai flessori della coscia sinistra, ipotesi rientro da fine settembre"
+Walukiewicz,Sassuolo,panchina,no,si,"trauma contusivo alla gamba destra, da valutare convocazione dalla 3a giornata"
+Candè,Sassuolo,panchina,no,si,"rottura legamento crociato anteriore ginocchio destro, tentativo rientro da metà settembre"
+Pieragnolo,Sassuolo,panchina,no,si,"lesione legamento crociato anteriore gamba destra, ipotesi rientro da ottobre"
+Boloca,Sassuolo,panchina,no,si,"problema al ginocchio, da valutare rientro da fine settembre"
+Konè I.,Sassuolo,panchina,no,si,"rottura di tibia e perone gamba sinistra, rientro da dicembre"
+McKennie,Juventus,panchina,no,si,"affaticamento muscolare, da valutare contro il Milan"
+Thuram K.,Juventus,panchina,no,si,"sindrome femoro-rotulea, ipotesi rientro da gennaio"
+Ekhator,Juventus,panchina,no,si,"lesione di medio grado del muscolo semitendinoso, ipotesi rientro da fine ottobre"
+Yildiz,Juventus,panchina,no,si,"frattura metatarso piede sinistro, ipotesi rientro da fine novembre"
+Cambiaso,Juventus,panchina,no,si,"fastidio alla caviglia, in dubbio contro il Milan"
+El Azzouzi A.,Bologna,panchina,no,si,"lesione del bicipite femorale della coscia sinistra, rientro dalla seconda metà di settembre"
+Orsolini,Bologna,panchina,no,si,"risentimento ai flessori della coscia sinistra, ipotesi rientro da fine settembre"
+Mina,Cagliari,panchina,no,si,"affaticamento muscolare al polpaccio, da valutare contro il Lecce"
+Idrissi R.,Cagliari,panchina,no,si,"rottura del legamento crociato, rientro da fine ottobre"
+Trepy,Cagliari,panchina,no,si,"noie fisiche, out contro Lecce"
+Geubbels,Lecce,panchina,no,si,"distorsione alla caviglia, out a Cagliari"
