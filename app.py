@@ -15,7 +15,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# CSS Ottimizzato (UI/UX Pro Max: Alto contrasto WCAG + Layout a colonna singola)
+# CSS Ottimizzato (UI/UX Pro Max: Alto contrasto WCAG + Layout a colonna singola + No Scroll Jump)
 st.markdown(
     """
     <style>
@@ -25,10 +25,14 @@ st.markdown(
         font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
         background-color: #0B0F19;
         color: #F8FAFC;
+        overflow-anchor: none !important;
+        scroll-behavior: auto !important;
     }
 
-    .stAppViewContainer {
+    .stAppViewContainer, section.main, [data-testid="stMainBlockContainer"] {
         background-color: #0B0F19;
+        overflow-anchor: none !important;
+        scroll-behavior: auto !important;
     }
 
     /* Scrollbar moderna verticale */
@@ -48,37 +52,44 @@ st.markdown(
     }
 
     /* ===================================================
-       LISTA GIOCATORI: COLONNA SINGOLA E TESTO AD ALTO CONTRASTO
+       LISTA GIOCATORI: CARD CLICCABILI (SENZA QUADRATINI O PALLINI)
        =================================================== */
-    [data-testid="stRadio"] div[role="radiogroup"],
-    [data-testid="stRadio"] > div {
+    [data-testid="stRadio"] div[role="radiogroup"] {
         display: flex !important;
-        flex-direction: column !important; /* Forza una sola colonna verticale */
+        flex-direction: column !important;
         flex-wrap: nowrap !important;
         width: 100% !important;
-        max-height: 580px !important;       /* Altezza fissa con scroll */
-        overflow-y: auto !important;        /* Scorrimento solo verticale */
-        overflow-x: hidden !important;      /* Niente scorrimento orizzontale */
-        background-color: #0F172A !important;
+        max-height: 620px !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        background-color: #111827 !important;
         border: 1px solid rgba(255, 255, 255, 0.08) !important;
         border-radius: 12px !important;
         padding: 8px !important;
-        gap: 6px !important;
+        gap: 5px !important;
+        overscroll-behavior: contain !important;
+        contain: content !important;
     }
 
-    /* Card di ogni giocatore */
+    /* Rimuove completamente il cerchietto o quadratino nativo */
+    [data-testid="stRadio"] label > div:first-child,
+    [data-testid="stRadio"] input[type="radio"] {
+        display: none !important;
+    }
+
+    /* Card di ogni giocatore cliccabile per intero */
     [data-testid="stRadio"] label {
         display: flex !important;
         align-items: center !important;
+        justify-content: space-between !important;
         width: 100% !important;
         background-color: #1E293B !important;
-        border: 1px solid rgba(255, 255, 255, 0.06) !important;
+        border: 1px solid rgba(255, 255, 255, 0.05) !important;
         border-radius: 8px !important;
         padding: 10px 14px !important;
         margin: 0 !important;
         cursor: pointer !important;
         transition: all 0.15s ease !important;
-        min-height: 44px !important; /* Touch target conforme HIG/WCAG */
     }
 
     [data-testid="stRadio"] label:hover {
@@ -86,31 +97,29 @@ st.markdown(
         border-color: rgba(16, 185, 129, 0.4) !important;
     }
 
-    /* Testo del nome: BIANCO PURO (#FFFFFF) super leggibile */
-    [data-testid="stRadio"] label *,
+    /* Testo del nome chiaro ed elegante */
     [data-testid="stRadio"] label p,
     [data-testid="stRadio"] label span,
     [data-testid="stRadio"] label div {
-        color: #FFFFFF !important;
+        color: #F1F5F9 !important;
         font-size: 14px !important;
         font-weight: 600 !important;
-        opacity: 1 !important;
+        margin: 0 !important;
     }
 
-    /* Elemento selezionato (Verde Smeraldo) */
+    /* Giocatore Selezionato (Verde Smeraldo + Glow) */
     [data-testid="stRadio"] label:has(input:checked) {
         background-color: rgba(16, 185, 129, 0.2) !important;
         border: 1.5px solid #10B981 !important;
     }
 
-    [data-testid="stRadio"] label:has(input:checked) *,
     [data-testid="stRadio"] label:has(input:checked) p,
     [data-testid="stRadio"] label:has(input:checked) span {
         color: #34D399 !important;
         font-weight: 700 !important;
     }
 
-    /* Input & Select */
+    /* Input & Selectboxes */
     .stTextInput input, .stSelectbox [data-baseweb="select"] {
         background-color: #111827 !important;
         border: 1px solid #374151 !important;
@@ -133,6 +142,28 @@ st.markdown(
     [data-testid="stMetricValue"] {
         color: #F8FAFC !important;
         font-weight: 700;
+    }
+
+    /* Evita salti di scroll / focus jump */
+    [data-testid="stRadio"],
+    [data-testid="stRadio"] *,
+    [data-testid="stRadio"] label,
+    [data-testid="stRadio"] input {
+        scroll-margin: 0 !important;
+        scroll-padding: 0 !important;
+        scroll-margin-top: 0 !important;
+        scroll-margin-bottom: 0 !important;
+    }
+
+    /* Colonna sinistra sticky fissata in alto */
+    div[data-testid="stHorizontalBlock"] {
+        align-items: flex-start !important;
+    }
+    div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:first-child {
+        position: sticky !important;
+        top: 12px !important;
+        align-self: flex-start !important;
+        z-index: 10 !important;
     }
     </style>
     """,
@@ -466,7 +497,7 @@ def render_quote_hero_card(quota, fvm):
     )
 
 # ==========================================
-# 5. PLAYER DETAIL VIEW (modificata)
+# 5. PLAYER DETAIL VIEW
 # ==========================================
 def render_player_detail(player_id, stats, quotations):
     try:
@@ -492,11 +523,13 @@ def render_player_detail(player_id, stats, quotations):
 
     nome_upper, squadra_upper = str(nome).upper().strip(), str(squadra).upper().strip()
 
+    # Rigorista & Punizioni check
     rigor_info = rigoristi_df[(rigoristi_df["giocatore"] == nome_upper) & (rigoristi_df["squadra"] == squadra_upper)]
     puniz_info = punizioni_df[(punizioni_df["giocatore"] == nome_upper) & (punizioni_df["squadra"] == squadra_upper)]
 
     role_meta = ROLE_COLORS.get(ruolo, {"bg": "#374151", "text": "#E5E7EB", "border": "#4B5563", "label": ruolo})
 
+    # Header Card
     badge_html = f"""
     <span style="background:{role_meta['bg']}; color:{role_meta['text']}; border:1px solid {role_meta['border']}; padding:4px 10px; border-radius:8px; font-weight:700; font-size:0.85rem; margin-right:8px;">
         {ruolo} — {role_meta['label']}
@@ -536,19 +569,22 @@ def render_player_detail(player_id, stats, quotations):
         st.info("ℹ️ Nessuna prestazione valida registrata.")
         return
 
-    # Escludo stagione 2026-27 dai calcoli
-    p_stats_filtered = p_stats[p_stats["stagione"] != "2026-27"].copy()
-
-    p_stats_filtered = calculate_bonus_malus(p_stats_filtered)
+    p_stats = calculate_bonus_malus(p_stats)
     is_goalkeeper = (ruolo == "P")
 
-    render_section_header("📊 Rendimento Complessivo", "Medie pesate e metriche chiave calcolate su tutte le stagioni (esclusa 2026-27)")
+    # Escludi la stagione in corso (2026-27) dal calcolo delle medie complessive
+    p_stats_hist = p_stats[p_stats["stagione"].astype(str).str.strip() != "2026-27"].copy() if "stagione" in p_stats.columns else p_stats.copy()
+    if p_stats_hist.empty:
+        p_stats_hist = p_stats.copy()
+
+    # Bento Grid KPIs
+    render_section_header("📊 Rendimento Complessivo", "Medie pesate e metriche chiave calcolate sulle stagioni concluse")
     
-    rel = calculate_relative_metrics(p_stats_filtered, is_goalkeeper=is_goalkeeper)
-    media_voto = safe_mean(p_stats_filtered, "voto")
-    fantamedia = safe_mean(p_stats_filtered, "fanta_voto_calcolato")
-    varianza_bin = varianza_gol_binaria(p_stats_filtered)
-    varianza_v = safe_variance(p_stats_filtered, "voto")
+    rel = calculate_relative_metrics(p_stats_hist, is_goalkeeper=is_goalkeeper)
+    media_voto = safe_mean(p_stats_hist, "voto")
+    fantamedia = safe_mean(p_stats_hist, "fanta_voto_calcolato")
+    varianza_bin = varianza_gol_binaria(p_stats_hist)
+    varianza_v = safe_variance(p_stats_hist, "voto")
 
     k1, k2, k3, k4 = st.columns(4)
     with k1:
@@ -563,6 +599,7 @@ def render_player_detail(player_id, stats, quotations):
         else:
             render_kpi_card("Gol Medi / Anno", f"{rel['gol_stagione']:.1f}", f"{rel['assist_stagione']:.1f} assist medi")
 
+    # Stability & Variance indicators
     render_section_header("🎯 Continuità & Analisi del Rischio")
     var_col1, var_col2, var_col3, var_col4 = st.columns(4)
     with var_col1:
@@ -574,8 +611,9 @@ def render_player_detail(player_id, stats, quotations):
     with var_col4:
         st.metric("Espulsioni / anno", f"{rel['espulsioni']:.1f}", help="Media cartellini rossi a stagione")
 
+    # Form Trend Chart (Plotly with UI/UX Pro Max Theme)
     render_section_header("📈 Trend di Forma (Rolling 5 Giornate)", "Evoluzione della media mobile su voto puro vs fantavoto")
-    rolling_df = build_rolling_data(p_stats_filtered, window=5)
+    rolling_df = build_rolling_data(p_stats, window=5)
 
     if not rolling_df.empty:
         fig = go.Figure()
@@ -600,6 +638,7 @@ def render_player_detail(player_id, stats, quotations):
                 hovertemplate="<b>%{x}</b><br>Media Voto: <b>%{y:.2f}</b><extra></extra>",
             ))
 
+        # Sufficienza reference line
         fig.add_hline(y=6.0, line_dash="dash", line_color="rgba(255,255,255,0.2)", annotation_text="Sufficienza (6.0)", annotation_position="bottom right")
 
         fig.update_layout(
@@ -622,6 +661,7 @@ def render_player_detail(player_id, stats, quotations):
         )
         st.plotly_chart(fig, use_container_width=True)
 
+    # Season Breakdown Table
     render_section_header("📅 Storico Dettagliato per Stagione")
     if "stagione" in p_stats.columns:
         rows = []
@@ -695,6 +735,7 @@ with filter_col1:
 with filter_col2:
     search_query = st.text_input("Cerca", placeholder="🔍 Cerca per nome giocatore o squadra...", label_visibility="collapsed")
 
+# Filter View
 quot_view = current_quot.copy()
 if selected_role != "Tutti" and "ruolo" in quot_view.columns:
     quot_view = quot_view[quot_view["ruolo"].astype(str).str.upper().str.strip() == selected_role]
@@ -708,6 +749,7 @@ if search_query and "nome" in quot_view.columns:
 if "nome" in quot_view.columns:
     quot_view = quot_view.sort_values("nome", na_position="last")
 
+# Main 2-Column Layout
 col_players, col_detail = st.columns([0.9, 3.1], gap="medium")
 
 with col_players:
@@ -723,9 +765,7 @@ with col_players:
             n = getattr(row, "nome", "Giocatore")
             s = getattr(row, "squadra", "-")
             pid = getattr(row, "player_id")
-            lbl = str(n)
-            if lbl in labels:
-                lbl = f"{lbl} ({s})"
+            lbl = f"{n} [{s}]"
             if lbl in labels:
                 lbl = f"{lbl} #{int(pid)}"
             labels.append(lbl)
@@ -733,6 +773,7 @@ with col_players:
         
         label_to_id = dict(zip(labels, ids))
 
+        # Recupera indice attivo per evitare salti
         current_idx = 0
         if "active_player_id" in st.session_state and st.session_state["active_player_id"] in ids:
             current_idx = ids.index(st.session_state["active_player_id"])
