@@ -466,7 +466,7 @@ def render_quote_hero_card(quota, fvm):
     )
 
 # ==========================================
-# 5. PLAYER DETAIL VIEW
+# 5. PLAYER DETAIL VIEW (modificata)
 # ==========================================
 def render_player_detail(player_id, stats, quotations):
     try:
@@ -492,13 +492,11 @@ def render_player_detail(player_id, stats, quotations):
 
     nome_upper, squadra_upper = str(nome).upper().strip(), str(squadra).upper().strip()
 
-    # Rigorista & Punizioni check
     rigor_info = rigoristi_df[(rigoristi_df["giocatore"] == nome_upper) & (rigoristi_df["squadra"] == squadra_upper)]
     puniz_info = punizioni_df[(punizioni_df["giocatore"] == nome_upper) & (punizioni_df["squadra"] == squadra_upper)]
 
     role_meta = ROLE_COLORS.get(ruolo, {"bg": "#374151", "text": "#E5E7EB", "border": "#4B5563", "label": ruolo})
 
-    # Header Card
     badge_html = f"""
     <span style="background:{role_meta['bg']}; color:{role_meta['text']}; border:1px solid {role_meta['border']}; padding:4px 10px; border-radius:8px; font-weight:700; font-size:0.85rem; margin-right:8px;">
         {ruolo} — {role_meta['label']}
@@ -538,17 +536,19 @@ def render_player_detail(player_id, stats, quotations):
         st.info("ℹ️ Nessuna prestazione valida registrata.")
         return
 
-    p_stats = calculate_bonus_malus(p_stats)
+    # Escludo stagione 2026-27 dai calcoli
+    p_stats_filtered = p_stats[p_stats["stagione"] != "2026-27"].copy()
+
+    p_stats_filtered = calculate_bonus_malus(p_stats_filtered)
     is_goalkeeper = (ruolo == "P")
 
-    # Bento Grid KPIs
-    render_section_header("📊 Rendimento Complessivo", "Medie pesate e metriche chiave calcolate su tutte le stagioni")
+    render_section_header("📊 Rendimento Complessivo", "Medie pesate e metriche chiave calcolate su tutte le stagioni (esclusa 2026-27)")
     
-    rel = calculate_relative_metrics(p_stats, is_goalkeeper=is_goalkeeper)
-    media_voto = safe_mean(p_stats, "voto")
-    fantamedia = safe_mean(p_stats, "fanta_voto_calcolato")
-    varianza_bin = varianza_gol_binaria(p_stats)
-    varianza_v = safe_variance(p_stats, "voto")
+    rel = calculate_relative_metrics(p_stats_filtered, is_goalkeeper=is_goalkeeper)
+    media_voto = safe_mean(p_stats_filtered, "voto")
+    fantamedia = safe_mean(p_stats_filtered, "fanta_voto_calcolato")
+    varianza_bin = varianza_gol_binaria(p_stats_filtered)
+    varianza_v = safe_variance(p_stats_filtered, "voto")
 
     k1, k2, k3, k4 = st.columns(4)
     with k1:
@@ -563,7 +563,6 @@ def render_player_detail(player_id, stats, quotations):
         else:
             render_kpi_card("Gol Medi / Anno", f"{rel['gol_stagione']:.1f}", f"{rel['assist_stagione']:.1f} assist medi")
 
-    # Stability & Variance indicators
     render_section_header("🎯 Continuità & Analisi del Rischio")
     var_col1, var_col2, var_col3, var_col4 = st.columns(4)
     with var_col1:
@@ -575,9 +574,8 @@ def render_player_detail(player_id, stats, quotations):
     with var_col4:
         st.metric("Espulsioni / anno", f"{rel['espulsioni']:.1f}", help="Media cartellini rossi a stagione")
 
-    # Form Trend Chart (Plotly with UI/UX Pro Max Theme)
     render_section_header("📈 Trend di Forma (Rolling 5 Giornate)", "Evoluzione della media mobile su voto puro vs fantavoto")
-    rolling_df = build_rolling_data(p_stats, window=5)
+    rolling_df = build_rolling_data(p_stats_filtered, window=5)
 
     if not rolling_df.empty:
         fig = go.Figure()
@@ -602,7 +600,6 @@ def render_player_detail(player_id, stats, quotations):
                 hovertemplate="<b>%{x}</b><br>Media Voto: <b>%{y:.2f}</b><extra></extra>",
             ))
 
-        # Sufficienza reference line
         fig.add_hline(y=6.0, line_dash="dash", line_color="rgba(255,255,255,0.2)", annotation_text="Sufficienza (6.0)", annotation_position="bottom right")
 
         fig.update_layout(
@@ -625,7 +622,6 @@ def render_player_detail(player_id, stats, quotations):
         )
         st.plotly_chart(fig, use_container_width=True)
 
-    # Season Breakdown Table
     render_section_header("📅 Storico Dettagliato per Stagione")
     if "stagione" in p_stats.columns:
         rows = []
@@ -699,7 +695,6 @@ with filter_col1:
 with filter_col2:
     search_query = st.text_input("Cerca", placeholder="🔍 Cerca per nome giocatore o squadra...", label_visibility="collapsed")
 
-# Filter View
 quot_view = current_quot.copy()
 if selected_role != "Tutti" and "ruolo" in quot_view.columns:
     quot_view = quot_view[quot_view["ruolo"].astype(str).str.upper().str.strip() == selected_role]
@@ -713,11 +708,11 @@ if search_query and "nome" in quot_view.columns:
 if "nome" in quot_view.columns:
     quot_view = quot_view.sort_values("nome", na_position="last")
 
-# Main 2-Column Layout
-col_players, col_detail = st.columns([1.1, 2.9], gap="medium")
+col_players, col_detail = st.columns([0.9, 3.1], gap="medium")
 
 with col_players:
     st.markdown(f'<div style="font-size:0.85rem; font-weight:700; color:#94A3B8; margin-bottom:8px;">GIOCATORI ({len(quot_view)})</div>', unsafe_allow_html=True)
+    
     if quot_view.empty:
         st.info("Nessun giocatore trovato con questi filtri.")
         selected_id = None
@@ -727,17 +722,29 @@ with col_players:
         for row in options_df.itertuples():
             n = getattr(row, "nome", "Giocatore")
             s = getattr(row, "squadra", "-")
-            r = getattr(row, "ruolo", "-")
             pid = getattr(row, "player_id")
-            lbl = f"[{r}] {n} ({s})"
+            lbl = str(n)
+            if lbl in labels:
+                lbl = f"{lbl} ({s})"
             if lbl in labels:
                 lbl = f"{lbl} #{int(pid)}"
             labels.append(lbl)
             ids.append(int(pid))
         
         label_to_id = dict(zip(labels, ids))
-        selected_label = st.radio("Giocatore", options=labels, label_visibility="collapsed")
-        selected_id = label_to_id[selected_label]
+
+        current_idx = 0
+        if "active_player_id" in st.session_state and st.session_state["active_player_id"] in ids:
+            current_idx = ids.index(st.session_state["active_player_id"])
+
+        selected_label = st.radio(
+            "Seleziona giocatore",
+            options=labels,
+            index=current_idx,
+            label_visibility="collapsed"
+        )
+        selected_id = label_to_id.get(selected_label)
+        st.session_state["active_player_id"] = selected_id
 
 with col_detail:
     if selected_id is None:
