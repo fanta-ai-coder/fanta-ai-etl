@@ -15,7 +15,6 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# CSS Ottimizzato (UI/UX Pro Max: Alto contrasto WCAG + Layout a colonna singola + No Scroll Jump)
 st.markdown(
     """
     <style>
@@ -35,25 +34,11 @@ st.markdown(
         scroll-behavior: auto !important;
     }
 
-    /* Scrollbar moderna verticale */
-    ::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
-    }
-    ::-webkit-scrollbar-track {
-        background: #0B0F19;
-    }
-    ::-webkit-scrollbar-thumb {
-        background: #334155;
-        border-radius: 9999px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-        background: #10B981;
-    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #0B0F19; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #10B981; }
 
-    /* ===================================================
-       LISTA GIOCATORI: CARD CLICCABILI (SENZA QUADRATINI O PALLINI)
-       =================================================== */
     [data-testid="stRadio"] div[role="radiogroup"] {
         display: flex !important;
         flex-direction: column !important;
@@ -71,13 +56,11 @@ st.markdown(
         contain: content !important;
     }
 
-    /* Rimuove completamente il cerchietto o quadratino nativo */
     [data-testid="stRadio"] label > div:first-child,
     [data-testid="stRadio"] input[type="radio"] {
         display: none !important;
     }
 
-    /* Card di ogni giocatore cliccabile per intero */
     [data-testid="stRadio"] label {
         display: flex !important;
         align-items: center !important;
@@ -97,7 +80,6 @@ st.markdown(
         border-color: rgba(16, 185, 129, 0.4) !important;
     }
 
-    /* Testo del nome chiaro ed elegante */
     [data-testid="stRadio"] label p,
     [data-testid="stRadio"] label span,
     [data-testid="stRadio"] label div {
@@ -107,7 +89,6 @@ st.markdown(
         margin: 0 !important;
     }
 
-    /* Giocatore Selezionato (Verde Smeraldo + Glow) */
     [data-testid="stRadio"] label:has(input:checked) {
         background-color: rgba(16, 185, 129, 0.2) !important;
         border: 1.5px solid #10B981 !important;
@@ -119,7 +100,6 @@ st.markdown(
         font-weight: 700 !important;
     }
 
-    /* Input & Selectboxes */
     .stTextInput input, .stSelectbox [data-baseweb="select"] {
         background-color: #111827 !important;
         border: 1px solid #374151 !important;
@@ -127,24 +107,15 @@ st.markdown(
         color: #F9FAFB !important;
     }
 
-    /* Metrics */
     [data-testid="stMetric"] {
         background-color: #111827;
         border: 1px solid rgba(255, 255, 255, 0.06);
         border-radius: 12px;
         padding: 14px 18px;
     }
-    [data-testid="stMetricLabel"] {
-        color: #94A3B8 !important;
-        font-weight: 500;
-        font-size: 0.85rem;
-    }
-    [data-testid="stMetricValue"] {
-        color: #F8FAFC !important;
-        font-weight: 700;
-    }
+    [data-testid="stMetricLabel"] { color: #94A3B8 !important; font-weight: 500; font-size: 0.85rem; }
+    [data-testid="stMetricValue"] { color: #F8FAFC !important; font-weight: 700; }
 
-    /* Evita salti di scroll / focus jump */
     [data-testid="stRadio"],
     [data-testid="stRadio"] *,
     [data-testid="stRadio"] label,
@@ -155,10 +126,7 @@ st.markdown(
         scroll-margin-bottom: 0 !important;
     }
 
-    /* Colonna sinistra sticky fissata in alto */
-    div[data-testid="stHorizontalBlock"] {
-        align-items: flex-start !important;
-    }
+    div[data-testid="stHorizontalBlock"] { align-items: flex-start !important; }
     div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:first-child {
         position: sticky !important;
         top: 12px !important;
@@ -418,7 +386,7 @@ def get_latest_quote_row(player_quotes):
     return res.iloc[-1]
 
 # ==========================================
-# 4. REUSABLE UI COMPONENTS (UI/UX PRO MAX)
+# 4. REUSABLE UI COMPONENTS
 # ==========================================
 ROLE_COLORS = {
     "P": {"bg": "rgba(245, 158, 11, 0.15)", "text": "#FBBF24", "border": "rgba(245, 158, 11, 0.4)", "label": "Portiere"},
@@ -443,22 +411,13 @@ def render_kpi_card(title, value, subtext="", highlight=False):
     bg_color = "rgba(16, 185, 129, 0.08)" if highlight else "#111827"
     border_color = "rgba(16, 185, 129, 0.3)" if highlight else "rgba(255, 255, 255, 0.07)"
     val_color = "#10B981" if highlight else "#F8FAFC"
-    
     st.markdown(
         f"""
-        <div style="
-            background: {bg_color};
-            border: 1px solid {border_color};
-            border-radius: 12px;
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            height: 100%;
-        ">
-            <span style="font-size: 0.8rem; font-weight: 600; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.05em;">{title}</span>
-            <span style="font-size: 1.75rem; font-weight: 800; color: {val_color}; margin: 6px 0;">{value}</span>
-            <span style="font-size: 0.75rem; color: #64748B;">{subtext}</span>
+        <div style="background:{bg_color}; border:1px solid {border_color}; border-radius:12px; padding:16px;
+                    display:flex; flex-direction:column; justify-content:space-between; height:100%;">
+            <span style="font-size:0.8rem; font-weight:600; color:#94A3B8; text-transform:uppercase; letter-spacing:0.05em;">{title}</span>
+            <span style="font-size:1.75rem; font-weight:800; color:{val_color}; margin:6px 0;">{value}</span>
+            <span style="font-size:0.75rem; color:#64748B;">{subtext}</span>
         </div>
         """,
         unsafe_allow_html=True,
@@ -467,28 +426,21 @@ def render_kpi_card(title, value, subtext="", highlight=False):
 def render_quote_hero_card(quota, fvm):
     st.markdown(
         f"""
-        <div style="
-            background: linear-gradient(135deg, #111827 0%, #1E293B 100%);
-            border: 1px solid rgba(16, 185, 129, 0.4);
-            border-radius: 16px;
-            padding: 20px;
-            position: relative;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 0 15px rgba(16, 185, 129, 0.15);
-        ">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                <span style="color: #94A3B8; font-size: 0.85rem; font-weight: 600;">VALUTAZIONI ASTA</span>
-                <span style="background: rgba(16, 185, 129, 0.2); color: #34D399; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 9999px; border: 1px solid rgba(16, 185, 129, 0.3);">
-                    ⭐ GUIDA ASTA
-                </span>
+        <div style="background:linear-gradient(135deg,#111827 0%,#1E293B 100%); border:1px solid rgba(16,185,129,0.4);
+                    border-radius:16px; padding:20px; box-shadow:0 10px 25px -5px rgba(0,0,0,0.5),0 0 15px rgba(16,185,129,0.15);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <span style="color:#94A3B8; font-size:0.85rem; font-weight:600;">VALUTAZIONI ASTA</span>
+                <span style="background:rgba(16,185,129,0.2); color:#34D399; font-size:0.75rem; font-weight:700;
+                             padding:2px 8px; border-radius:9999px; border:1px solid rgba(16,185,129,0.3);">⭐ GUIDA ASTA</span>
             </div>
-            <div style="display: flex; gap: 20px; align-items: baseline;">
+            <div style="display:flex; gap:20px; align-items:baseline;">
                 <div>
-                    <div style="color: #64748B; font-size: 0.75rem; text-transform: uppercase;">Quotazione</div>
-                    <div style="color: #F8FAFC; font-size: 2rem; font-weight: 800;">{quota} <span style="font-size: 1rem; color: #64748B;">FM</span></div>
+                    <div style="color:#64748B; font-size:0.75rem; text-transform:uppercase;">Quotazione</div>
+                    <div style="color:#F8FAFC; font-size:2rem; font-weight:800;">{quota} <span style="font-size:1rem; color:#64748B;">FM</span></div>
                 </div>
-                <div style="border-left: 1px solid rgba(255,255,255,0.1); padding-left: 20px;">
-                    <div style="color: #64748B; font-size: 0.75rem; text-transform: uppercase;">FVM Consigliato</div>
-                    <div style="color: #10B981; font-size: 2rem; font-weight: 800;">{fvm} <span style="font-size: 1rem; color: #10B981;">FM</span></div>
+                <div style="border-left:1px solid rgba(255,255,255,0.1); padding-left:20px;">
+                    <div style="color:#64748B; font-size:0.75rem; text-transform:uppercase;">FVM Consigliato</div>
+                    <div style="color:#10B981; font-size:2rem; font-weight:800;">{fvm} <span style="font-size:1rem; color:#10B981;">FM</span></div>
                 </div>
             </div>
         </div>
@@ -522,34 +474,31 @@ def render_player_detail(player_id, stats, quotations):
         nome, ruolo, squadra = "Giocatore", "-", "-"
 
     nome_upper, squadra_upper = str(nome).upper().strip(), str(squadra).upper().strip()
-
-    # Rigorista & Punizioni check
     rigor_info = rigoristi_df[(rigoristi_df["giocatore"] == nome_upper) & (rigoristi_df["squadra"] == squadra_upper)]
     puniz_info = punizioni_df[(punizioni_df["giocatore"] == nome_upper) & (punizioni_df["squadra"] == squadra_upper)]
-
     role_meta = ROLE_COLORS.get(ruolo, {"bg": "#374151", "text": "#E5E7EB", "border": "#4B5563", "label": ruolo})
 
-    # Header Card
     badge_html = f"""
-    <span style="background:{role_meta['bg']}; color:{role_meta['text']}; border:1px solid {role_meta['border']}; padding:4px 10px; border-radius:8px; font-weight:700; font-size:0.85rem; margin-right:8px;">
+    <span style="background:{role_meta['bg']}; color:{role_meta['text']}; border:1px solid {role_meta['border']};
+                 padding:4px 10px; border-radius:8px; font-weight:700; font-size:0.85rem; margin-right:8px;">
         {ruolo} — {role_meta['label']}
     </span>
-    <span style="background:rgba(255,255,255,0.06); color:#CBD5E1; padding:4px 10px; border-radius:8px; font-weight:600; font-size:0.85rem; margin-right:8px;">
+    <span style="background:rgba(255,255,255,0.06); color:#CBD5E1; padding:4px 10px; border-radius:8px;
+                 font-weight:600; font-size:0.85rem; margin-right:8px;">
         🛡️ {html.escape(str(squadra))}
     </span>
     """
     if not rigor_info.empty:
         pos_r = int(rigor_info["posizione"].values[0])
-        badge_html += f'<span style="background:rgba(239, 68, 68, 0.15); color:#FCA5A5; border:1px solid rgba(239, 68, 68, 0.3); padding:4px 10px; border-radius:8px; font-weight:600; font-size:0.85rem; margin-right:8px;">🎯 Rigorista #{pos_r}</span>'
+        badge_html += f'<span style="background:rgba(239,68,68,0.15); color:#FCA5A5; border:1px solid rgba(239,68,68,0.3); padding:4px 10px; border-radius:8px; font-weight:600; font-size:0.85rem; margin-right:8px;">🎯 Rigorista #{pos_r}</span>'
     if not puniz_info.empty:
         pos_p = int(puniz_info["posizione"].values[0])
-        badge_html += f'<span style="background:rgba(147, 51, 234, 0.15); color:#D8B4FE; border:1px solid rgba(147, 51, 234, 0.3); padding:4px 10px; border-radius:8px; font-weight:600; font-size:0.85rem;">⚡ Punizioni #{pos_p}</span>'
+        badge_html += f'<span style="background:rgba(147,51,234,0.15); color:#D8B4FE; border:1px solid rgba(147,51,234,0.3); padding:4px 10px; border-radius:8px; font-weight:600; font-size:0.85rem;">⚡ Punizioni #{pos_p}</span>'
 
     header_col1, header_col2 = st.columns([2.5, 1.5])
     with header_col1:
-        st.markdown(f'<h1 style="font-size: 2.2rem; font-weight: 800; color: #F8FAFC; margin: 0 0 8px 0;">{html.escape(str(nome))}</h1>', unsafe_allow_html=True)
+        st.markdown(f'<h1 style="font-size:2.2rem; font-weight:800; color:#F8FAFC; margin:0 0 8px 0;">{html.escape(str(nome))}</h1>', unsafe_allow_html=True)
         st.markdown(f'<div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;">{badge_html}</div>', unsafe_allow_html=True)
-
     with header_col2:
         quota_val = current_quote.get("quotazione_attuale", "-") if current_quote is not None else "-"
         fvm_val = current_quote.get("fvm", "-") if current_quote is not None else "-"
@@ -572,14 +521,12 @@ def render_player_detail(player_id, stats, quotations):
     p_stats = calculate_bonus_malus(p_stats)
     is_goalkeeper = (ruolo == "P")
 
-    # Escludi la stagione in corso (2026-27) dal calcolo delle medie complessive
+    # Escludi stagione in corso (2026-27) dai KPI complessivi
     p_stats_hist = p_stats[p_stats["stagione"].astype(str).str.strip() != "2026-27"].copy() if "stagione" in p_stats.columns else p_stats.copy()
     if p_stats_hist.empty:
         p_stats_hist = p_stats.copy()
 
-    # Bento Grid KPIs
     render_section_header("📊 Rendimento Complessivo", "Medie pesate e metriche chiave calcolate sulle stagioni concluse")
-    
     rel = calculate_relative_metrics(p_stats_hist, is_goalkeeper=is_goalkeeper)
     media_voto = safe_mean(p_stats_hist, "voto")
     fantamedia = safe_mean(p_stats_hist, "fanta_voto_calcolato")
@@ -599,7 +546,6 @@ def render_player_detail(player_id, stats, quotations):
         else:
             render_kpi_card("Gol Medi / Anno", f"{rel['gol_stagione']:.1f}", f"{rel['assist_stagione']:.1f} assist medi")
 
-    # Stability & Variance indicators
     render_section_header("🎯 Continuità & Analisi del Rischio")
     var_col1, var_col2, var_col3, var_col4 = st.columns(4)
     with var_col1:
@@ -611,57 +557,37 @@ def render_player_detail(player_id, stats, quotations):
     with var_col4:
         st.metric("Espulsioni / anno", f"{rel['espulsioni']:.1f}", help="Media cartellini rossi a stagione")
 
-    # Form Trend Chart (Plotly with UI/UX Pro Max Theme)
     render_section_header("📈 Trend di Forma (Rolling 5 Giornate)", "Evoluzione della media mobile su voto puro vs fantavoto")
     rolling_df = build_rolling_data(p_stats, window=5)
-
     if not rolling_df.empty:
         fig = go.Figure()
         if "media_mobile_fanta" in rolling_df.columns:
             fig.add_trace(go.Scatter(
-                x=rolling_df["periodo"],
-                y=rolling_df["media_mobile_fanta"],
-                mode="lines",
-                name="Fantamedia (5G)",
+                x=rolling_df["periodo"], y=rolling_df["media_mobile_fanta"],
+                mode="lines", name="Fantamedia (5G)",
                 line=dict(color="#10B981", width=3, shape="spline"),
-                fill="tozeroy",
-                fillcolor="rgba(16, 185, 129, 0.08)",
+                fill="tozeroy", fillcolor="rgba(16, 185, 129, 0.08)",
                 hovertemplate="<b>%{x}</b><br>Fantamedia: <b>%{y:.2f}</b><extra></extra>",
             ))
         if "media_mobile_voto" in rolling_df.columns:
             fig.add_trace(go.Scatter(
-                x=rolling_df["periodo"],
-                y=rolling_df["media_mobile_voto"],
-                mode="lines",
-                name="Media Voto (5G)",
+                x=rolling_df["periodo"], y=rolling_df["media_mobile_voto"],
+                mode="lines", name="Media Voto (5G)",
                 line=dict(color="#60A5FA", width=2, dash="dot", shape="spline"),
                 hovertemplate="<b>%{x}</b><br>Media Voto: <b>%{y:.2f}</b><extra></extra>",
             ))
-
-        # Sufficienza reference line
-        fig.add_hline(y=6.0, line_dash="dash", line_color="rgba(255,255,255,0.2)", annotation_text="Sufficienza (6.0)", annotation_position="bottom right")
-
+        fig.add_hline(y=6.0, line_dash="dash", line_color="rgba(255,255,255,0.2)",
+                      annotation_text="Sufficienza (6.0)", annotation_position="bottom right")
         fig.update_layout(
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(17, 24, 39, 0.6)",
+            paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(17, 24, 39, 0.6)",
             font=dict(family="Plus Jakarta Sans", color="#94A3B8"),
-            hovermode="x unified",
-            height=380,
-            margin=dict(l=10, r=10, t=30, b=10),
-            legend=dict(
-                orientation="h",
-                yanchor="bottom",
-                y=1.02,
-                xanchor="right",
-                x=1,
-                bgcolor="rgba(0,0,0,0)"
-            ),
+            hovermode="x unified", height=380, margin=dict(l=10, r=10, t=30, b=10),
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, bgcolor="rgba(0,0,0,0)"),
             xaxis=dict(gridcolor="rgba(255,255,255,0.05)", showgrid=True),
             yaxis=dict(gridcolor="rgba(255,255,255,0.05)", showgrid=True, range=[4.5, 10]),
         )
         st.plotly_chart(fig, use_container_width=True)
 
-    # Season Breakdown Table
     render_section_header("📅 Storico Dettagliato per Stagione")
     if "stagione" in p_stats.columns:
         rows = []
@@ -682,11 +608,8 @@ def render_player_detail(player_id, stats, quotations):
         if not season_df.empty:
             season_df["_sort"] = season_df["Stagione"].apply(season_sort_key)
             season_df = season_df.sort_values("_sort", ascending=False).drop(columns="_sort")
-            
             st.dataframe(
-                season_df,
-                use_container_width=True,
-                hide_index=True,
+                season_df, use_container_width=True, hide_index=True,
                 column_config={
                     "Fantamedia": st.column_config.NumberColumn(format="%.2f ⭐"),
                     "Media Voto": st.column_config.NumberColumn(format="%.2f"),
@@ -715,46 +638,41 @@ df = remove_starred_vote_rows(df)
 latest_s = get_latest_season(quot)
 current_quot = quot[quot["stagione"].astype(str).str.strip() == str(latest_s).strip()].copy() if latest_s else quot.copy()
 
-# App Header
 st.markdown("""
-<div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 0 20px 0; border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 20px;">
-    <div style="display: flex; align-items: center; gap: 12px;">
-        <span style="font-size: 2rem;">⚽</span>
+<div style="display:flex; align-items:center; justify-content:space-between; padding:12px 0 20px 0;
+            border-bottom:1px solid rgba(255,255,255,0.08); margin-bottom:20px;">
+    <div style="display:flex; align-items:center; gap:12px;">
+        <span style="font-size:2rem;">⚽</span>
         <div>
-            <h2 style="margin: 0; font-size: 1.5rem; font-weight: 800; color: #F8FAFC;">FantaAI Analytics</h2>
-            <p style="margin: 0; font-size: 0.8rem; color: #94A3B8;">Design Intelligence & Decision Support per l'Asta</p>
+            <h2 style="margin:0; font-size:1.5rem; font-weight:800; color:#F8FAFC;">FantaAI Analytics</h2>
+            <p style="margin:0; font-size:0.8rem; color:#94A3B8;">Design Intelligence & Decision Support per l'Asta</p>
         </div>
     </div>
 </div>
 """, unsafe_allow_html=True)
 
-# Search & Filter Bar
 filter_col1, filter_col2 = st.columns([1, 2])
 with filter_col1:
     selected_role = st.selectbox("Ruolo", ["Tutti", "P", "D", "C", "A"], label_visibility="collapsed")
 with filter_col2:
     search_query = st.text_input("Cerca", placeholder="🔍 Cerca per nome giocatore o squadra...", label_visibility="collapsed")
 
-# Filter View
 quot_view = current_quot.copy()
 if selected_role != "Tutti" and "ruolo" in quot_view.columns:
     quot_view = quot_view[quot_view["ruolo"].astype(str).str.upper().str.strip() == selected_role]
-
 if search_query and "nome" in quot_view.columns:
     q = search_query.upper().strip()
     match_nome = quot_view["nome"].astype(str).str.upper().str.contains(q, na=False)
     match_squadra = quot_view["squadra"].astype(str).str.upper().str.contains(q, na=False) if "squadra" in quot_view.columns else False
     quot_view = quot_view[match_nome | match_squadra]
-
 if "nome" in quot_view.columns:
     quot_view = quot_view.sort_values("nome", na_position="last")
 
-# Main 2-Column Layout
 col_players, col_detail = st.columns([0.9, 3.1], gap="medium")
 
 with col_players:
     st.markdown(f'<div style="font-size:0.85rem; font-weight:700; color:#94A3B8; margin-bottom:8px;">GIOCATORI ({len(quot_view)})</div>', unsafe_allow_html=True)
-    
+
     if quot_view.empty:
         st.info("Nessun giocatore trovato con questi filtri.")
         selected_id = None
@@ -770,19 +688,24 @@ with col_players:
                 lbl = f"{lbl} #{int(pid)}"
             labels.append(lbl)
             ids.append(int(pid))
-        
+
         label_to_id = dict(zip(labels, ids))
 
-        # Recupera indice attivo per evitare salti
-        current_idx = 0
-        if "active_player_id" in st.session_state and st.session_state["active_player_id"] in ids:
-            current_idx = ids.index(st.session_state["active_player_id"])
+        # FIX doppio click: usa key nativo di st.radio.
+        # Se la lista cambia (filtro/ricerca), resetta al primo elemento valido.
+        radio_key = "player_radio"
+        prev_label = st.session_state.get(radio_key)
+        if prev_label not in labels:
+            default_idx = 0
+            if "active_player_id" in st.session_state and st.session_state["active_player_id"] in ids:
+                default_idx = ids.index(st.session_state["active_player_id"])
+            st.session_state[radio_key] = labels[default_idx]
 
         selected_label = st.radio(
             "Seleziona giocatore",
             options=labels,
-            index=current_idx,
-            label_visibility="collapsed"
+            key=radio_key,
+            label_visibility="collapsed",
         )
         selected_id = label_to_id.get(selected_label)
         st.session_state["active_player_id"] = selected_id
