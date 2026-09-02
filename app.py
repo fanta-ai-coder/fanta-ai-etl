@@ -537,7 +537,7 @@ def render_player_detail(player_id, stats, quotations):
 
     role_meta = ROLE_COLORS.get(ruolo, {"bg": "#374151", "text": "#E5E7EB", "border": "#4B5563", "label": ruolo})
 
-    # ── Badge riga 1: ruolo, squadra, rigorista, punizioni ──
+    # Badge
     badge_html = f"""
     <span style="background:{role_meta['bg']}; color:{role_meta['text']}; border:1px solid {role_meta['border']};
                  padding:4px 10px; border-radius:8px; font-weight:700; font-size:0.85rem; margin-right:6px;">
@@ -555,7 +555,7 @@ def render_player_detail(player_id, stats, quotations):
         pos_p = int(puniz_info["posizione"].values[0])
         badge_html += f'<span style="background:rgba(147,51,234,0.15); color:#D8B4FE; border:1px solid rgba(147,51,234,0.3); padding:4px 10px; border-radius:8px; font-weight:600; font-size:0.85rem; margin-right:6px;">⚡ Punizioni #{pos_p}</span>'
 
-    # ── Badge riga 2: titolarità, squalifica, infortunio ──
+    # Status
     status_html = ""
     if not titolare_info.empty:
         row = titolare_info.iloc[0]
@@ -576,19 +576,10 @@ def render_player_detail(player_id, stats, quotations):
 
     header_col1, header_col2 = st.columns([2.5, 1.5])
     with header_col1:
-        st.markdown(
-            f'<h1 style="font-size:2.2rem; font-weight:800; color:#F8FAFC; margin:0 0 8px 0;">{html.escape(str(nome))}</h1>',
-            unsafe_allow_html=True
-        )
-        st.markdown(
-            f'<div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:6px;">{badge_html}</div>',
-            unsafe_allow_html=True
-        )
+        st.markdown(f'<h1 style="font-size:2.2rem; font-weight:800; color:#F8FAFC; margin:0 0 8px 0;">{html.escape(str(nome))}</h1>', unsafe_allow_html=True)
+        st.markdown(f'<div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:6px;">{badge_html}</div>', unsafe_allow_html=True)
         if status_html:
-            st.markdown(
-                f'<div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;">{status_html}</div>',
-                unsafe_allow_html=True
-            )
+            st.markdown(f'<div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;">{status_html}</div>', unsafe_allow_html=True)
     with header_col2:
         quota_val = current_quote.get("quotazione_attuale", "-") if current_quote is not None else "-"
         fvm_val = current_quote.get("fvm", "-") if current_quote is not None else "-"
@@ -622,39 +613,30 @@ def render_player_detail(player_id, stats, quotations):
     fantamedia = safe_mean(p_stats_hist, "fanta_voto_calcolato")
     varianza_bin = varianza_gol_binaria(p_stats_hist)
     varianza_v = safe_variance(p_stats_hist, "voto")
-    # Ottieni quotazione attuale dal current_quote (o da p_quotes)
-if current_quote is not None:
-    quotazione = current_quote.get("quotazione_attuale", None)
-else:
-    quotazione = None
 
-rel = calculate_relative_metrics(p_stats_hist, is_goalkeeper=is_goalkeeper)
-media_voto = safe_mean(p_stats_hist, "voto")
-fantamedia = safe_mean(p_stats_hist, "fanta_voto_calcolato")
-varianza_bin = varianza_gol_binaria(p_stats_hist)
-varianza_v = safe_variance(p_stats_hist, "voto")
-presenza_pct = rel["presenza_pct"]
+    if current_quote is not None:
+        quotazione = current_quote.get("quotazione_attuale", 1)
+    else:
+        quotazione = 1
 
-# Prepara mini-df con dati necessari per indice
-indice_df = pd.DataFrame([{
-    "player_id": player_id,
-    "media_voto": media_voto,
-    "fantamedia": fantamedia,
-    "varianza_voto": varianza_v if varianza_v is not None else 0,
-    "presenza_pct": presenza_pct,
-    "quotazione": quotazione if quotazione is not None else 1  # evita zero/None
-}])
+    presenza_pct = rel["presenza_pct"]
 
-# Calcola indice
-indice_df = calculate_player_index(indice_df)
-indice_val = indice_df.iloc[0]["Indice"]
+    # Prepara mini-df con dati necessari per indice
+    indice_df = pd.DataFrame([{
+        "player_id": player_id,
+        "media_voto": media_voto,
+        "fantamedia": fantamedia,
+        "varianza_voto": varianza_v if varianza_v is not None else 0,
+        "presenza_pct": presenza_pct,
+        "quotazione": quotazione if quotazione is not None else 1  # evita zero/None
+    }])
 
-# Ora puoi visualizzare
-render_kpi_card("Indice Affidabilità/Convenienza", f"{indice_val:.3f}", highlight=True)
+    # Calcola indice
+    indice_df = calculate_player_index(indice_df)
+    indice_val = indice_df.iloc[0]["Indice"]
 
-
-# Prima riga KPI sempre 4 colonne:
-k1, k2, k3, k4 = st.columns(4)
+    # Prima riga KPI sempre 4 colonne:
+    k1, k2, k3, k4 = st.columns(4)
     with k1:
         render_kpi_card("Fantamedia", f"{fantamedia:.2f}", "Bonus/Malus inclusi", highlight=True)
     with k2:
@@ -666,10 +648,38 @@ k1, k2, k3, k4 = st.columns(4)
             render_kpi_card("Media GS / Stagione", f"{rel['gs_stagione']:.2f}", highlight=True)
         else:
             render_kpi_card("Gol Medi / Anno", f"{rel['gol_stagione']:.1f}", f"{rel['assist_stagione']:.1f} assist medi")
-    
-# Nuova riga per indice
-st.markdown("<br>", unsafe_allow_html=True)
-render_kpi_card("Indice Affidabilità/Convenienza", f"{indice_val:.3f}", highlight=True)
+
+    # Nuova riga per indice
+    st.markdown("<br>", unsafe_allow_html=True)
+    render_kpi_card("Indice Affidabilità/Convenienza", f"{indice_val:.3f}", highlight=True)
+
+    # Seconda riga: solo per portieri, per bilanciare il layout
+    if is_goalkeeper:
+        var_col1, var_col2, var_col3 = st.columns(3)
+        varianza_gs = safe_variance(p_stats_hist, "gs")
+        totale_presenze = numeric_series(p_stats_hist, "voto").count()
+        media_clean_sheet = (numeric_series(p_stats_hist, "gs") == 0).sum() / totale_presenze * 100 if totale_presenze > 0 else 0
+
+        with var_col1:
+            render_kpi_card("Varianza GS / Partita", format_number(varianza_gs))
+        with var_col2:
+            render_kpi_card("Media Clean Sheet (%)", f"{media_clean_sheet:.1f}%")
+        with var_col3:
+            st.markdown("", unsafe_allow_html=True)
+    else:
+        render_section_header("🎯 Continuità & Analisi del Rischio")
+        var_col1, var_col2, var_col3, var_col4 = st.columns(4)
+        with var_col1:
+            st.metric("Varianza Voto", format_number(varianza_v), help="Minore è il valore, più costante è il rendimento (valore < 0.5 = ottimo)")
+        with var_col2:
+            st.metric("Varianza Gol", format_number(varianza_bin), help="Frequenza con cui va a segno su più giornate diverse")
+        with var_col3:
+            st.metric("Ammonizioni / anno", f"{rel['ammonizioni']:.1f}", help="Media cartellini gialli a stagione")
+        with var_col4:
+            st.metric("Espulsioni / anno", f"{rel['espulsioni']:.1f}", help="Media cartellini rossi a stagione")
+
+    ## (segue caricamento trend/ storico e altre parti come nel tuo codice)
+
 
     # Seconda riga: solo per portieri, per bilanciare il layout
     if is_goalkeeper:
