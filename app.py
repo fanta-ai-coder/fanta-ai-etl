@@ -658,13 +658,14 @@ def render_player_detail(player_id, stats, quotations):
             gfanta = calculate_fantavoto(g)
             if is_goalkeeper:
                 gol_subiti = int(safe_sum(g, "gs"))
+                clean_sheet_count = (numeric_series(g, "gs") == 0).sum()
                 rows.append({
                     "Stagione": s,
                     "Presenze": int(numeric_series(g, "voto").count()),
                     "Media Voto": round(safe_mean(g, "voto"), 2),
                     "Fantamedia": round(safe_mean(gfanta, "fanta_voto_calcolato"), 2),
                     "Gol Subiti": gol_subiti,
-                    "Assist": int(safe_sum(g, "ass")),
+                    "Clean Sheet": clean_sheet_count,
                     "Amm": int(safe_sum(g, "amm")),
                     "Esp": int(safe_sum(g, "esp")),
                     "Malus/Bonus Medio": round(safe_mean(calculate_bonus_malus(g), "bonus_malus"), 2),
