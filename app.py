@@ -585,6 +585,7 @@ def render_player_detail(player_id, stats, quotations):
     varianza_bin = varianza_gol_binaria(p_stats_hist)
     varianza_v = safe_variance(p_stats_hist, "voto")
 
+    # Prima riga KPI sempre 4 colonne:
     k1, k2, k3, k4 = st.columns(4)
     with k1:
         render_kpi_card("Fantamedia", f"{fantamedia:.2f}", "Bonus/Malus inclusi", highlight=True)
@@ -594,20 +595,36 @@ def render_player_detail(player_id, stats, quotations):
         render_kpi_card("% Presenze", f"{rel['presenza_pct']:.1f}%", f"{rel['presenze_medie']:.1f} partite / anno")
     with k4:
         if is_goalkeeper:
-            # usa media gol subiti totale a stagione già calcolata in 'rel'
-            varianza_gs = safe_variance(p_stats_hist, "gs")
-            totale_presenze = numeric_series(p_stats_hist, "voto").count()
-            media_clean_sheet = (numeric_series(p_stats_hist, "gs") == 0).sum() / totale_presenze * 100 if totale_presenze > 0 else 0
-
             render_kpi_card("Media GS / Stagione", f"{rel['gs_stagione']:.2f}", highlight=True)
-            st.write("")  # Spaziatura
-            render_kpi_card("Varianza GS / Partita", format_number(varianza_gs), highlight=False)
-            st.write("")
-            render_kpi_card("Media Clean Sheet (%)", f"{media_clean_sheet:.1f}%", highlight=True)
         else:
             render_kpi_card("Gol Medi / Anno", f"{rel['gol_stagione']:.1f}", f"{rel['assist_stagione']:.1f} assist medi")
 
+    # Seconda riga: solo per portieri, per bilanciare il layout
+    if is_goalkeeper:
+        var_col1, var_col2, var_col3 = st.columns(3)
+        varianza_gs = safe_variance(p_stats_hist, "gs")
+        totale_presenze = numeric_series(p_stats_hist, "voto").count()
+        media_clean_sheet = (numeric_series(p_stats_hist, "gs") == 0).sum() / totale_presenze * 100 if totale_presenze > 0 else 0
 
+        with var_col1:
+            render_kpi_card("Varianza GS / Partita", format_number(varianza_gs))
+        with var_col2:
+            render_kpi_card("Media Clean Sheet (%)", f"{media_clean_sheet:.1f}%")
+        with var_col3:
+            # Lascia vuoto per mantenere l'allineamento
+            st.markdown("", unsafe_allow_html=True)
+    else:
+        # Mantieni la sezione continuità & analisi rischio per gli altri ruoli come ora
+        render_section_header("🎯 Continuità & Analisi del Rischio")
+        var_col1, var_col2, var_col3, var_col4 = st.columns(4)
+        with var_col1:
+            st.metric("Varianza Voto", format_number(varianza_v), help="Minore è il valore, più costante è il rendimento (valore < 0.5 = ottimo)")
+        with var_col2:
+            st.metric("Varianza Gol", format_number(varianza_bin), help="Frequenza con cui va a segno su più giornate diverse")
+        with var_col3:
+            st.metric("Ammonizioni / anno", f"{rel['ammonizioni']:.1f}", help="Media cartellini gialli a stagione")
+        with var_col4:
+            st.metric("Espulsioni / anno", f"{rel['espulsioni']:.1f}", help="Media cartellini rossi a stagione")
 
     render_section_header("🎯 Continuità & Analisi del Rischio")
     var_col1, var_col2, var_col3, var_col4 = st.columns(4)
