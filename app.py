@@ -653,8 +653,8 @@ indice_val = indice_df.iloc[0]["Indice"]
 render_kpi_card("Indice Affidabilità/Convenienza", f"{indice_val:.3f}", highlight=True)
 
 
-    # Prima riga KPI sempre 4 colonne:
-    k1, k2, k3, k4 = st.columns(4)
+# Prima riga KPI sempre 4 colonne:
+k1, k2, k3, k4 = st.columns(4)
     with k1:
         render_kpi_card("Fantamedia", f"{fantamedia:.2f}", "Bonus/Malus inclusi", highlight=True)
     with k2:
@@ -667,9 +667,9 @@ render_kpi_card("Indice Affidabilità/Convenienza", f"{indice_val:.3f}", highlig
         else:
             render_kpi_card("Gol Medi / Anno", f"{rel['gol_stagione']:.1f}", f"{rel['assist_stagione']:.1f} assist medi")
     
-    # Nuova riga per indice
-    st.markdown("<br>", unsafe_allow_html=True)
-    render_kpi_card("Indice Affidabilità/Convenienza", f"{indice_val:.3f}", highlight=True)
+# Nuova riga per indice
+st.markdown("<br>", unsafe_allow_html=True)
+render_kpi_card("Indice Affidabilità/Convenienza", f"{indice_val:.3f}", highlight=True)
 
     # Seconda riga: solo per portieri, per bilanciare il layout
     if is_goalkeeper:
