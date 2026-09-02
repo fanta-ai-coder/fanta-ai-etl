@@ -593,23 +593,23 @@ def render_player_detail(player_id, stats, quotations):
     with k3:
         render_kpi_card("% Presenze", f"{rel['presenza_pct']:.1f}%", f"{rel['presenze_medie']:.1f} partite / anno")
     with k4:
-    if is_goalkeeper:
-        # Calcola media e varianza gol subiti, gol fatti e media clean sheet
-        media_gs = safe_mean(p_stats_hist, "gs")
-        varianza_gs = safe_variance(p_stats_hist, "gs")
-        gol_fatti = safe_sum(p_stats_hist, "gf") + safe_sum(p_stats_hist, "rf")
-        totale_presenze = numeric_series(p_stats_hist, "voto").count()
-        media_clean_sheet = (numeric_series(p_stats_hist, "gs") == 0).sum() / totale_presenze * 100 if totale_presenze > 0 else 0
+        if is_goalkeeper:
+            # Calcola media e varianza gol subiti, gol fatti e media clean sheet
+            media_gs = safe_mean(p_stats_hist, "gs")
+            varianza_gs = safe_variance(p_stats_hist, "gs")
+            gol_fatti = safe_sum(p_stats_hist, "gf") + safe_sum(p_stats_hist, "rf")
+            totale_presenze = numeric_series(p_stats_hist, "voto").count()
+            media_clean_sheet = (numeric_series(p_stats_hist, "gs") == 0).sum() / totale_presenze * 100 if totale_presenze > 0 else 0
 
-        render_kpi_card("Media Gol Subiti", f"{media_gs:.2f}", highlight=True)
-        st.write("")  # Spaziatura
-        render_kpi_card("Varianza Gol Subiti", format_number(varianza_gs), highlight=False)
-        st.write("")
-        render_kpi_card("Numero Gol Fatti", f"{gol_fatti}", highlight=False)
-        st.write("")
-        render_kpi_card("Media Clean Sheet (%)", f"{media_clean_sheet:.1f}%", highlight=True)
-    else:
-        render_kpi_card("Gol Medi / Anno", f"{rel['gol_stagione']:.1f}", f"{rel['assist_stagione']:.1f} assist medi")
+            render_kpi_card("Media Gol Subiti", f"{media_gs:.2f}", highlight=True)
+            st.write("")  # Spaziatura
+            render_kpi_card("Varianza Gol Subiti", format_number(varianza_gs), highlight=False)
+            st.write("")
+            render_kpi_card("Numero Gol Fatti", f"{gol_fatti}", highlight=False)
+            st.write("")
+            render_kpi_card("Media Clean Sheet (%)", f"{media_clean_sheet:.1f}%", highlight=True)
+        else:
+            render_kpi_card("Gol Medi / Anno", f"{rel['gol_stagione']:.1f}", f"{rel['assist_stagione']:.1f} assist medi")
 
 
     render_section_header("🎯 Continuità & Analisi del Rischio")
