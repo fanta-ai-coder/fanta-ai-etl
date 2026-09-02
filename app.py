@@ -15,15 +15,149 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# CSS Ottimizzato (omesso per brevità, usa il tuo originale)
+# CSS Ottimizzato (UI/UX Pro Max: Alto contrasto WCAG + Layout integrato + No Scroll Jump)
 st.markdown(
-    """
-    <style>
-    /* ... il tuo CSS qui ... */
-    </style>
-    """,
-    unsafe_allow_html=True,
+"""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+html, body, [class*="css"], .stApp {
+font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+background-color: #0B0F19;
+color: #F8FAFC;
+overflow-anchor: none !important;
+}
+
+.stAppViewContainer, section.main, [data-testid="stMainBlockContainer"] {
+background-color: #0B0F19;
+overflow-anchor: none !important;
+}
+
+/* Scrollbar moderna verticale */
+::-webkit-scrollbar {
+width: 6px;
+height: 6px;
+}
+::-webkit-scrollbar-track {
+background: #0B0F19;
+}
+::-webkit-scrollbar-thumb {
+background: #334155;
+border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+background: #10B981;
+}
+
+/* ===================================================
+LISTA GIOCATORI: CARD CLICCABILI (SENZA QUADRATINI O PALLINI)
+=================================================== */
+[data-testid="stRadio"] div[role="radiogroup"] {
+display: flex !important;
+flex-direction: column !important;
+flex-wrap: nowrap !important;
+width: 100% !important;
+max-height: 620px !important;
+overflow-y: auto !important;
+overflow-x: hidden !important;
+background-color: #111827 !important;
+border: 1px solid rgba(255, 255, 255, 0.08) !important;
+border-radius: 12px !important;
+padding: 8px !important;
+gap: 5px !important;
+}
+
+/* Rimuove completamente il cerchietto o quadratino nativo */
+[data-testid="stRadio"] label > div:first-child,
+[data-testid="stRadio"] input[type="radio"] {
+display: none !important;
+}
+
+/* Card di ogni giocatore cliccabile per intero */
+[data-testid="stRadio"] label {
+display: flex !important;
+align-items: center !important;
+width: 100% !important;
+background-color: #1E293B !important;
+border: 1px solid rgba(255, 255, 255, 0.05) !important;
+border-radius: 8px !important;
+padding: 10px 14px !important;
+margin: 0 !important;
+cursor: pointer !important;
+transition: all 0.15s ease !important;
+}
+
+[data-testid="stRadio"] label:hover {
+background-color: #334155 !important;
+border-color: rgba(16, 185, 129, 0.4) !important;
+}
+
+/* Testo del nome chiaro ed elegante */
+[data-testid="stRadio"] label p,
+[data-testid="stRadio"] label span,
+[data-testid="stRadio"] label div {
+color: #F1F5F9 !important;
+font-size: 14px !important;
+font-weight: 600 !important;
+margin: 0 !important;
+}
+
+/* Giocatore Selezionato (Verde Smeraldo + Glow) */
+[data-testid="stRadio"] label:has(input:checked) {
+background-color: rgba(16, 185, 129, 0.2) !important;
+border: 1.5px solid #10B981 !important;
+}
+
+[data-testid="stRadio"] label:has(input:checked) p,
+[data-testid="stRadio"] label:has(input:checked) span {
+color: #34D399 !important;
+font-weight: 700 !important;
+}
+
+/* Input & Selectboxes */
+.stTextInput input, .stSelectbox [data-baseweb="select"] {
+background-color: #111827 !important;
+border: 1px solid #374151 !important;
+border-radius: 8px !important;
+color: #F9FAFB !important;
+}
+
+/* Metrics */
+[data-testid="stMetric"] {
+background-color: #111827;
+border: 1px solid rgba(255, 255, 255, 0.06);
+border-radius: 12px;
+padding: 14px 18px;
+}
+[data-testid="stMetricLabel"] {
+color: #94A3B8 !important;
+font-weight: 500;
+font-size: 0.85rem;
+}
+[data-testid="stMetricValue"] {
+color: #F8FAFC !important;
+font-weight: 700;
+}
+
+/* Evita salti di scroll / focus jump */
+[data-testid="stRadio"] input,
+[data-testid="stRadio"] label {
+scroll-margin: 0 !important;
+scroll-padding: 0 !important;
+}
+
+/* Colonna sinistra sticky */
+div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:first-child {
+position: sticky !important;
+top: 12px !important;
+align-self: flex-start !important;
+z-index: 5 !important;
+}
+</style>
+""",
+unsafe_allow_html=True,
 )
+
 
 # ==========================================
 # 2. SUPABASE & DATA FETCHING
