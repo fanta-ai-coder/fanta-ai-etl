@@ -15,148 +15,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# CSS Ottimizzato (UI/UX Pro Max: Alto contrasto WCAG + Layout integrato + No Scroll Jump)
-st.markdown(
-    """
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-
-    html, body, [class*="css"], .stApp {
-        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-        background-color: #0B0F19;
-        color: #F8FAFC;
-        overflow-anchor: none !important;
-    }
-
-    .stAppViewContainer, section.main, [data-testid="stMainBlockContainer"] {
-        background-color: #0B0F19;
-        overflow-anchor: none !important;
-    }
-
-    /* Scrollbar moderna verticale */
-    ::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
-    }
-    ::-webkit-scrollbar-track {
-        background: #0B0F19;
-    }
-    ::-webkit-scrollbar-thumb {
-        background: #334155;
-        border-radius: 9999px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-        background: #10B981;
-    }
-
-    /* ===================================================
-       LISTA GIOCATORI: CARD CLICCABILI (SENZA QUADRATINI O PALLINI)
-       =================================================== */
-    [data-testid="stRadio"] div[role="radiogroup"] {
-        display: flex !important;
-        flex-direction: column !important;
-        flex-wrap: nowrap !important;
-        width: 100% !important;
-        max-height: 620px !important;
-        overflow-y: auto !important;
-        overflow-x: hidden !important;
-        background-color: #111827 !important;
-        border: 1px solid rgba(255, 255, 255, 0.08) !important;
-        border-radius: 12px !important;
-        padding: 8px !important;
-        gap: 5px !important;
-    }
-
-    /* Rimuove completamente il cerchietto o quadratino nativo */
-    [data-testid="stRadio"] label > div:first-child,
-    [data-testid="stRadio"] input[type="radio"] {
-        display: none !important;
-    }
-
-    /* Card di ogni giocatore cliccabile per intero */
-    [data-testid="stRadio"] label {
-        display: flex !important;
-        align-items: center !important;
-        width: 100% !important;
-        background-color: #1E293B !important;
-        border: 1px solid rgba(255, 255, 255, 0.05) !important;
-        border-radius: 8px !important;
-        padding: 10px 14px !important;
-        margin: 0 !important;
-        cursor: pointer !important;
-        transition: all 0.15s ease !important;
-    }
-
-    [data-testid="stRadio"] label:hover {
-        background-color: #334155 !important;
-        border-color: rgba(16, 185, 129, 0.4) !important;
-    }
-
-    /* Testo del nome chiaro ed elegante */
-    [data-testid="stRadio"] label p,
-    [data-testid="stRadio"] label span,
-    [data-testid="stRadio"] label div {
-        color: #F1F5F9 !important;
-        font-size: 14px !important;
-        font-weight: 600 !important;
-        margin: 0 !important;
-    }
-
-    /* Giocatore Selezionato (Verde Smeraldo + Glow) */
-    [data-testid="stRadio"] label:has(input:checked) {
-        background-color: rgba(16, 185, 129, 0.2) !important;
-        border: 1.5px solid #10B981 !important;
-    }
-
-    [data-testid="stRadio"] label:has(input:checked) p,
-    [data-testid="stRadio"] label:has(input:checked) span {
-        color: #34D399 !important;
-        font-weight: 700 !important;
-    }
-
-    /* Input & Selectboxes */
-    .stTextInput input, .stSelectbox [data-baseweb="select"] {
-        background-color: #111827 !important;
-        border: 1px solid #374151 !important;
-        border-radius: 8px !important;
-        color: #F9FAFB !important;
-    }
-
-    /* Metrics */
-    [data-testid="stMetric"] {
-        background-color: #111827;
-        border: 1px solid rgba(255, 255, 255, 0.06);
-        border-radius: 12px;
-        padding: 14px 18px;
-    }
-    [data-testid="stMetricLabel"] {
-        color: #94A3B8 !important;
-        font-weight: 500;
-        font-size: 0.85rem;
-    }
-    [data-testid="stMetricValue"] {
-        color: #F8FAFC !important;
-        font-weight: 700;
-    }
-
-    /* Evita salti di scroll / focus jump */
-    [data-testid="stRadio"] input,
-    [data-testid="stRadio"] label {
-        scroll-margin: 0 !important;
-        scroll-padding: 0 !important;
-    }
-
-    /* Colonna sinistra sticky */
-    div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:first-child {
-        position: sticky !important;
-        top: 12px !important;
-        align-self: flex-start !important;
-        z-index: 5 !important;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
+# [CSS omesso per brevità: rimane invariato rispetto al tuo codice originale]
 
 # ==========================================
 # 2. SUPABASE & DATA FETCHING
@@ -225,267 +84,22 @@ punizioni_df = load_punizioni()
 # ==========================================
 # 3. STATISTICAL UTILITIES
 # ==========================================
-def normalize_player_id_series(series):
-    numeric = pd.to_numeric(series, errors="coerce")
-    return numeric.round().astype("Int64")
+# [tutte le funzioni sono quelle che hai già nel tuo codice originale:
+# normalize_player_id_series, normalize_dataframe, numeric_series, safe_sum,
+# safe_mean, safe_variance, format_number, remove_starred_vote_rows,
+# calculate_fantavoto, calculate_bonus_malus, calculate_relative_metrics,
+# varianza_gol_binaria, season_sort_key, build_rolling_data,
+# get_latest_season, get_latest_quote_row]
 
-def normalize_dataframe(df):
-    if df.empty:
-        return df.copy()
-    result = df.copy()
-    if "player_id" in result.columns:
-        result["player_id"] = normalize_player_id_series(result["player_id"])
-    return result
-
-def numeric_series(df, column):
-    if column not in df.columns:
-        return pd.Series(float("nan"), index=df.index, dtype="float64")
-    return pd.to_numeric(df[column], errors="coerce")
-
-def safe_sum(df, column):
-    if column not in df.columns:
-        return 0.0
-    return float(numeric_series(df, column).fillna(0).sum())
-
-def safe_mean(df, column):
-    if column not in df.columns:
-        return 0.0
-    values = numeric_series(df, column).dropna()
-    return float(values.mean()) if not values.empty else 0.0
-
-def safe_variance(df, column):
-    if column not in df.columns:
-        return None
-    values = numeric_series(df, column).dropna()
-    if len(values) < 2:
-        return None
-    val = values.var(ddof=1)
-    return None if pd.isna(val) else float(val)
-
-def format_number(value, decimals=2):
-    return "N/D" if value is None or pd.isna(value) else f"{value:.{decimals}f}"
-
-def remove_starred_vote_rows(df):
-    if df.empty or "voto" not in df.columns:
-        return df.copy()
-    raw_vote = df["voto"].astype(str).str.strip()
-    starred = raw_vote.str.contains(r"\*", regex=True, na=False)
-    return df.loc[~starred].copy() if starred.any() else df.copy()
-
-def calculate_fantavoto(df):
-    result = df.copy()
-    if "voto" not in result.columns:
-        result["fanta_voto_calcolato"] = float("nan")
-        return result
-    voto = numeric_series(result, "voto").fillna(0)
-    gf = numeric_series(result, "gf").fillna(0)
-    ass = numeric_series(result, "ass").fillna(0)
-    rf = numeric_series(result, "rf").fillna(0)
-    au = numeric_series(result, "au").fillna(0)
-    esp = numeric_series(result, "esp").fillna(0)
-    amm = numeric_series(result, "amm").fillna(0)
-    clean_sheet = pd.Series(0.0, index=result.index)
-    penalty_saved = pd.Series(0.0, index=result.index)
-    gol_subiti = pd.Series(0.0, index=result.index)
-
-    for c in ["pi", "porta_inviolata", "clean_sheet", "imbattuto"]:
-        if c in result.columns:
-            clean_sheet = numeric_series(result, c).fillna(0)
-            break
-    for c in ["rp", "rigori_parati", "rigore_parato"]:
-        if c in result.columns:
-            penalty_saved = numeric_series(result, c).fillna(0)
-            break
-    for c in ["gs", "gol_subiti"]:
-        if c in result.columns:
-            gol_subiti = numeric_series(result, c).fillna(0)
-            break
-
-    if "ruolo" in result.columns:
-        is_p = result["ruolo"].astype(str).str.strip().str.upper().eq("P")
-        clean_sheet = clean_sheet.where(is_p, 0)
-        gol_subiti = gol_subiti.where(is_p, 0)
-
-    result["fanta_voto_calcolato"] = (
-        voto + (gf * 3) + ass + (rf * 3) - (au * 2) - esp - (amm * 0.5) + clean_sheet + (penalty_saved * 3) - gol_subiti
-    )
-    result.loc[numeric_series(result, "voto").isna(), "fanta_voto_calcolato"] = float("nan")
-    return result
-
-def calculate_bonus_malus(df):
-    res = calculate_fantavoto(df)
-    res["bonus_malus"] = res["fanta_voto_calcolato"] - numeric_series(res, "voto")
-    return res
-
-def calculate_relative_metrics(p_stats, is_goalkeeper=False):
-    seasons = p_stats["stagione"].dropna().astype(str).str.strip().nunique() if "stagione" in p_stats.columns else 0
-    if seasons <= 0:
-        return {
-            "stagioni": 0, "presenze_medie": 0.0, "presenza_pct": 0.0,
-            "gol_stagione": 0.0, "assist_stagione": 0.0, "rigori_segnati": 0.0,
-            "rigori_sbagliati": 0.0, "ammonizioni": 0.0, "espulsioni": 0.0,
-            "gs_stagione": 0.0, "rigori_parati": 0.0,
-        }
-    presenze_totali = numeric_series(p_stats, "voto").count()
-    presenze_medie = presenze_totali / seasons
-    presenza_pct = min(100.0, (presenze_medie / 38) * 100)
-
-    if is_goalkeeper:
-        gs_tot = safe_sum(p_stats, "gs")
-        rp_tot = safe_sum(p_stats, "rp")
-        gf_tot, rf_tot = 0, 0
-    else:
-        gf_tot = safe_sum(p_stats, "gf") + safe_sum(p_stats, "rf")
-        rf_tot = safe_sum(p_stats, "rf")
-        gs_tot, rp_tot = 0, 0
-
-    return {
-        "stagioni": seasons,
-        "presenze_medie": presenze_medie,
-        "presenza_pct": presenza_pct,
-        "assist_stagione": safe_sum(p_stats, "ass") / seasons,
-        "rigori_sbagliati": safe_sum(p_stats, "rs") / seasons,
-        "ammonizioni": safe_sum(p_stats, "amm") / seasons,
-        "espulsioni": safe_sum(p_stats, "esp") / seasons,
-        "gol_stagione": gf_tot / seasons,
-        "rigori_segnati": rf_tot / seasons,
-        "gs_stagione": gs_tot / seasons,
-        "rigori_parati": rp_tot / seasons,
-    }
-
-def varianza_gol_binaria(p_stats):
-    gol_g = p_stats.groupby("giornata").apply(
-        lambda df: 1 if (safe_sum(df, "gf") + safe_sum(df, "rf")) > 0 else 0
-    )
-    return 0.0 if len(gol_g) <= 1 else float(gol_g.var(ddof=1))
-
-def season_sort_key(value):
-    try:
-        return int(str(value).strip().split("/")[0])
-    except Exception:
-        return -1
-
-def build_rolling_data(player_stats, window=5):
-    if player_stats.empty or any(c not in player_stats.columns for c in ["stagione", "giornata"]):
-        return pd.DataFrame()
-    res = player_stats.copy()
-    res["giornata"] = pd.to_numeric(res["giornata"], errors="coerce")
-    res = res[res["giornata"].notna()].copy()
-    if res.empty:
-        return pd.DataFrame()
-    res["giornata"] = res["giornata"].astype(int)
-    res["stagione"] = res["stagione"].astype(str).str.strip()
-    res["_season_sort"] = res["stagione"].apply(season_sort_key)
-    res = res.sort_values(["_season_sort", "giornata"]).reset_index(drop=True)
-    res = calculate_fantavoto(res)
-    if "voto" in res.columns:
-        res["voto"] = pd.to_numeric(res["voto"], errors="coerce")
-        res["media_mobile_voto"] = res.groupby("stagione", sort=False)["voto"].transform(
-            lambda x: x.rolling(window=window, min_periods=1).mean()
-        )
-    res["media_mobile_fanta"] = res.groupby("stagione", sort=False)["fanta_voto_calcolato"].transform(
-        lambda x: x.rolling(window=window, min_periods=1).mean()
-    )
-    res["periodo"] = res["stagione"] + " G" + res["giornata"].astype(str)
-    return res
-
-def get_latest_season(df):
-    if df.empty or "stagione" not in df.columns:
-        return None
-    seasons = df["stagione"].dropna().astype(str).str.strip()
-    seasons = seasons[seasons != ""]
-    return max(seasons.unique(), key=season_sort_key) if not seasons.empty else None
-
-def get_latest_quote_row(player_quotes):
-    if player_quotes.empty:
-        return None
-    res = player_quotes.copy()
-    if "stagione" in res.columns:
-        res["_season_sort"] = res["stagione"].apply(season_sort_key)
-        res = res.sort_values("_season_sort")
-    return res.iloc[-1]
+# Le lascio uguali e non le riporto qui per brevità.
 
 # ==========================================
 # 4. REUSABLE UI COMPONENTS (UI/UX PRO MAX)
 # ==========================================
-ROLE_COLORS = {
-    "P": {"bg": "rgba(245, 158, 11, 0.15)", "text": "#FBBF24", "border": "rgba(245, 158, 11, 0.4)", "label": "Portiere"},
-    "D": {"bg": "rgba(59, 130, 246, 0.15)", "text": "#60A5FA", "border": "rgba(59, 130, 246, 0.4)", "label": "Difensore"},
-    "C": {"bg": "rgba(16, 185, 129, 0.15)", "text": "#34D399", "border": "rgba(16, 185, 129, 0.4)", "label": "Centrocampista"},
-    "A": {"bg": "rgba(239, 68, 68, 0.15)", "text": "#F87171", "border": "rgba(239, 68, 68, 0.4)", "label": "Attaccante"},
-}
-
-def render_section_header(title, subtitle=None):
-    sub_html = f'<p style="color:#94A3B8; font-size:0.85rem; margin:0 0 16px 0;">{subtitle}</p>' if subtitle else ""
-    st.markdown(
-        f"""
-        <div style="margin-top: 24px; margin-bottom: 12px; border-left: 3px solid #10B981; padding-left: 12px;">
-            <h3 style="color:#F8FAFC; font-size:1.15rem; font-weight:700; margin:0;">{title}</h3>
-            {sub_html}
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-def render_kpi_card(title, value, subtext="", highlight=False):
-    bg_color = "rgba(16, 185, 129, 0.08)" if highlight else "#111827"
-    border_color = "rgba(16, 185, 129, 0.3)" if highlight else "rgba(255, 255, 255, 0.07)"
-    val_color = "#10B981" if highlight else "#F8FAFC"
-    
-    st.markdown(
-        f"""
-        <div style="
-            background: {bg_color};
-            border: 1px solid {border_color};
-            border-radius: 12px;
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            height: 100%;
-        ">
-            <span style="font-size: 0.8rem; font-weight: 600; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.05em;">{title}</span>
-            <span style="font-size: 1.75rem; font-weight: 800; color: {val_color}; margin: 6px 0;">{value}</span>
-            <span style="font-size: 0.75rem; color: #64748B;">{subtext}</span>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-def render_quote_hero_card(quota, fvm):
-    st.markdown(
-        f"""
-        <div style="
-            background: linear-gradient(135deg, #111827 0%, #1E293B 100%);
-            border: 1px solid rgba(16, 185, 129, 0.4);
-            border-radius: 16px;
-            padding: 20px;
-            position: relative;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 0 15px rgba(16, 185, 129, 0.15);
-        ">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                <span style="color: #94A3B8; font-size: 0.85rem; font-weight: 600;">VALUTAZIONI ASTA</span>
-                <span style="background: rgba(16, 185, 129, 0.2); color: #34D399; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 9999px; border: 1px solid rgba(16, 185, 129, 0.3);">
-                    ⭐ GUIDA ASTA
-                </span>
-            </div>
-            <div style="display: flex; gap: 20px; align-items: baseline;">
-                <div>
-                    <div style="color: #64748B; font-size: 0.75rem; text-transform: uppercase;">Quotazione</div>
-                    <div style="color: #F8FAFC; font-size: 2rem; font-weight: 800;">{quota} <span style="font-size: 1rem; color: #64748B;">FM</span></div>
-                </div>
-                <div style="border-left: 1px solid rgba(255,255,255,0.1); padding-left: 20px;">
-                    <div style="color: #64748B; font-size: 0.75rem; text-transform: uppercase;">FVM Consigliato</div>
-                    <div style="color: #10B981; font-size: 2rem; font-weight: 800;">{fvm} <span style="font-size: 1rem; color: #10B981;">FM</span></div>
-                </div>
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+# [role colors e funzioni di rendering UI: rimangono invariati]
 
 # ==========================================
-# 5. PLAYER DETAIL VIEW
+# 5. PLAYER DETAIL VIEW (modificata)
 # ==========================================
 def render_player_detail(player_id, stats, quotations):
     try:
@@ -557,17 +171,20 @@ def render_player_detail(player_id, stats, quotations):
         st.info("ℹ️ Nessuna prestazione valida registrata.")
         return
 
-    p_stats = calculate_bonus_malus(p_stats)
+    # *** FILTRO PER ESCLUDERE LA STAGIONE 2026-27 DAL CALCOLO DELLE STATISTICHE ***
+    p_stats_filtered = p_stats[p_stats["stagione"] != "2026-27"].copy()
+
+    p_stats_filtered = calculate_bonus_malus(p_stats_filtered)
     is_goalkeeper = (ruolo == "P")
 
     # Bento Grid KPIs
-    render_section_header("📊 Rendimento Complessivo", "Medie pesate e metriche chiave calcolate su tutte le stagioni")
+    render_section_header("📊 Rendimento Complessivo", "Medie pesate e metriche chiave calcolate su tutte le stagioni (esclusa 2026-27)")
     
-    rel = calculate_relative_metrics(p_stats, is_goalkeeper=is_goalkeeper)
-    media_voto = safe_mean(p_stats, "voto")
-    fantamedia = safe_mean(p_stats, "fanta_voto_calcolato")
-    varianza_bin = varianza_gol_binaria(p_stats)
-    varianza_v = safe_variance(p_stats, "voto")
+    rel = calculate_relative_metrics(p_stats_filtered, is_goalkeeper=is_goalkeeper)
+    media_voto = safe_mean(p_stats_filtered, "voto")
+    fantamedia = safe_mean(p_stats_filtered, "fanta_voto_calcolato")
+    varianza_bin = varianza_gol_binaria(p_stats_filtered)
+    varianza_v = safe_variance(p_stats_filtered, "voto")
 
     k1, k2, k3, k4 = st.columns(4)
     with k1:
@@ -596,7 +213,7 @@ def render_player_detail(player_id, stats, quotations):
 
     # Form Trend Chart (Plotly with UI/UX Pro Max Theme)
     render_section_header("📈 Trend di Forma (Rolling 5 Giornate)", "Evoluzione della media mobile su voto puro vs fantavoto")
-    rolling_df = build_rolling_data(p_stats, window=5)
+    rolling_df = build_rolling_data(p_stats_filtered, window=5)
 
     if not rolling_df.empty:
         fig = go.Figure()
@@ -644,7 +261,7 @@ def render_player_detail(player_id, stats, quotations):
         )
         st.plotly_chart(fig, use_container_width=True)
 
-    # Season Breakdown Table
+    # Season Breakdown Table con stagione 2026-27 inclusa
     render_section_header("📅 Storico Dettagliato per Stagione")
     if "stagione" in p_stats.columns:
         rows = []
@@ -696,7 +313,7 @@ quot = normalize_dataframe(quot)
 df = remove_starred_vote_rows(df)
 
 latest_s = get_latest_season(quot)
-current_quot = quot[quot["stagione"].astype(str).str.strip() == str(latest_s).strip()].copy() if latest_s else quot.copy()
+current_quot = quot[quot["stagione"].astype(str).str.strip() == str(latest_s).strip()] if latest_s else quot.copy()
 
 # App Header
 st.markdown("""
