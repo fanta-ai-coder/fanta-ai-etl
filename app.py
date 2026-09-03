@@ -1,6 +1,7 @@
 import os
 import html
 import pandas as pd
+import numpy as np
 import streamlit as st
 import plotly.graph_objects as go
 from supabase import create_client
@@ -218,7 +219,6 @@ rigoristi_df = load_rigoristi()
 punizioni_df = load_punizioni()
 titolari_df = load_titolari_infortuni()
 
-# --- RANKING: carica e cache ---
 @st.cache_data(ttl=600)
 def load_player_ranking():
     res = (
@@ -234,9 +234,185 @@ ranking_data = load_player_ranking()
 # ==========================================
 # 3. STATISTICAL UTILITIES
 # ==========================================
+def normalize_player_id_series(series):
+    numeric = pd.to_numeric(series, errors="coerce")
+    return numeric.round().astype("Int64")
 
-# (tutte le funzioni statistiche originali rimangono invariate e non riscritte per brevità)
-# copy paste esatto da app_versione_finale.py originale...
+def normalize_dataframe(df):
+    if df.empty:
+        return df.copy()
+    result = df.copy()
+    if "player_id" in result.columns:
+        result["player_id"] = normalize_player_id_series(result["player_id"])
+    return result
+
+def numeric_series(df, column):
+    if column not in df.columns:
+        return pd.Series(float("nan"), index=df.index, dtype="float64")
+    return pd.to_numeric(df[column], errors="coerce")
+
+def safe_sum(df, column):
+    if column not in df.columns:
+        return 0.0
+    return float(numeric_series(df, column).fillna(0).sum())
+
+def safe_mean(df, column):
+    if column not in df.columns:
+        return 0.0
+    values = numeric_series(df, column).dropna()
+    return float(values.mean()) if not values.empty else 0.0
+
+def safe_variance(df, column):
+    if column not in df.columns:
+        return None
+    values = numeric_series(df, column).dropna()
+    if len(values) < 2:
+        return None
+    val = values.var(ddof=1)
+    return None if pd.isna(val) else float(val)
+
+def format_number(value, decimals=2):
+    return "N/D" if value is None or pd.isna(value) else f"{value:.{decimals}f}"
+
+def remove_starred_vote_rows(df):
+    if df.empty or "voto" not in df.columns:
+        return df.copy()
+    raw_vote = df["voto"].astype(str).str.strip()
+    starred = raw_vote.str.contains(r"\*", regex=True, na=False)
+    return df.loc[~starred].copy() if starred.any() else df.copy()
+
+def calculate_fantavoto(df):
+    result = df.copy()
+    if "voto" not in result.columns:
+        result["fanta_voto_calcolato"] = float("nan")
+        return result
+    voto = numeric_series(result, "voto").fillna(0)
+    gf = numeric_series(result, "gf").fillna(0)
+    ass = numeric_series(result, "ass").fillna(0)
+    rf = numeric_series(result, "rf").fillna(0)
+    au = numeric_series(result, "au").fillna(0)
+    esp = numeric_series(result, "esp").fillna(0)
+    amm = numeric_series(result, "amm").fillna(0)
+    clean_sheet = pd.Series(0.0, index=result.index)
+    penalty_saved = pd.Series(0.0, index=result.index)
+    gol_subiti = pd.Series(0.0, index=result.index)
+
+    for c in ["pi", "porta_inviolata", "clean_sheet", "imbattuto"]:
+        if c in result.columns:
+            clean_sheet = numeric_series(result, c).fillna(0)
+            break
+    for c in ["rp", "rigori_parati", "rigore_parato"]:
+        if c in result.columns:
+            penalty_saved = numeric_series(result, c).fillna(0)
+            break
+    for c in ["gs", "gol_subiti"]:
+        if c in result.columns:
+            gol_subiti = numeric_series(result, c).fillna(0)
+            break
+
+    if "ruolo" in result.columns:
+        is_p = result["ruolo"].astype(str).str.strip().str.upper().eq("P")
+        clean_sheet = clean_sheet.where(is_p, 0)
+        gol_subiti = gol_subiti.where(is_p, 0)
+
+    result["fanta_voto_calcolato"] = (
+        voto + (gf * 3) + ass + (rf * 3) - (au * 2) - esp - (amm * 0.5) + clean_sheet + (penalty_saved * 3) - gol_subiti
+    )
+    result.loc[numeric_series(result, "voto").isna(), "fanta_voto_calcolato"] = float("nan")
+    return result
+
+def calculate_bonus_malus(df):
+    res = calculate_fantavoto(df)
+    res["bonus_malus"] = res["fanta_voto_calcolato"] - numeric_series(res, "voto")
+    return res
+
+def calculate_relative_metrics(p_stats, is_goalkeeper=False):
+    seasons = p_stats["stagione"].dropna().astype(str).str.strip().nunique() if "stagione" in p_stats.columns else 0
+    if seasons <= 0:
+        return {
+            "stagioni": 0, "presenze_medie": 0.0, "presenza_pct": 0.0,
+            "gol_stagione": 0.0, "assist_stagione": 0.0, "rigori_segnati": 0.0,
+            "rigori_sbagliati": 0.0, "ammonizioni": 0.0, "espulsioni": 0.0,
+            "gs_stagione": 0.0, "rigori_parati": 0.0,
+        }
+    presenze_totali = numeric_series(p_stats, "voto").count()
+    presenze_medie = presenze_totali / seasons
+    presenza_pct = min(100.0, (presenze_medie / 38) * 100)
+
+    if is_goalkeeper:
+        gs_tot = safe_sum(p_stats, "gs")
+        rp_tot = safe_sum(p_stats, "rp")
+        gf_tot, rf_tot = 0, 0
+    else:
+        gf_tot = safe_sum(p_stats, "gf") + safe_sum(p_stats, "rf")
+        rf_tot = safe_sum(p_stats, "rf")
+        gs_tot, rp_tot = 0, 0
+
+    return {
+        "stagioni": seasons,
+        "presenze_medie": presenze_medie,
+        "presenza_pct": presenza_pct,
+        "assist_stagione": safe_sum(p_stats, "ass") / seasons,
+        "rigori_sbagliati": safe_sum(p_stats, "rs") / seasons,
+        "ammonizioni": safe_sum(p_stats, "amm") / seasons,
+        "espulsioni": safe_sum(p_stats, "esp") / seasons,
+        "gol_stagione": gf_tot / seasons,
+        "rigori_segnati": rf_tot / seasons,
+        "gs_stagione": gs_tot / seasons,
+        "rigori_parati": rp_tot / seasons,
+    }
+
+def varianza_gol_binaria(p_stats):
+    gol_g = p_stats.groupby("giornata").apply(
+        lambda df: 1 if (safe_sum(df, "gf") + safe_sum(df, "rf")) > 0 else 0
+    )
+    return 0.0 if len(gol_g) <= 1 else float(gol_g.var(ddof=1))
+
+def season_sort_key(value):
+    try:
+        return int(str(value).strip().split("/")[0])
+    except Exception:
+        return -1
+
+def build_rolling_data(player_stats, window=5):
+    if player_stats.empty or any(c not in player_stats.columns for c in ["stagione", "giornata"]):
+        return pd.DataFrame()
+    res = player_stats.copy()
+    res["giornata"] = pd.to_numeric(res["giornata"], errors="coerce")
+    res = res[res["giornata"].notna()].copy()
+    if res.empty:
+        return pd.DataFrame()
+    res["giornata"] = res["giornata"].astype(int)
+    res["stagione"] = res["stagione"].astype(str).str.strip()
+    res["_season_sort"] = res["stagione"].apply(season_sort_key)
+    res = res.sort_values(["_season_sort", "giornata"]).reset_index(drop=True)
+    res = calculate_fantavoto(res)
+    if "voto" in res.columns:
+        res["voto"] = pd.to_numeric(res["voto"], errors="coerce")
+        res["media_mobile_voto"] = res.groupby("stagione", sort=False)["voto"].transform(
+            lambda x: x.rolling(window=window, min_periods=1).mean()
+        )
+    res["media_mobile_fanta"] = res.groupby("stagione", sort=False)["fanta_voto_calcolato"].transform(
+        lambda x: x.rolling(window=window, min_periods=1).mean()
+    )
+    res["periodo"] = res["stagione"] + " G" + res["giornata"].astype(str)
+    return res
+
+def get_latest_season(df):
+    if df.empty or "stagione" not in df.columns:
+        return None
+    seasons = df["stagione"].dropna().astype(str).str.strip()
+    seasons = seasons[seasons != ""]
+    return max(seasons.unique(), key=season_sort_key) if not seasons.empty else None
+
+def get_latest_quote_row(player_quotes):
+    if player_quotes.empty:
+        return None
+    res = player_quotes.copy()
+    if "stagione" in res.columns:
+        res["_season_sort"] = res["stagione"].apply(season_sort_key)
+        res = res.sort_values("_season_sort")
+    return res.iloc[-1]
 
 # ==========================================
 # 4. REUSABLE UI COMPONENTS
@@ -378,7 +554,46 @@ def render_player_detail(player_id, stats, quotations):
     nome_upper = str(nome).upper().strip()
     squadra_upper = str(squadra).upper().strip()
 
-    # Lookup dati aggiuntivi (rigoristi, punizioni, titolari) rimangono inalterate...
+    rigor_info = rigoristi_df[(rigoristi_df["giocatore"] == nome_upper) & (rigoristi_df["squadra"] == squadra_upper)]
+    puniz_info = punizioni_df[(punizioni_df["giocatore"] == nome_upper) & (punizioni_df["squadra"] == squadra_upper)]
+    titolare_info = titolari_df[(titolari_df["nome_giocatore"] == nome_upper) & (titolari_df["squadra"] == squadra_upper)]
+
+    role_meta = ROLE_COLORS.get(ruolo, {"bg": "#374151", "text": "#E5E7EB", "border": "#4B5563", "label": ruolo})
+
+    badge_html = f"""
+    <span style="background:{role_meta['bg']}; color:{role_meta['text']}; border:1px solid {role_meta['border']};
+                 padding:4px 10px; border-radius:8px; font-weight:700; font-size:0.85rem; margin-right:6px;">
+        {ruolo} — {role_meta['label']}
+    </span>
+    <span style="background:rgba(255,255,255,0.06); color:#CBD5E1; padding:4px 10px; border-radius:8px;
+                 font-weight:600; font-size:0.85rem; margin-right:6px;">
+        🛡️ {html.escape(str(squadra))}
+    </span>
+    """
+    if not rigor_info.empty:
+        pos_r = int(rigor_info["posizione"].values[0])
+        badge_html += f'<span style="background:rgba(239,68,68,0.15); color:#FCA5A5; border:1px solid rgba(239,68,68,0.3); padding:4px 10px; border-radius:8px; font-weight:600; font-size:0.85rem; margin-right:6px;">🎯 Rigorista #{pos_r}</span>'
+    if not puniz_info.empty:
+        pos_p = int(puniz_info["posizione"].values[0])
+        badge_html += f'<span style="background:rgba(147,51,234,0.15); color:#D8B4FE; border:1px solid rgba(147,51,234,0.3); padding:4px 10px; border-radius:8px; font-weight:600; font-size:0.85rem; margin-right:6px;">⚡ Punizioni #{pos_p}</span>'
+
+    status_html = ""
+    if not titolare_info.empty:
+        row = titolare_info.iloc[0]
+        tit = row.get("titolarita", "")
+        squalificato = str(row.get("squalificato", "no")).lower()
+        infortunato = str(row.get("infortunato", "no")).lower()
+        desc = str(row.get("desc_infortunio", "")).strip()
+
+        if squalificato == "si":
+            status_html += '<span style="background:rgba(239,68,68,0.2); color:#F87171; border:1px solid rgba(239,68,68,0.4); padding:4px 10px; border-radius:8px; font-weight:700; font-size:0.82rem; margin-right:6px;">🟥 Squalificato</span>'
+        elif infortunato == "si":
+            tooltip = f' title="{html.escape(desc)}"' if desc else ""
+            status_html += f'<span{tooltip} style="background:rgba(234,179,8,0.15); color:#FDE047; border:1px solid rgba(234,179,8,0.35); padding:4px 10px; border-radius:8px; font-weight:700; font-size:0.82rem; margin-right:6px; cursor:help;">🤕 Infortunato{" — " + html.escape(desc[:40]) + ("…" if len(desc) > 40 else "") if desc else ""}</span>'
+        elif tit == "titolare":
+            status_html += '<span style="background:rgba(16,185,129,0.15); color:#34D399; border:1px solid rgba(16,185,129,0.3); padding:4px 10px; border-radius:8px; font-weight:700; font-size:0.82rem; margin-right:6px;">✅ Titolare</span>'
+        elif tit == "panchina":
+            status_html += '<span style="background:rgba(100,116,139,0.2); color:#94A3B8; border:1px solid rgba(100,116,139,0.3); padding:4px 10px; border-radius:8px; font-weight:700; font-size:0.82rem; margin-right:6px;">🪑 Panchina</span>'
 
     header_col1, header_col2 = st.columns([2.5, 1.5])
     with header_col1:
@@ -386,20 +601,27 @@ def render_player_detail(player_id, stats, quotations):
             f'<h1 style="font-size:2.2rem; font-weight:800; color:#F8FAFC; margin:0 0 8px 0;">{html.escape(str(nome))}</h1>',
             unsafe_allow_html=True,
         )
-        # ... codice badge rimanente senza modifiche ...
+        st.markdown(
+            f'<div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:6px;">{badge_html}</div>',
+            unsafe_allow_html=True,
+        )
+        if status_html:
+            st.markdown(
+                f'<div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;">{status_html}</div>',
+                unsafe_allow_html=True,
+            )
     with header_col2:
         quota_val = current_quote.get("quotazione_attuale", "-") if current_quote is not None else "-"
         fvm_val = current_quote.get("fvm", "-") if current_quote is not None else "-"
         ranking = ranking_data.get(player_id)
         render_quote_hero_card(quota_val, fvm_val, ranking)
 
-    # Il resto della funzione render_player_detail rimane identico all’originale,
-    # non modificato qui per brevità.
+    # Il resto della funzione (KPI, trend, storico...) rimane identico all'originale,
+    # e deve essere inserito qui come nel file di partenza.
 
 # ==========================================
 # 6. APP CONTROLLER & MAIN UI
 # ==========================================
-
 try:
     df = load_stats()
     quot = load_quotazioni()
@@ -411,7 +633,6 @@ if df.empty or quot.empty:
     st.warning("⚠️ Tabelle statistiche o quotazioni vuote.")
     st.stop()
 
-# Normalizzazione, filtro dati e filtraggio giocatori sono invariati...
 df = normalize_dataframe(df)
 quot = normalize_dataframe(quot)
 df = remove_starred_vote_rows(df)
@@ -419,19 +640,46 @@ df = remove_starred_vote_rows(df)
 latest_s = get_latest_season(quot)
 current_quot = quot[quot["stagione"].astype(str).str.strip() == str(latest_s).strip()].copy() if latest_s else quot.copy()
 
-# UI header e filtri rimangono identici...
+st.markdown("""
+<div style="display:flex; align-items:center; justify-content:space-between; padding:12px 0 20px 0;
+            border-bottom:1px solid rgba(255,255,255,0.08); margin-bottom:20px;">
+    <div style="display:flex; align-items:center; gap:12px;">
+        <span style="font-size:2rem;">⚽</span>
+        <div>
+            <h2 style="margin:0; font-size:1.5rem; font-weight:800; color:#F8FAFC;">FantaAI Analytics</h2>
+            <p style="margin:0; font-size:0.8rem; color:#94A3B8;">Design Intelligence & Decision Support per l'Asta</p>
+        </div>
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+filter_col1, filter_col2 = st.columns([1, 2])
+with filter_col1:
+    selected_role = st.selectbox("Ruolo", ["Tutti", "P", "D", "C", "A"], label_visibility="collapsed")
+with filter_col2:
+    search_query = st.text_input("Cerca", placeholder="🔍 Cerca per nome giocatore o squadra...", label_visibility="collapsed")
+
+quot_view = current_quot.copy()
+if selected_role != "Tutti" and "ruolo" in quot_view.columns:
+    quot_view = quot_view[quot_view["ruolo"].astype(str).str.upper().str.strip() == selected_role]
+if search_query and "nome" in quot_view.columns:
+    q = search_query.upper().strip()
+    match_nome = quot_view["nome"].astype(str).str.upper().str.contains(q, na=False)
+    match_squadra = quot_view["squadra"].astype(str).str.upper().str.contains(q, na=False) if "squadra" in quot_view.columns else False
+    quot_view = quot_view[match_nome | match_squadra]
+if "nome" in quot_view.columns:
+    quot_view = quot_view.sort_values("nome", na_position="last")
 
 col_players, col_detail = st.columns([0.9, 3.1], gap="medium")
 
 with col_players:
-    # Lista giocatori e selezione identica all’originale
-    st.markdown(f'<div style="font-size:0.85rem; font-weight:700; color:#94A3B8; margin-bottom:8px;">GIOCATORI ({len(current_quot)})</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="font-size:0.85rem; font-weight:700; color:#94A3B8; margin-bottom:8px;">GIOCATORI ({len(quot_view)})</div>', unsafe_allow_html=True)
 
-    if current_quot.empty:
+    if quot_view.empty:
         st.info("Nessun giocatore trovato con questi filtri.")
         selected_id = None
     else:
-        options_df = current_quot.drop_duplicates(subset="player_id").copy()
+        options_df = quot_view.drop_duplicates(subset="player_id").copy()
         labels, ids = [], []
         for row in options_df.itertuples():
             n = getattr(row, "nome", "Giocatore")
