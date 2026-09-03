@@ -180,7 +180,7 @@ def load_quotazioni():
 @st.cache_data(ttl=600)
 @st.cache_data(ttl=600)
 def load_rigoristi():
-    url = "https://raw.githubusercontent.com/fanta-ai-coder/fanta-ai-etl/refs/heads/main/rigoristi.csv"
+    url = "raw.githubusercontent.com/fanta-ai-coder/fanta-ai-etl/refs/heads/main/rigoristi.csv"
     try:
         df = pd.read_csv(url)
         df["giocatore"] = df["giocatore"].astype(str).str.upper().str.strip()
@@ -193,7 +193,7 @@ def load_rigoristi():
 
 @st.cache_data(ttl=600)
 def load_punizioni():
-    url = "https://raw.githubusercontent.com/fanta-ai-coder/fanta-ai-etl/refs/heads/main/punizioni.csv"
+    url = "raw.githubusercontent.com/fanta-ai-coder/fanta-ai-etl/refs/heads/main/punizioni.csv"
     try:
         df = pd.read_csv(url)
         df["giocatore"] = df["giocatore"].astype(str).str.upper().str.strip()
@@ -204,4 +204,4 @@ def load_punizioni():
 
 @st.cache_data(ttl=300)
 def load_titolari_infortuni():
-    url = "https://raw.githubusercontent.com/fanta-ai-coder
+    url = "raw.githubusercontent.com/fanta-ai-coder
