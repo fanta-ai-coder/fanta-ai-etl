@@ -19,151 +19,190 @@ st.set_page_config(
 
 st.markdown(
     """
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    <div style="
+        background: linear-gradient(135deg, #111827 0%, #1E293B 100%);
+        border: 1px solid rgba(16, 185, 129, 0.4);
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5),
+                    0 0 15px rgba(16,185,129,0.15);
+    ">
 
-    html, body, [class*="css"], .stApp {
-        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-        background-color: #0B0F19;
-        color: #F8FAFC;
-        overflow-anchor: none !important;
-        scroll-behavior: auto !important;
-    }
+        <!-- HEADER -->
+        <div style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        ">
+            <span style="
+                color: #94A3B8;
+                font-size: 0.85rem;
+                font-weight: 600;
+            ">
+                VALUTAZIONI ASTA
+            </span>
 
-    .stAppViewContainer,
-    section.main,
-    [data-testid="stMainBlockContainer"] {
-        background-color: #0B0F19;
-        overflow-anchor: none !important;
-        scroll-behavior: auto !important;
-    }
+            <span style="
+                background: rgba(16,185,129,0.2);
+                color: #34D399;
+                font-size: 0.75rem;
+                font-weight: 700;
+                padding: 2px 8px;
+                border-radius: 9999px;
+                border: 1px solid rgba(16,185,129,0.3);
+            ">
+                ⭐ GUIDA ASTA
+            </span>
+        </div>
 
-    ::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
-    }
+        <!-- QUOTAZIONE + FVM -->
+        <div style="
+            display: flex;
+            gap: 20px;
+            align-items: baseline;
+        ">
 
-    ::-webkit-scrollbar-track {
-        background: #0B0F19;
-    }
+            <div>
+                <div style="
+                    color: #64748B;
+                    font-size: 0.75rem;
+                    text-transform: uppercase;
+                ">
+                    Quotazione
+                </div>
 
-    ::-webkit-scrollbar-thumb {
-        background: #334155;
-        border-radius: 9999px;
-    }
+                <div style="
+                    color: #F8FAFC;
+                    font-size: 2rem;
+                    font-weight: 800;
+                ">
+                    2
+                    <span style="
+                        font-size: 1rem;
+                        color: #64748B;
+                    ">
+                        FM
+                    </span>
+                </div>
+            </div>
 
-    ::-webkit-scrollbar-thumb:hover {
-        background: #10B981;
-    }
+            <div style="
+                border-left: 1px solid rgba(255,255,255,0.1);
+                padding-left: 20px;
+            ">
 
-    [data-testid="stRadio"] div[role="radiogroup"] {
-        display: flex !important;
-        flex-direction: column !important;
-        flex-wrap: nowrap !important;
-        width: 100% !important;
-        max-height: 620px !important;
-        overflow-y: auto !important;
-        overflow-x: hidden !important;
-        background-color: #111827 !important;
-        border: 1px solid rgba(255, 255, 255, 0.08) !important;
-        border-radius: 12px !important;
-        padding: 8px !important;
-        gap: 5px !important;
-        overscroll-behavior: contain !important;
-        contain: content !important;
-    }
+                <div style="
+                    color: #64748B;
+                    font-size: 0.75rem;
+                    text-transform: uppercase;
+                ">
+                    FVM Consigliato
+                </div>
 
-    [data-testid="stRadio"] label > div:first-child,
-    [data-testid="stRadio"] input[type="radio"] {
-        display: none !important;
-    }
+                <div style="
+                    color: #10B981;
+                    font-size: 2rem;
+                    font-weight: 800;
+                ">
+                    10
+                    <span style="
+                        font-size: 1rem;
+                        color: #10B981;
+                    ">
+                        FM
+                    </span>
+                </div>
+            </div>
 
-    [data-testid="stRadio"] label {
-        display: flex !important;
-        align-items: center !important;
-        justify-content: space-between !important;
-        width: 100% !important;
-        background-color: #1E293B !important;
-        border: 1px solid rgba(255, 255, 255, 0.05) !important;
-        border-radius: 8px !important;
-        padding: 10px 14px !important;
-        margin: 0 !important;
-        cursor: pointer !important;
-        transition: all 0.15s ease !important;
-    }
+        </div>
 
-    [data-testid="stRadio"] label:hover {
-        background-color: #334155 !important;
-        border-color: rgba(16, 185, 129, 0.4) !important;
-    }
+        <!-- RANKING ASTA V3.1 -->
+        <div style="
+            margin-top: 18px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+        ">
 
-    [data-testid="stRadio"] label p,
-    [data-testid="stRadio"] label span,
-    [data-testid="stRadio"] label div {
-        color: #F1F5F9 !important;
-        font-size: 14px !important;
-        font-weight: 600 !important;
-        margin: 0 !important;
-    }
+            <div style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 12px;
+            ">
 
-    [data-testid="stRadio"] label:has(input:checked) {
-        background-color: rgba(16, 185, 129, 0.2) !important;
-        border: 1.5px solid #10B981 !important;
-    }
+                <div>
+                    <div style="
+                        color: #F8FAFC;
+                        font-size: 0.82rem;
+                        font-weight: 800;
+                        text-transform: uppercase;
+                        letter-spacing: 0.04em;
+                    ">
+                        👑 RANKING ASTA V3.1
+                    </div>
 
-    [data-testid="stRadio"] label:has(input:checked) p,
-    [data-testid="stRadio"] label:has(input:checked) span {
-        color: #34D399 !important;
-        font-weight: 700 !important;
-    }
+                    <div style="
+                        color: #64748B;
+                        font-size: 0.7rem;
+                        margin-top: 3px;
+                    ">
+                        100 = migliore del listone
+                    </div>
+                </div>
 
-    .stTextInput input,
-    .stSelectbox [data-baseweb="select"] {
-        background-color: #111827 !important;
-        border: 1px solid #374151 !important;
-        border-radius: 8px !important;
-        color: #F9FAFB !important;
-    }
+                <div style="
+                    color: #94A3B8;
+                    font-size: 1.55rem;
+                    font-weight: 800;
+                    white-space: nowrap;
+                ">
+                    48.6
+                    <span style="
+                        font-size: 0.8rem;
+                        color: #64748B;
+                    ">
+                        /100
+                    </span>
+                </div>
 
-    [data-testid="stMetric"] {
-        background-color: #111827;
-        border: 1px solid rgba(255, 255, 255, 0.06);
-        border-radius: 12px;
-        padding: 14px 18px;
-    }
+            </div>
 
-    [data-testid="stMetricLabel"] {
-        color: #94A3B8 !important;
-        font-weight: 500;
-        font-size: 0.85rem;
-    }
+            <!-- POSIZIONI -->
+            <div style="
+                display: flex;
+                gap: 10px;
+                flex-wrap: wrap;
+                margin-top: 10px;
+            ">
 
-    [data-testid="stMetricValue"] {
-        color: #F8FAFC !important;
-        font-weight: 700;
-    }
+                <span style="
+                    background: rgba(255,255,255,0.05);
+                    color: #CBD5E1;
+                    padding: 5px 9px;
+                    border-radius: 7px;
+                    font-size: 0.72rem;
+                    font-weight: 700;
+                ">
+                    #223 / 560&nbsp; generale
+                </span>
 
-    [data-testid="stRadio"],
-    [data-testid="stRadio"] *,
-    [data-testid="stRadio"] label,
-    [data-testid="stRadio"] input {
-        scroll-margin: 0 !important;
-        scroll-padding: 0 !important;
-        scroll-margin-top: 0 !important;
-        scroll-margin-bottom: 0 !important;
-    }
+                <span style="
+                    background: rgba(16,185,129,0.10);
+                    color: #34D399;
+                    padding: 5px 9px;
+                    border-radius: 7px;
+                    font-size: 0.72rem;
+                    font-weight: 700;
+                ">
+                    #84 / 201&nbsp; ruolo
+                </span>
 
-    div[data-testid="stHorizontalBlock"] {
-        align-items: flex-start !important;
-    }
+            </div>
 
-    div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:first-child {
-        position: sticky !important;
-        top: 12px !important;
-        align-self: flex-start !important;
-        z-index: 10 !important;
-    }
-    </style>
+        </div>
+
+    </div>
     """,
     unsafe_allow_html=True,
 )
