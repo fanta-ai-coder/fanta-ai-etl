@@ -178,6 +178,7 @@ def load_quotazioni():
     return pd.DataFrame(fetch_all_rows("giocatori_quotazioni"))
 
 @st.cache_data(ttl=600)
+@st.cache_data(ttl=600)
 def load_rigoristi():
     url = "https://raw.githubusercontent.com/fanta-ai-coder/fanta-ai-etl/refs/heads/main/rigoristi.csv"
     try:
@@ -185,8 +186,10 @@ def load_rigoristi():
         df["giocatore"] = df["giocatore"].astype(str).str.upper().str.strip()
         df["squadra"] = df["squadra"].astype(str).str.upper().str.strip()
         return df
-    except Exception:
-        return pd.DataFrame(columns=["giocatore", "squadra", "posizione"])
+    except Exception as e:
+        st.error(f"Errore caricando rigoristi: {e}")
+        raise
+
 
 @st.cache_data(ttl=600)
 def load_punizioni():
