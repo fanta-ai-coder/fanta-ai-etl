@@ -626,6 +626,7 @@ def render_player_detail(player_id, stats, quotations):
         with var_col4:
             st.metric("Espulsioni / anno", f"{rel['espulsioni']:.1f}", help="Media cartellini rossi a stagione")
 
+    """
     render_section_header("🎯 Continuità & Analisi del Rischio")
     var_col1, var_col2, var_col3, var_col4 = st.columns(4)
     with var_col1:
@@ -636,6 +637,7 @@ def render_player_detail(player_id, stats, quotations):
         st.metric("Ammonizioni / anno", f"{rel['ammonizioni']:.1f}", help="Media cartellini gialli a stagione")
     with var_col4:
         st.metric("Espulsioni / anno", f"{rel['espulsioni']:.1f}", help="Media cartellini rossi a stagione")
+    """
 
     render_section_header("📈 Trend di Forma (Rolling 5 Giornate)", "Evoluzione della media mobile su voto puro vs fantavoto")
     rolling_df = build_rolling_data(p_stats, window=5)
