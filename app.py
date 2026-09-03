@@ -178,22 +178,19 @@ def load_quotazioni():
     return pd.DataFrame(fetch_all_rows("giocatori_quotazioni"))
 
 @st.cache_data(ttl=600)
-@st.cache_data(ttl=600)
 def load_rigoristi():
-    url = "raw.githubusercontent.com/fanta-ai-coder/fanta-ai-etl/refs/heads/main/rigoristi.csv"
+    url = "https://raw.githubusercontent.com/fanta-ai-coder/fanta-ai-etl/refs/heads/main/rigoristi.csv"
     try:
         df = pd.read_csv(url)
         df["giocatore"] = df["giocatore"].astype(str).str.upper().str.strip()
         df["squadra"] = df["squadra"].astype(str).str.upper().str.strip()
         return df
-    except Exception as e:
-        st.error(f"Errore caricando rigoristi: {e}")
-        raise
-
+    except Exception:
+        return pd.DataFrame(columns=["giocatore", "squadra", "posizione"])
 
 @st.cache_data(ttl=600)
 def load_punizioni():
-    url = "raw.githubusercontent.com/fanta-ai-coder/fanta-ai-etl/refs/heads/main/punizioni.csv"
+    url = "https://raw.githubusercontent.com/fanta-ai-coder/fanta-ai-etl/refs/heads/main/punizioni.csv"
     try:
         df = pd.read_csv(url)
         df["giocatore"] = df["giocatore"].astype(str).str.upper().str.strip()
@@ -204,4 +201,19 @@ def load_punizioni():
 
 @st.cache_data(ttl=300)
 def load_titolari_infortuni():
-    url = "raw.githubusercontent.com/fanta-ai-coder
+    url = "https://raw.githubusercontent.com/fanta-ai-coder/fanta-ai-etl/refs/heads/main/titolari_infortuni"
+    try:
+        df = pd.read_csv(url)
+        df["nome_giocatore"] = df["nome_giocatore"].astype(str).str.upper().str.strip()
+        df["squadra"] = df["squadra"].astype(str).str.upper().str.strip()
+        df["titolarita"] = df["titolarita"].astype(str).str.lower().str.strip()
+        df["squalificato"] = df["squalificato"].astype(str).str.lower().str.strip()
+        df["infortunato"] = df["infortunato"].astype(str).str.lower().str.strip()
+        df["desc_infortunio"] = df["desc_infortunio"].fillna("").astype(str).str.strip()
+        return df
+    except Exception:
+        return pd.DataFrame(columns=["nome_giocatore", "squadra", "titolarita", "squalificato", "infortunato", "desc_infortunio"])
+
+rigoristi_df = load_rigoristi()
+punizioni_df = load_punizioni()
+titolari_df = load_titolari_infortuni()
