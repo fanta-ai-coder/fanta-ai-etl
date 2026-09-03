@@ -1,7 +1,6 @@
 import os
 import html
 import pandas as pd
-import numpy as np
 import streamlit as st
 import plotly.graph_objects as go
 from supabase import create_client
@@ -231,9 +230,10 @@ def load_player_ranking():
 
 ranking_data = load_player_ranking()
 
-# ==========================================
+# ================================
 # 3. STATISTICAL UTILITIES
-# ==========================================
+# (funzioni identiche come nel file originale)
+# ================================
 def normalize_player_id_series(series):
     numeric = pd.to_numeric(series, errors="coerce")
     return numeric.round().astype("Int64")
@@ -424,23 +424,6 @@ ROLE_COLORS = {
     "A": {"bg": "rgba(239, 68, 68, 0.15)", "text": "#F87171", "border": "rgba(239, 68, 68, 0.4)", "label": "Attaccante"},
 }
 
-def get_role_name(role_letter):
-    roles = {
-        "P": "Portiere",
-        "D": "Difensore",
-        "C": "Centrocampista",
-        "A": "Attaccante",
-    }
-    return roles.get(role_letter, role_letter)
-
-def ranking_color(indice_finale):
-    if indice_finale >= 80:
-        return "#34D399"  # verde
-    elif indice_finale >= 65:
-        return "#FBBF24"  # giallo
-    else:
-        return "#94A3B8"  # grigio
-
 def render_section_header(title, subtitle=None):
     sub_html = f'<p style="color:#94A3B8; font-size:0.85rem; margin:0 0 16px 0;">{subtitle}</p>' if subtitle else ""
     st.markdown(
@@ -468,6 +451,23 @@ def render_kpi_card(title, value, subtext="", highlight=False):
         """,
         unsafe_allow_html=True,
     )
+
+def get_role_name(role_letter):
+    roles = {
+        "P": "Portiere",
+        "D": "Difensore",
+        "C": "Centrocampista",
+        "A": "Attaccante",
+    }
+    return roles.get(role_letter, role_letter)
+
+def ranking_color(indice_finale):
+    if indice_finale >= 80:
+        return "#34D399"  # verde
+    elif indice_finale >= 65:
+        return "#FBBF24"  # giallo
+    else:
+        return "#94A3B8"  # grigio
 
 def render_quote_hero_card(quota, fvm, ranking=None):
     st.markdown(
@@ -507,14 +507,12 @@ def render_quote_hero_card(quota, fvm, ranking=None):
         st.markdown(
             f"""
             <div style="font-family: monospace; margin-top: 16px; color:#F8FAFC;">
-                <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:1rem;">
-                    <div>👑 RANKING ASTA V3</div>
-                    <div style="color:{color};">{indice_finale:.1f}/100</div>
-                </div>
-                <div style="font-size:0.75rem; color:#94A3B8; margin-bottom:10px;">
+                <div style="font-weight:bold; font-size:1.1rem; margin-bottom:4px;">👑 RANKING ASTA V3</div>
+                <div style="font-weight:bold; font-size:1.5rem; color:{color}; margin-bottom:6px;">{indice_finale:.1f}/100</div>
+                <div style="font-size:0.9rem; color:#94A3B8; margin-bottom:12px;">
                     100 = migliore del listone
                 </div>
-                <div style="display:flex; justify-content:space-between; font-family: monospace; font-weight:600;">
+                <div style="display:flex; justify-content:flex-start; gap:20px; font-family: monospace; font-weight:600; font-size:1rem;">
                     <div>#{rank_generale} / {totale_generale} generale</div>
                     <div>#{rank_ruolo} / {totale_ruolo} {ruolo_nome}</div>
                 </div>
@@ -531,14 +529,14 @@ def render_quote_hero_card(quota, fvm, ranking=None):
 # ==========================================
 def render_player_detail(player_id, stats, quotations):
     try:
-        player_id = int(float(player_id))
+        player_id_int = int(float(player_id))
     except Exception:
         st.error(f"Player ID non valido: {player_id}")
         return
 
-    p_quotes = quotations[quotations["player_id"] == player_id].copy()
+    p_quotes = quotations[quotations["player_id"] == player_id_int].copy()
     current_quote = get_latest_quote_row(p_quotes)
-    p_stats = stats[stats["player_id"] == player_id].copy()
+    p_stats = stats[stats["player_id"] == player_id_int].copy()
 
     if current_quote is not None:
         nome = current_quote.get("nome", "Giocatore")
@@ -560,6 +558,7 @@ def render_player_detail(player_id, stats, quotations):
 
     role_meta = ROLE_COLORS.get(ruolo, {"bg": "#374151", "text": "#E5E7EB", "border": "#4B5563", "label": ruolo})
 
+    # ── Badge riga 1: ruolo, squadra, rigorista, punizioni ──
     badge_html = f"""
     <span style="background:{role_meta['bg']}; color:{role_meta['text']}; border:1px solid {role_meta['border']};
                  padding:4px 10px; border-radius:8px; font-weight:700; font-size:0.85rem; margin-right:6px;">
@@ -577,6 +576,7 @@ def render_player_detail(player_id, stats, quotations):
         pos_p = int(puniz_info["posizione"].values[0])
         badge_html += f'<span style="background:rgba(147,51,234,0.15); color:#D8B4FE; border:1px solid rgba(147,51,234,0.3); padding:4px 10px; border-radius:8px; font-weight:600; font-size:0.85rem; margin-right:6px;">⚡ Punizioni #{pos_p}</span>'
 
+    # ── Badge riga 2: titolarità, squalifica, infortunio ──
     status_html = ""
     if not titolare_info.empty:
         row = titolare_info.iloc[0]
@@ -599,25 +599,24 @@ def render_player_detail(player_id, stats, quotations):
     with header_col1:
         st.markdown(
             f'<h1 style="font-size:2.2rem; font-weight:800; color:#F8FAFC; margin:0 0 8px 0;">{html.escape(str(nome))}</h1>',
-            unsafe_allow_html=True,
+            unsafe_allow_html=True
         )
         st.markdown(
             f'<div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:6px;">{badge_html}</div>',
-            unsafe_allow_html=True,
+            unsafe_allow_html=True
         )
         if status_html:
             st.markdown(
                 f'<div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;">{status_html}</div>',
-                unsafe_allow_html=True,
+                unsafe_allow_html=True
             )
     with header_col2:
         quota_val = current_quote.get("quotazione_attuale", "-") if current_quote is not None else "-"
         fvm_val = current_quote.get("fvm", "-") if current_quote is not None else "-"
-        ranking = ranking_data.get(player_id)
+        ranking = ranking_data.get(player_id_int)
         render_quote_hero_card(quota_val, fvm_val, ranking)
 
-    # Il resto della funzione (KPI, trend, storico...) rimane identico all'originale,
-    # e deve essere inserito qui come nel file di partenza.
+    # ... resto della funzione invariato ...
 
 # ==========================================
 # 6. APP CONTROLLER & MAIN UI
