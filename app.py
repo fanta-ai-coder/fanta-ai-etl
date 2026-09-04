@@ -30,8 +30,18 @@ st.set_page_config(
 _CUSTOM_CSS = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-html, body, [class*="css"], .stApp {
+html, body, [class*="css"], .stApp, [data-testid="stAppViewContainer"], [data-testid="stHeader"] {
 font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+background-color: #0B0F19 !important;
+color: #F8FAFC !important;
+}
+section.main, [data-testid="stMainBlockContainer"], [data-testid="stAppViewBlockContainer"] {
+background-color: #0B0F19 !important;
+}
+[data-testid="stVerticalBlockBorderWrapper"] {
+background-color: #111827 !important;
+border: 1px solid rgba(255, 255, 255, 0.08) !important;
+border-radius: 12px !important;
 }
 ::-webkit-scrollbar {
 width: 6px;
@@ -123,6 +133,20 @@ font-weight: 700;
 }
 [data-testid="stVerticalBlockBorderWrapper"] > div > [data-testid="stVerticalBlock"] {
 gap: 0.5rem;
+}
+.st-key-hero_card [data-testid="stMetric"] {
+padding: 8px 12px;
+}
+.st-key-hero_card [data-testid="stMetricLabel"] {
+font-size: 0.72rem;
+}
+.st-key-hero_card [data-testid="stMetricValue"] {
+font-size: 1.35rem;
+white-space: nowrap;
+overflow: visible;
+}
+.st-key-hero_rank_small [data-testid="stMetricValue"] {
+font-size: 1.1rem;
 }
 div[data-testid="stHorizontalBlock"] {
 align-items: flex-start !important;
@@ -1124,7 +1148,7 @@ def render_quote_hero_card(quota, fvm, ranking=None):
     else:
         ruolo_txt = "N/D"
 
-    with st.container(border=True):
+    with st.container(border=True, key="hero_card"):
         st.caption("⭐ VALUTAZIONI ASTA — GUIDA ASTA")
 
         c1, c2 = st.columns(2)
@@ -1132,8 +1156,6 @@ def render_quote_hero_card(quota, fvm, ranking=None):
             st.metric("Quotazione", f"{quota} FM")
         with c2:
             st.metric("FVM Consigliato", f"{fvm} FM")
-
-        st.divider()
 
         st.markdown("**👑 RANKING ASTA V3.1**")
 
@@ -1144,11 +1166,12 @@ def render_quote_hero_card(quota, fvm, ranking=None):
             delta_color="off",
         )
 
-        r1, r2 = st.columns(2)
-        with r1:
-            st.metric("Generale", generale_txt)
-        with r2:
-            st.metric("Ruolo", ruolo_txt)
+        with st.container(key="hero_rank_small"):
+            r1, r2 = st.columns(2)
+            with r1:
+                st.metric("Generale", generale_txt)
+            with r2:
+                st.metric("Ruolo", ruolo_txt)
 
 
 # ==========================================
