@@ -1371,7 +1371,7 @@ def render_player_detail(
         if squalificato == "si":
             status_kind = "error"
             # "##" = titolo grande: stato più critico, massima visibilità
-            status_text = "## 🟥 Squalificato"
+            status_text = " 🟥 Squalificato"
 
         elif infortunato == "si":
             desc_short = (
@@ -1380,12 +1380,12 @@ def render_player_detail(
             )
             status_kind = "warning"
             # "##" per il titolo, descrizione su riga separata in testo normale
-            status_text = f"# 🤕 Infortunato{desc_short}"
+            status_text = f" 🤕 Infortunato{desc_short}"
 
         elif tit == "titolare":
             status_kind = "success"
             # "###" = titolo medio: informazione positiva ma meno urgente
-            status_text = "# ✅ Titolare"
+            status_text = " ✅ Titolare"
 
         elif tit == "panchina":
             status_kind = "info"
@@ -1408,11 +1408,11 @@ def render_player_detail(
         # risalto agli stati critici (squalificato/infortunato) rispetto
         # a quelli neutri (panchina).
         if status_kind == "error":
-            st.error(status_text)
+            st.bedge(status_text)
         elif status_kind == "warning":
-            st.warning(status_text)
+            st.bedge(status_text)
         elif status_kind == "success":
-            st.success(status_text)
+            st.bedge(status_text)
         elif status_kind == "info":
             (status_text)
 
