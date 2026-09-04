@@ -1380,12 +1380,12 @@ def render_player_detail(
             )
             status_kind = "warning"
             # "##" per il titolo, descrizione su riga separata in testo normale
-            status_text = f"## 🤕 Infortunato{desc_short}"
+            status_text = f"# 🤕 Infortunato{desc_short}"
 
         elif tit == "titolare":
             status_kind = "success"
             # "###" = titolo medio: informazione positiva ma meno urgente
-            status_text = "### ✅ Titolare"
+            status_text = "** ✅ Titolare"
 
         elif tit == "panchina":
             status_kind = "info"
