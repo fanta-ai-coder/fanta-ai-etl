@@ -1383,7 +1383,7 @@ def render_player_detail(
             status_text = f" 🤕 Infortunato{desc_short}"
 
         elif tit == "titolare":
-            status_kind = "success"
+            status_kind = "info"
             # "###" = titolo medio: informazione positiva ma meno urgente
             status_text = " ✅ Titolare"
 
