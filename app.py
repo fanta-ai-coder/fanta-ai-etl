@@ -1385,7 +1385,7 @@ def render_player_detail(
         elif tit == "titolare":
             status_kind = "success"
             # "###" = titolo medio: informazione positiva ma meno urgente
-            status_text = "** ✅ Titolare"
+            status_text = "# ✅ Titolare"
 
         elif tit == "panchina":
             status_kind = "info"
