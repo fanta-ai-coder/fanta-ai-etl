@@ -6,14 +6,8 @@ from supabase import create_client
 
 
 # ==========================================
-# 1. PAGE CONFIG
+# 1. PAGE CONFIG & DESIGN SYSTEM
 # ==========================================
-# NOTE: styling is handled via native Streamlit components only
-# (st.container(border=True), st.metric, st.columns, st.success/
-# warning/error/info, etc.) instead of injected HTML/CSS, which was
-# unreliable across Streamlit/Markdown versions. To further customize
-# colors (dark theme, accent color) use a native .streamlit/config.toml
-# file alongside this script instead of custom CSS.
 
 st.set_page_config(
     page_title="FantaAI Analytics Pro",
@@ -21,6 +15,127 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed",
 )
+
+# Dark theme + accent color are set natively via .streamlit/config.toml
+# (see the file shipped alongside this script). The CSS below only
+# restyles Streamlit's own native elements (st.metric, st.radio,
+# st.container(border=True), inputs) — it never injects custom
+# <div>/<span> markup, so there is nothing for it to conflict with.
+#
+# IMPORTANT: every line here is flush-left with no leading indentation.
+# Streamlit's st.markdown() runs text through a CommonMark parser first;
+# a line indented by 4+ spaces that follows a blank line is treated as
+# an "indented code block" and rendered as literal text instead of CSS.
+# Keeping this block unindented avoids that failure mode entirely.
+_CUSTOM_CSS = """
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+html, body, [class*="css"], .stApp {
+font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+::-webkit-scrollbar {
+width: 6px;
+height: 6px;
+}
+::-webkit-scrollbar-track {
+background: transparent;
+}
+::-webkit-scrollbar-thumb {
+background: #334155;
+border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+background: #10B981;
+}
+[data-testid="stRadio"] div[role="radiogroup"] {
+display: flex !important;
+flex-direction: column !important;
+flex-wrap: nowrap !important;
+width: 100% !important;
+max-height: 620px !important;
+overflow-y: auto !important;
+overflow-x: hidden !important;
+background-color: #111827 !important;
+border: 1px solid rgba(255, 255, 255, 0.08) !important;
+border-radius: 12px !important;
+padding: 8px !important;
+gap: 5px !important;
+}
+[data-testid="stRadio"] label > div:first-child,
+[data-testid="stRadio"] input[type="radio"] {
+display: none !important;
+}
+[data-testid="stRadio"] label {
+display: flex !important;
+align-items: center !important;
+justify-content: space-between !important;
+width: 100% !important;
+background-color: #1E293B !important;
+border: 1px solid rgba(255, 255, 255, 0.05) !important;
+border-radius: 8px !important;
+padding: 10px 14px !important;
+margin: 0 !important;
+cursor: pointer !important;
+transition: all 0.15s ease !important;
+}
+[data-testid="stRadio"] label:hover {
+background-color: #334155 !important;
+border-color: rgba(16, 185, 129, 0.4) !important;
+}
+[data-testid="stRadio"] label p,
+[data-testid="stRadio"] label span,
+[data-testid="stRadio"] label div {
+color: #F1F5F9 !important;
+font-size: 14px !important;
+font-weight: 600 !important;
+margin: 0 !important;
+}
+[data-testid="stRadio"] label:has(input:checked) {
+background-color: rgba(16, 185, 129, 0.2) !important;
+border: 1.5px solid #10B981 !important;
+}
+[data-testid="stRadio"] label:has(input:checked) p,
+[data-testid="stRadio"] label:has(input:checked) span {
+color: #34D399 !important;
+font-weight: 700 !important;
+}
+.stTextInput input,
+.stSelectbox [data-baseweb="select"] {
+background-color: #111827 !important;
+border: 1px solid #374151 !important;
+border-radius: 8px !important;
+color: #F9FAFB !important;
+}
+[data-testid="stMetric"] {
+background-color: #111827;
+border: 1px solid rgba(255, 255, 255, 0.06);
+border-radius: 12px;
+padding: 14px 18px;
+}
+[data-testid="stMetricLabel"] {
+color: #94A3B8 !important;
+font-weight: 500;
+font-size: 0.85rem;
+}
+[data-testid="stMetricValue"] {
+color: #F8FAFC !important;
+font-weight: 700;
+}
+[data-testid="stVerticalBlockBorderWrapper"] > div > [data-testid="stVerticalBlock"] {
+gap: 0.5rem;
+}
+div[data-testid="stHorizontalBlock"] {
+align-items: flex-start !important;
+}
+div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:first-child {
+position: sticky !important;
+top: 12px !important;
+align-self: flex-start !important;
+z-index: 10 !important;
+}
+</style>
+"""
+st.markdown(_CUSTOM_CSS, unsafe_allow_html=True)
 
 # ==========================================
 # 2. SUPABASE & DATA FETCHING
@@ -989,8 +1104,8 @@ def render_quote_hero_card(quota, fvm, ranking=None):
         totale_ruolo = None
 
     ranking_score = (
-        "N/D" if indice_finale is None or pd.isna(indice_finale)
-        else f"{float(indice_finale):.1f}/100"
+        None if indice_finale is None or pd.isna(indice_finale)
+        else f"{float(indice_finale):.1f}"
     )
 
     if (
@@ -1021,14 +1136,18 @@ def render_quote_hero_card(quota, fvm, ranking=None):
         st.divider()
 
         st.markdown("**👑 RANKING ASTA V3.1**")
-        st.caption("100 = migliore del listone")
 
-        r1, r2, r3 = st.columns(3)
+        st.metric(
+            "Indice",
+            ranking_score if ranking_score is not None else "N/D",
+            delta=("su 100" if ranking_score is not None else None),
+            delta_color="off",
+        )
+
+        r1, r2 = st.columns(2)
         with r1:
-            st.metric("Indice", ranking_score)
-        with r2:
             st.metric("Generale", generale_txt)
-        with r3:
+        with r2:
             st.metric("Ruolo", ruolo_txt)
 
 
