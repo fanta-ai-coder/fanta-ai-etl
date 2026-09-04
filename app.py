@@ -1412,7 +1412,7 @@ def render_player_detail(
         elif status_kind == "warning":
             st.warning(status_text)
         elif status_kind == "success":
-            st.badge(status_text)
+            st.success(status_text)
         elif status_kind == "info":
             (status_text)
 
