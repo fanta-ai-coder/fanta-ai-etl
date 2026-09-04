@@ -903,162 +903,193 @@ def render_quote_hero_card(quota, fvm, ranking=None):
                 0 0 15px rgba(16,185,129,0.15);
         ">
 
-            <!-- HEADER -->
+<!-- HEADER -->
+<div style="
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:12px;
+">
+    <span style="
+        color:#94A3B8;
+        font-size:0.85rem;
+        font-weight:600;
+    ">
+        VALUTAZIONI ASTA
+    </span>
+    <span style="
+        background:rgba(16,185,129,0.2);
+        color:#34D399;
+        font-size:0.75rem;
+        font-weight:700;
+        padding:2px 8px;
+        border-radius:9999px;
+        border:1px solid rgba(16,185,129,0.3);
+    ">
+        ⭐ GUIDA ASTA
+    </span>
+</div>
 
-            <div style="
-                display:flex;
-                justify-content:space-between;
-                align-items:center;
-                margin-bottom:12px;
+<!-- QUOTAZIONE + FVM -->
+<div style="
+    display:flex;
+    gap:20px;
+    align-items:baseline;
+">
+    <div>
+        <div style="
+            color:#64748B;
+            font-size:0.75rem;
+            text-transform:uppercase;
+        ">
+            Quotazione
+        </div>
+        <div style="
+            color:#F8FAFC;
+            font-size:2rem;
+            font-weight:800;
+        ">
+            2
+            <span style="
+                font-size:1rem;
+                color:#64748B;
             ">
+                FM
+            </span>
+        </div>
+    </div>
+    <div style="
+        border-left:1px solid rgba(255,255,255,0.1);
+        padding-left:20px;
+    ">
+        <div style="
+            color:#64748B;
+            font-size:0.75rem;
+            text-transform:uppercase;
+        ">
+            FVM Consigliato
+        </div>
+        <div style="
+            color:#10B981;
+            font-size:2rem;
+            font-weight:800;
+        ">
+            10
+            <span style="
+                font-size:1rem;
+                color:#10B981;
+            ">
+                FM
+            </span>
+        </div>
+    </div>
+</div>
 
-                <span style="
-                    color:#94A3B8;
-                    font-size:0.85rem;
-                    font-weight:600;
-                ">
-                    VALUTAZIONI ASTA
-                </span>
-
-                <span style="
-                    background:rgba(16,185,129,0.2);
-                    color:#34D399;
-                    font-size:0.75rem;
-                    font-weight:700;
-                    padding:2px 8px;
-                    border-radius:9999px;
-                    border:1px solid rgba(16,185,129,0.3);
-                ">
-                    ⭐ GUIDA ASTA
-                </span>
-
+<!-- =================================
+     RANKING ASTA V3.1
+     ================================= -->
+<div style="
+    margin-top:18px;
+    padding-top:16px;
+    border-top:1px solid rgba(255,255,255,0.08);
+">
+    <div style="
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:12px;
+    ">
+        <div>
+            <div style="
+                color:#F8FAFC;
+                font-size:0.82rem;
+                font-weight:800;
+                text-transform:uppercase;
+                letter-spacing:0.04em;
+            ">
+                👑 RANKING ASTA V3.1
             </div>
-
-            <!-- QUOTAZIONE + FVM -->
-
             <div style="
-                display:flex;
-                gap:20px;
-                align-items:baseline;
+                color:#64748B;
+                font-size:0.7rem;
+                margin-top:3px;
             ">
-
-                <div>
-
-                    <div style="
-                        color:#64748B;
-                        font-size:0.75rem;
-                        text-transform:uppercase;
-                    ">
-                        Quotazione
-                    </div>
-
-                    <div style="
-                        color:#F8FAFC;
-                        font-size:2rem;
-                        font-weight:800;
-                    ">
-                        {quota}
-
-                        <span style="
-                            font-size:1rem;
-                            color:#64748B;
-                        ">
-                            FM
-                        </span>
-                    </div>
-
-                </div>
-
-                <div style="
-                    border-left:1px solid rgba(255,255,255,0.1);
-                    padding-left:20px;
-                ">
-
-                    <div style="
-                        color:#64748B;
-                        font-size:0.75rem;
-                        text-transform:uppercase;
-                    ">
-                        FVM Consigliato
-                    </div>
-
-                    <div style="
-                        color:#10B981;
-                        font-size:2rem;
-                        font-weight:800;
-                    ">
-                        {fvm}
-
-                        <span style="
-                            font-size:1rem;
-                            color:#10B981;
-                        ">
-                            FM
-                        </span>
-                    </div>
-
-                </div>
-
+                100 = migliore del listone
             </div>
-
-            <!-- =================================
-                RANKING ASTA V3.1
-                ================================= -->
-
-            <div style="
-                margin-top:18px;
-                padding-top:16px;
-                border-top:1px solid rgba(255,255,255,0.08);
+        </div>
+        <div style="
+            color:#94A3B8;
+            font-size:1.55rem;
+            font-weight:800;
+            white-space:nowrap;
+        ">
+            48.6
+            <span style="
+                font-size:0.8rem;
+                color:#64748B;
             ">
+                /100
+            </span>
+        </div>
+    </div>
 
-                <div style="
-                    display:flex;
-                    justify-content:space-between;
-                    align-items:center;
-                    gap:12px;
-                ">
+    <!-- POSIZIONI -->
+    <div style="
+        display:flex;
+        gap:10px;
+        flex-wrap:wrap;
+        margin-top:10px;
+    ">
+        <span style="
+            background:rgba(255,255,255,0.05);
+            color:#CBD5E1;
+            padding:5px 9px;
+            border-radius:7px;
+            font-size:0.72rem;
+            font-weight:700;
+        ">
+            #223 / 560&nbsp; generale
+        </span>
+        <span style="
+            background:rgba(16,185,129,0.10);
+            color:#34D399;
+            padding:5px 9px;
+            border-radius:7px;
+            font-size:0.72rem;
+            font-weight:700;
+        ">
+            #84 / 201&nbsp; ruolo
+        </span>
+    </div>
+</div>
 
-                    <div>
-
-                        <div style="
-                            color:#F8FAFC;
-                            font-size:0.82rem;
-                            font-weight:800;
-                            text-transform:uppercase;
-                            letter-spacing:0.04em;
-                        ">
-                            👑 RANKING ASTA V3.1
-                        </div>
-
-                        <div style="
-                            color:#64748B;
-                            font-size:0.7rem;
-                            margin-top:3px;
-                        ">
-                            100 = migliore del listone
-                        </div>
-
-                    </div>
-
-                    <div style="
-                        color:#94A3B8;
-                        font-size:1.55rem;
-                        font-weight:800;
-                        white-space:nowrap;
-                    ">
-
-                        {ranking_score}
-
-                        <span style="
-                            font-size:0.8rem;
-                            color:#64748B;
-                        ">
-                            /100
-                        </span>
-
-                    </div>
-
-                </div>
+<!-- Esempio KPI card -->
+<div>
+    <span style="
+        font-size:0.8rem;
+        font-weight:600;
+        color:#94A3B8;
+        text-transform:uppercase;
+        letter-spacing:0.05em;
+    ">
+        Fantamedia
+    </span>
+    <span style="
+        font-size:1.75rem;
+        font-weight:800;
+        color:#10B981;
+        margin:6px 0;
+        display:block;
+    ">
+        6.17
+    </span>
+    <span style="
+        font-size:0.75rem;
+        color:#64748B;
+    ">
+        Bonus/Malus inclusi
+    </span>
+</div>
 
                 <!-- POSIZIONI -->
 
@@ -1589,7 +1620,7 @@ current_quot = (
 )
 
 # HEADER
-st.markdown(
+st.markdown( 
     """
     <div style="
         display:flex;
