@@ -1408,11 +1408,11 @@ def render_player_detail(
         # risalto agli stati critici (squalificato/infortunato) rispetto
         # a quelli neutri (panchina).
         if status_kind == "error":
-            st.bedge(status_text)
+            st.error(status_text)
         elif status_kind == "warning":
-            st.bedge(status_text)
+            st.warning(status_text)
         elif status_kind == "success":
-            st.bedge(status_text)
+            st.success(status_text)
         elif status_kind == "info":
             (status_text)
 
