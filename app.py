@@ -1,5 +1,4 @@
 import os
-import html
 import pandas as pd
 import streamlit as st
 import plotly.graph_objects as go
@@ -7,8 +6,14 @@ from supabase import create_client
 
 
 # ==========================================
-# 1. PAGE CONFIG & DESIGN SYSTEM
+# 1. PAGE CONFIG
 # ==========================================
+# NOTE: styling is handled via native Streamlit components only
+# (st.container(border=True), st.metric, st.columns, st.success/
+# warning/error/info, etc.) instead of injected HTML/CSS, which was
+# unreliable across Streamlit/Markdown versions. To further customize
+# colors (dark theme, accent color) use a native .streamlit/config.toml
+# file alongside this script instead of custom CSS.
 
 st.set_page_config(
     page_title="FantaAI Analytics Pro",
@@ -16,180 +21,6 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed",
 )
-
-def render_html(content: str) -> None:
-    """
-    Renders raw HTML/CSS through st.markdown while stripping per-line
-    indentation.
-
-    Streamlit's st.markdown() runs the text through a CommonMark parser
-    before injecting it into the page. A line indented by 4+ spaces that
-    follows a blank line is treated by CommonMark as an "indented code
-    block" and is shown as literal text instead of being parsed as HTML.
-    Heavily indented multi-line f-string HTML (as used throughout this
-    file) triggers that rule constantly, which is why raw <div>/<span>
-    tags were showing up as plain text on the page instead of being
-    rendered as styled elements.
-
-    Stripping leading/trailing whitespace from every line removes any
-    4+-space indentation, so no line can ever be mistaken for a code
-    block, while leaving the HTML itself fully valid (extra whitespace
-    inside a style="" attribute or between tags has no visual effect).
-    """
-    lines = [line.strip() for line in content.strip("\n").splitlines()]
-    st.markdown("\n".join(lines), unsafe_allow_html=True)
-
-
-render_html(
-    """
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-
-    html, body, [class*="css"], .stApp {
-        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-        background-color: #0B0F19;
-        color: #F8FAFC;
-        overflow-anchor: none !important;
-        scroll-behavior: auto !important;
-    }
-
-    .stAppViewContainer,
-    section.main,
-    [data-testid="stMainBlockContainer"] {
-        background-color: #0B0F19;
-        overflow-anchor: none !important;
-        scroll-behavior: auto !important;
-    }
-
-    ::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
-    }
-
-    ::-webkit-scrollbar-track {
-        background: #0B0F19;
-    }
-
-    ::-webkit-scrollbar-thumb {
-        background: #334155;
-        border-radius: 9999px;
-    }
-
-    ::-webkit-scrollbar-thumb:hover {
-        background: #10B981;
-    }
-
-    [data-testid="stRadio"] div[role="radiogroup"] {
-        display: flex !important;
-        flex-direction: column !important;
-        flex-wrap: nowrap !important;
-        width: 100% !important;
-        max-height: 620px !important;
-        overflow-y: auto !important;
-        overflow-x: hidden !important;
-        background-color: #111827 !important;
-        border: 1px solid rgba(255, 255, 255, 0.08) !important;
-        border-radius: 12px !important;
-        padding: 8px !important;
-        gap: 5px !important;
-        overscroll-behavior: contain !important;
-        contain: content !important;
-    }
-
-    [data-testid="stRadio"] label > div:first-child,
-    [data-testid="stRadio"] input[type="radio"] {
-        display: none !important;
-    }
-
-    [data-testid="stRadio"] label {
-        display: flex !important;
-        align-items: center !important;
-        justify-content: space-between !important;
-        width: 100% !important;
-        background-color: #1E293B !important;
-        border: 1px solid rgba(255, 255, 255, 0.05) !important;
-        border-radius: 8px !important;
-        padding: 10px 14px !important;
-        margin: 0 !important;
-        cursor: pointer !important;
-        transition: all 0.15s ease !important;
-    }
-
-    [data-testid="stRadio"] label:hover {
-        background-color: #334155 !important;
-        border-color: rgba(16, 185, 129, 0.4) !important;
-    }
-
-    [data-testid="stRadio"] label p,
-    [data-testid="stRadio"] label span,
-    [data-testid="stRadio"] label div {
-        color: #F1F5F9 !important;
-        font-size: 14px !important;
-        font-weight: 600 !important;
-        margin: 0 !important;
-    }
-
-    [data-testid="stRadio"] label:has(input:checked) {
-        background-color: rgba(16, 185, 129, 0.2) !important;
-        border: 1.5px solid #10B981 !important;
-    }
-
-    [data-testid="stRadio"] label:has(input:checked) p,
-    [data-testid="stRadio"] label:has(input:checked) span {
-        color: #34D399 !important;
-        font-weight: 700 !important;
-    }
-
-    .stTextInput input,
-    .stSelectbox [data-baseweb="select"] {
-        background-color: #111827 !important;
-        border: 1px solid #374151 !important;
-        border-radius: 8px !important;
-        color: #F9FAFB !important;
-    }
-
-    [data-testid="stMetric"] {
-        background-color: #111827;
-        border: 1px solid rgba(255, 255, 255, 0.06);
-        border-radius: 12px;
-        padding: 14px 18px;
-    }
-
-    [data-testid="stMetricLabel"] {
-        color: #94A3B8 !important;
-        font-weight: 500;
-        font-size: 0.85rem;
-    }
-
-    [data-testid="stMetricValue"] {
-        color: #F8FAFC !important;
-        font-weight: 700;
-    }
-
-    [data-testid="stRadio"],
-    [data-testid="stRadio"] *,
-    [data-testid="stRadio"] label,
-    [data-testid="stRadio"] input {
-        scroll-margin: 0 !important;
-        scroll-padding: 0 !important;
-        scroll-margin-top: 0 !important;
-        scroll-margin-bottom: 0 !important;
-    }
-
-    div[data-testid="stHorizontalBlock"] {
-        align-items: flex-start !important;
-    }
-
-    div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:first-child {
-        position: sticky !important;
-        top: 12px !important;
-        align-self: flex-start !important;
-        z-index: 10 !important;
-    }
-    </style>
-    """
-)
-
 
 # ==========================================
 # 2. SUPABASE & DATA FETCHING
@@ -1121,422 +952,84 @@ ROLE_COLORS = {
 }
 
 
-def render_section_header(
-    title,
-    subtitle=None
-):
-
-    sub_html = (
-        f'<p style="color:#94A3B8; '
-        f'font-size:0.85rem; '
-        f'margin:0 0 16px 0;">'
-        f'{subtitle}'
-        f'</p>'
-        if subtitle
-        else ""
-    )
-
-    render_html(
-        f"""
-        <div style="
-            margin-top:24px;
-            margin-bottom:12px;
-            border-left:3px solid #10B981;
-            padding-left:12px;
-        ">
-            <h3 style="
-                color:#F8FAFC;
-                font-size:1.15rem;
-                font-weight:700;
-                margin:0;
-            ">
-                {title}
-            </h3>
-            {sub_html}
-        </div>
-        """
-)
+def render_section_header(title, subtitle=None):
+    """Native replacement for the old custom HTML section header."""
+    st.subheader(title)
+    if subtitle:
+        st.caption(subtitle)
 
 
-def render_kpi_card(
-    title,
-    value,
-    subtext="",
-    highlight=False
-):
-
-    bg_color = (
-        "rgba(16, 185, 129, 0.08)"
-        if highlight
-        else "#111827"
-    )
-
-    border_color = (
-        "rgba(16, 185, 129, 0.3)"
-        if highlight
-        else "rgba(255, 255, 255, 0.07)"
-    )
-
-    val_color = (
-        "#10B981"
-        if highlight
-        else "#F8FAFC"
-    )
-
-    render_html(
-        f"""
-        <div style="
-            background:{bg_color};
-            border:1px solid {border_color};
-            border-radius:12px;
-            padding:16px;
-            display:flex;
-            flex-direction:column;
-            justify-content:space-between;
-            height:100%;
-        ">
-
-            <span style="
-                font-size:0.8rem;
-                font-weight:600;
-                color:#94A3B8;
-                text-transform:uppercase;
-                letter-spacing:0.05em;
-            ">
-                {title}
-            </span>
-
-            <span style="
-                font-size:1.75rem;
-                font-weight:800;
-                color:{val_color};
-                margin:6px 0;
-            ">
-                {value}
-            </span>
-
-            <span style="
-                font-size:0.75rem;
-                color:#64748B;
-            ">
-                {subtext}
-            </span>
-
-        </div>
-        """
-)
+def render_kpi_card(title, value, subtext="", highlight=False):
+    """Native replacement for the old custom HTML KPI card."""
+    with st.container(border=True):
+        label = ("⭐ " + title) if highlight else title
+        st.metric(label=label, value=value)
+        if subtext:
+            st.caption(subtext)
 
 
 # ==========================================
 # CARD ASTA V3.1
 # ==========================================
 
-def render_quote_hero_card(
-    quota,
-    fvm,
-    ranking=None
-):
-
-    # --------------------------------------
-    # Ranking values
-    # --------------------------------------
+def render_quote_hero_card(quota, fvm, ranking=None):
+    """Native replacement for the old custom HTML hero card."""
 
     if ranking is not None:
-
-        indice_finale = ranking.get(
-            "indice_finale"
-        )
-
-        rank_generale = ranking.get(
-            "rank_generale"
-        )
-
-        totale_generale = ranking.get(
-            "totale_generale"
-        )
-
-        rank_ruolo = ranking.get(
-            "rank_ruolo"
-        )
-
-        totale_ruolo = ranking.get(
-            "totale_ruolo"
-        )
-
+        indice_finale = ranking.get("indice_finale")
+        rank_generale = ranking.get("rank_generale")
+        totale_generale = ranking.get("totale_generale")
+        rank_ruolo = ranking.get("rank_ruolo")
+        totale_ruolo = ranking.get("totale_ruolo")
     else:
-
         indice_finale = None
         rank_generale = None
         totale_generale = None
         rank_ruolo = None
         totale_ruolo = None
 
-    # --------------------------------------
-    # Formattazione ranking
-    # --------------------------------------
-
     ranking_score = (
-        "N/D"
-        if indice_finale is None
-        or pd.isna(indice_finale)
-        else f"{float(indice_finale):.1f}"
+        "N/D" if indice_finale is None or pd.isna(indice_finale)
+        else f"{float(indice_finale):.1f}/100"
     )
 
     if (
-        rank_generale is not None
-        and not pd.isna(rank_generale)
-        and totale_generale is not None
-        and not pd.isna(totale_generale)
+        rank_generale is not None and not pd.isna(rank_generale)
+        and totale_generale is not None and not pd.isna(totale_generale)
     ):
-
-        generale_html = (
-            f"#{int(rank_generale)} / "
-            f"{int(totale_generale)}"
-        )
-
+        generale_txt = f"#{int(rank_generale)} / {int(totale_generale)}"
     else:
-
-        generale_html = "N/D"
+        generale_txt = "N/D"
 
     if (
-        rank_ruolo is not None
-        and not pd.isna(rank_ruolo)
-        and totale_ruolo is not None
-        and not pd.isna(totale_ruolo)
+        rank_ruolo is not None and not pd.isna(rank_ruolo)
+        and totale_ruolo is not None and not pd.isna(totale_ruolo)
     ):
-
-        ruolo_html = (
-            f"#{int(rank_ruolo)} / "
-            f"{int(totale_ruolo)}"
-        )
-
+        ruolo_txt = f"#{int(rank_ruolo)} / {int(totale_ruolo)}"
     else:
+        ruolo_txt = "N/D"
 
-        ruolo_html = "N/D"
+    with st.container(border=True):
+        st.caption("⭐ VALUTAZIONI ASTA — GUIDA ASTA")
 
-    # --------------------------------------
-    # CARD
-    # --------------------------------------
+        c1, c2 = st.columns(2)
+        with c1:
+            st.metric("Quotazione", f"{quota} FM")
+        with c2:
+            st.metric("FVM Consigliato", f"{fvm} FM")
 
-    render_html(
-        f"""
-        <div style="
-            background:linear-gradient(
-                135deg,
-                #111827 0%,
-                #1E293B 100%
-            );
-            border:1px solid rgba(16,185,129,0.4);
-            border-radius:16px;
-            padding:20px;
-            box-shadow:
-                0 10px 25px -5px rgba(0,0,0,0.5),
-                0 0 15px rgba(16,185,129,0.15);
-        ">
+        st.divider()
 
-            <!-- HEADER -->
+        st.markdown("**👑 RANKING ASTA V3.1**")
+        st.caption("100 = migliore del listone")
 
-            <div style="
-                display:flex;
-                justify-content:space-between;
-                align-items:center;
-                margin-bottom:12px;
-            ">
-
-                <span style="
-                    color:#94A3B8;
-                    font-size:0.85rem;
-                    font-weight:600;
-                ">
-                    VALUTAZIONI ASTA
-                </span>
-
-                <span style="
-                    background:rgba(16,185,129,0.2);
-                    color:#34D399;
-                    font-size:0.75rem;
-                    font-weight:700;
-                    padding:2px 8px;
-                    border-radius:9999px;
-                    border:1px solid rgba(16,185,129,0.3);
-                ">
-                    ⭐ GUIDA ASTA
-                </span>
-
-            </div>
-
-
-            <!-- QUOTAZIONE + FVM -->
-
-            <div style="
-                display:flex;
-                gap:20px;
-                align-items:baseline;
-            ">
-
-                <div>
-
-                    <div style="
-                        color:#64748B;
-                        font-size:0.75rem;
-                        text-transform:uppercase;
-                    ">
-                        Quotazione
-                    </div>
-
-                    <div style="
-                        color:#F8FAFC;
-                        font-size:2rem;
-                        font-weight:800;
-                    ">
-                        {quota}
-
-                        <span style="
-                            font-size:1rem;
-                            color:#64748B;
-                        ">
-                            FM
-                        </span>
-                    </div>
-
-                </div>
-
-
-                <div style="
-                    border-left:1px solid rgba(255,255,255,0.1);
-                    padding-left:20px;
-                ">
-
-                    <div style="
-                        color:#64748B;
-                        font-size:0.75rem;
-                        text-transform:uppercase;
-                    ">
-                        FVM Consigliato
-                    </div>
-
-                    <div style="
-                        color:#10B981;
-                        font-size:2rem;
-                        font-weight:800;
-                    ">
-                        {fvm}
-
-                        <span style="
-                            font-size:1rem;
-                            color:#10B981;
-                        ">
-                            FM
-                        </span>
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <!-- =================================
-                 RANKING ASTA V3.1
-                 ================================= -->
-
-            <div style="
-                margin-top:18px;
-                padding-top:16px;
-                border-top:1px solid rgba(255,255,255,0.08);
-            ">
-
-                <div style="
-                    display:flex;
-                    justify-content:space-between;
-                    align-items:center;
-                    gap:12px;
-                ">
-
-                    <div>
-
-                        <div style="
-                            color:#F8FAFC;
-                            font-size:0.82rem;
-                            font-weight:800;
-                            text-transform:uppercase;
-                            letter-spacing:0.04em;
-                        ">
-                            👑 RANKING ASTA V3.1
-                        </div>
-
-                        <div style="
-                            color:#64748B;
-                            font-size:0.7rem;
-                            margin-top:3px;
-                        ">
-                            100 = migliore del listone
-                        </div>
-
-                    </div>
-
-
-                    <div style="
-                        color:#94A3B8;
-                        font-size:1.55rem;
-                        font-weight:800;
-                        white-space:nowrap;
-                    ">
-
-                        {ranking_score}
-
-                        <span style="
-                            font-size:0.8rem;
-                            color:#64748B;
-                        ">
-                            /100
-                        </span>
-
-                    </div>
-
-                </div>
-
-
-                <!-- POSIZIONI -->
-
-                <div style="
-                    display:flex;
-                    gap:10px;
-                    flex-wrap:wrap;
-                    margin-top:10px;
-                ">
-
-                    <span style="
-                        background:rgba(255,255,255,0.05);
-                        color:#CBD5E1;
-                        padding:5px 9px;
-                        border-radius:7px;
-                        font-size:0.72rem;
-                        font-weight:700;
-                    ">
-                        {generale_html}
-                        &nbsp; generale
-                    </span>
-
-
-                    <span style="
-                        background:rgba(16,185,129,0.10);
-                        color:#34D399;
-                        padding:5px 9px;
-                        border-radius:7px;
-                        font-size:0.72rem;
-                        font-weight:700;
-                    ">
-                        {ruolo_html}
-                        &nbsp; ruolo
-                    </span>
-
-                </div>
-
-            </div>
-
-        </div>
-        """
-)
+        r1, r2, r3 = st.columns(3)
+        with r1:
+            st.metric("Indice", ranking_score)
+        with r2:
+            st.metric("Generale", generale_txt)
+        with r3:
+            st.metric("Ruolo", ruolo_txt)
 
 
 # ==========================================
@@ -1697,282 +1190,92 @@ def render_player_detail(
 
     role_meta = ROLE_COLORS.get(
         ruolo,
-        {
-            "bg": "#374151",
-            "text": "#E5E7EB",
-            "border": "#4B5563",
-            "label": ruolo,
-        }
+        {"label": ruolo}
     )
 
     # --------------------------------------
-    # Badge riga 1
+    # Tag informativi (ruolo, squadra, rigorista, punizioni)
     # --------------------------------------
 
-    badge_html = f"""
-    <span style="
-        background:{role_meta['bg']};
-        color:{role_meta['text']};
-        border:1px solid {role_meta['border']};
-        padding:4px 10px;
-        border-radius:8px;
-        font-weight:700;
-        font-size:0.85rem;
-        margin-right:6px;
-    ">
-        {ruolo} — {role_meta['label']}
-    </span>
-
-    <span style="
-        background:rgba(255,255,255,0.06);
-        color:#CBD5E1;
-        padding:4px 10px;
-        border-radius:8px;
-        font-weight:600;
-        font-size:0.85rem;
-        margin-right:6px;
-    ">
-        🛡️ {html.escape(str(squadra))}
-    </span>
-    """
+    tags = [
+        f"{ruolo} — {role_meta['label']}",
+        f"🛡️ {squadra}",
+    ]
 
     if not rigor_info.empty:
-
-        pos_r = int(
-            rigor_info["posizione"]
-            .values[0]
-        )
-
-        badge_html += f"""
-        <span style="
-            background:rgba(239,68,68,0.15);
-            color:#FCA5A5;
-            border:1px solid rgba(239,68,68,0.3);
-            padding:4px 10px;
-            border-radius:8px;
-            font-weight:600;
-            font-size:0.85rem;
-            margin-right:6px;
-        ">
-            🎯 Rigorista #{pos_r}
-        </span>
-        """
+        pos_r = int(rigor_info["posizione"].values[0])
+        tags.append(f"🎯 Rigorista #{pos_r}")
 
     if not puniz_info.empty:
-
-        pos_p = int(
-            puniz_info["posizione"]
-            .values[0]
-        )
-
-        badge_html += f"""
-        <span style="
-            background:rgba(147,51,234,0.15);
-            color:#D8B4FE;
-            border:1px solid rgba(147,51,234,0.3);
-            padding:4px 10px;
-            border-radius:8px;
-            font-weight:600;
-            font-size:0.85rem;
-            margin-right:6px;
-        ">
-            ⚡ Punizioni #{pos_p}
-        </span>
-        """
+        pos_p = int(puniz_info["posizione"].values[0])
+        tags.append(f"⚡ Punizioni #{pos_p}")
 
     # --------------------------------------
-    # Badge riga 2
+    # Stato giocatore (titolare / infortunato / squalificato / panchina)
     # --------------------------------------
 
-    status_html = ""
+    status_kind = None
+    status_text = None
 
     if not titolare_info.empty:
 
         row = titolare_info.iloc[0]
 
-        tit = row.get(
-            "titolarita",
-            ""
-        )
-
-        squalificato = str(
-            row.get(
-                "squalificato",
-                "no"
-            )
-        ).lower()
-
-        infortunato = str(
-            row.get(
-                "infortunato",
-                "no"
-            )
-        ).lower()
-
-        desc = str(
-            row.get(
-                "desc_infortunio",
-                ""
-            )
-        ).strip()
+        tit = row.get("titolarita", "")
+        squalificato = str(row.get("squalificato", "no")).lower()
+        infortunato = str(row.get("infortunato", "no")).lower()
+        desc = str(row.get("desc_infortunio", "")).strip()
 
         if squalificato == "si":
-
-            status_html += """
-            <span style="
-                background:rgba(239,68,68,0.2);
-                color:#F87171;
-                border:1px solid rgba(239,68,68,0.4);
-                padding:4px 10px;
-                border-radius:8px;
-                font-weight:700;
-                font-size:0.82rem;
-                margin-right:6px;
-            ">
-                🟥 Squalificato
-            </span>
-            """
+            status_kind = "error"
+            status_text = "🟥 Squalificato"
 
         elif infortunato == "si":
-
-            tooltip = (
-                f' title="{html.escape(desc)}"'
-                if desc
-                else ""
+            desc_short = (
+                (" — " + desc[:80] + ("…" if len(desc) > 80 else ""))
+                if desc else ""
             )
-
-            description_text = ""
-
-            if desc:
-
-                description_text = (
-                    " — "
-                    + html.escape(desc[:40])
-                    + (
-                        "…"
-                        if len(desc) > 40
-                        else ""
-                    )
-                )
-
-            status_html += f"""
-            <span{tooltip} style="
-                background:rgba(234,179,8,0.15);
-                color:#FDE047;
-                border:1px solid rgba(234,179,8,0.35);
-                padding:4px 10px;
-                border-radius:8px;
-                font-weight:700;
-                font-size:0.82rem;
-                margin-right:6px;
-                cursor:help;
-            ">
-                🤕 Infortunato
-                {description_text}
-            </span>
-            """
+            status_kind = "warning"
+            status_text = f"🤕 Infortunato{desc_short}"
 
         elif tit == "titolare":
-
-            status_html += """
-            <span style="
-                background:rgba(16,185,129,0.15);
-                color:#34D399;
-                border:1px solid rgba(16,185,129,0.3);
-                padding:4px 10px;
-                border-radius:8px;
-                font-weight:700;
-                font-size:0.82rem;
-                margin-right:6px;
-            ">
-                ✅ Titolare
-            </span>
-            """
+            status_kind = "success"
+            status_text = "✅ Titolare"
 
         elif tit == "panchina":
-
-            status_html += """
-            <span style="
-                background:rgba(100,116,139,0.2);
-                color:#94A3B8;
-                border:1px solid rgba(100,116,139,0.3);
-                padding:4px 10px;
-                border-radius:8px;
-                font-weight:700;
-                font-size:0.82rem;
-                margin-right:6px;
-            ">
-                🪑 Panchina
-            </span>
-            """
+            status_kind = "info"
+            status_text = "🪑 Panchina"
 
     # --------------------------------------
     # HEADER
     # --------------------------------------
 
-    header_col1, header_col2 = st.columns(
-        [2.5, 1.5]
-    )
+    header_col1, header_col2 = st.columns([2.5, 1.5])
 
     with header_col1:
 
-        render_html(
-            f"""
-            <h1 style="
-                font-size:2.2rem;
-                font-weight:800;
-                color:#F8FAFC;
-                margin:0 0 8px 0;
-            ">
-                {html.escape(str(nome))}
-            </h1>
-            """
-)
+        st.header(nome)
+        st.write(" &nbsp;|&nbsp; ".join(tags))
 
-        render_html(
-            f"""
-            <div style="
-                display:flex;
-                flex-wrap:wrap;
-                gap:6px;
-                margin-bottom:6px;
-            ">
-                {badge_html}
-            </div>
-            """
-)
-
-        if status_html:
-
-            render_html(
-                f"""
-                <div style="
-                    display:flex;
-                    flex-wrap:wrap;
-                    gap:6px;
-                    margin-bottom:12px;
-                ">
-                    {status_html}
-                </div>
-                """
-)
+        if status_kind == "error":
+            st.error(status_text)
+        elif status_kind == "warning":
+            st.warning(status_text)
+        elif status_kind == "success":
+            st.success(status_text)
+        elif status_kind == "info":
+            st.info(status_text)
 
     with header_col2:
 
         quota_val = (
-            current_quote.get(
-                "quotazione_attuale",
-                "-"
-            )
+            current_quote.get("quotazione_attuale", "-")
             if current_quote is not None
             else "-"
         )
 
         fvm_val = (
-            current_quote.get(
-                "fvm",
-                "-"
-            )
+            current_quote.get("fvm", "-")
             if current_quote is not None
             else "-"
         )
@@ -2610,55 +1913,14 @@ current_quot = (
 # HEADER
 # ==========================================
 
-render_html(
-    """
-    <div style="
-        display:flex;
-        align-items:center;
-        justify-content:space-between;
-        padding:12px 0 20px 0;
-        border-bottom:1px solid rgba(255,255,255,0.08);
-        margin-bottom:20px;
-    ">
+title_col1, title_col2 = st.columns([0.06, 0.94])
+with title_col1:
+    st.markdown("### ⚽")
+with title_col2:
+    st.title("FantaAI Analytics")
+    st.caption("Design Intelligence & Decision Support per l'Asta")
 
-        <div style="
-            display:flex;
-            align-items:center;
-            gap:12px;
-        ">
-
-            <span style="
-                font-size:2rem;
-            ">
-                ⚽
-            </span>
-
-            <div>
-
-                <h2 style="
-                    margin:0;
-                    font-size:1.5rem;
-                    font-weight:800;
-                    color:#F8FAFC;
-                ">
-                    FantaAI Analytics
-                </h2>
-
-                <p style="
-                    margin:0;
-                    font-size:0.8rem;
-                    color:#94A3B8;
-                ">
-                    Design Intelligence & Decision Support per l'Asta
-                </p>
-
-            </div>
-
-        </div>
-
-    </div>
-    """
-)
+st.divider()
 
 
 # ==========================================
@@ -2780,18 +2042,7 @@ col_players, col_detail = st.columns(
 
 with col_players:
 
-    render_html(
-        f"""
-        <div style="
-            font-size:0.85rem;
-            font-weight:700;
-            color:#94A3B8;
-            margin-bottom:8px;
-        ">
-            GIOCATORI ({len(quot_view)})
-        </div>
-        """
-)
+    st.caption(f"**GIOCATORI ({len(quot_view)})**")
 
     if quot_view.empty:
 
