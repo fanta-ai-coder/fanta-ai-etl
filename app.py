@@ -1412,9 +1412,9 @@ def render_player_detail(
         elif status_kind == "warning":
             st.warning(status_text)
         elif status_kind == "success":
-            st.success(status_text)
+            st.badge(status_text)
         elif status_kind == "info":
-            st.info(status_text)
+            (status_text)
 
     with header_col2:
 
@@ -1446,7 +1446,7 @@ def render_player_detail(
 
     if p_stats.empty:
 
-        st.info(
+        (
             "ℹ️ Nessuna statistica storica disponibile per questo giocatore."
         )
 
@@ -1477,7 +1477,7 @@ def render_player_detail(
 
     if p_stats.empty:
 
-        st.info(
+        (
             "ℹ️ Nessuna prestazione valida registrata."
         )
 
@@ -2196,7 +2196,7 @@ with col_players:
 
     if quot_view.empty:
 
-        st.info(
+        (
             "Nessun giocatore trovato con questi filtri."
         )
 
@@ -2313,7 +2313,7 @@ with col_detail:
 
     if selected_id is None:
 
-        st.info(
+        (
             "👈 Seleziona un giocatore dalla lista "
             "a sinistra per visualizzare la scheda analitica."
         )
