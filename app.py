@@ -145,8 +145,27 @@ font-size: 1.35rem;
 white-space: nowrap;
 overflow: visible;
 }
-.st-key-hero_rank_small [data-testid="stMetricValue"] {
-font-size: 1.1rem;
+.st-key-hero_rank_row [data-testid="stMetric"] {
+padding: 8px 10px;
+}
+.st-key-hero_rank_row [data-testid="stMetricLabel"] {
+font-size: 0.7rem;
+}
+.st-key-hero_rank_row [data-testid="stMetricValue"] {
+font-size: 1.05rem;
+white-space: nowrap;
+}
+.st-key-hero_card [data-testid="stProgress"] {
+margin-top: 2px;
+margin-bottom: 2px;
+}
+.st-key-hero_card [data-testid="stProgress"] > div > div {
+border-radius: 9999px !important;
+height: 8px !important;
+}
+.st-key-hero_card [data-testid="stProgress"] p {
+color: #94A3B8 !important;
+font-size: 0.75rem !important;
 }
 div[data-testid="stHorizontalBlock"] {
 align-items: flex-start !important;
@@ -1286,19 +1305,26 @@ def render_quote_hero_card(quota, fvm, ranking=None):
 
         st.markdown("**👑 RANKING ASTA V3.1**")
 
-        st.metric(
-            "Indice",
-            ranking_score if ranking_score is not None else "N/D",
-            delta=("su 100" if ranking_score is not None else None),
-            delta_color="off",
-        )
-
-        with st.container(key="hero_rank_small"):
-            r1, r2 = st.columns(2)
+        # Indice, Generale e Ruolo sulla stessa riga (3 colonne): evita
+        # che l'Indice resti da solo a piena larghezza con mezza card
+        # vuota accanto al valore.
+        with st.container(key="hero_rank_row"):
+            r1, r2, r3 = st.columns(3)
             with r1:
-                st.metric("Generale", generale_txt)
+                st.metric(
+                    "Indice",
+                    ranking_score if ranking_score is not None else "N/D",
+                )
             with r2:
+                st.metric("Generale", generale_txt)
+            with r3:
                 st.metric("Ruolo", ruolo_txt)
+
+        # La progress bar occupa lo spazio orizzontale liberato e dà
+        # subito il senso della scala 0-100 dell'indice.
+        if ranking_score is not None:
+            pct = max(0.0, min(float(ranking_score) / 100.0, 1.0))
+            st.progress(pct, text=f"{ranking_score} / 100")
 
 
 # ==========================================
