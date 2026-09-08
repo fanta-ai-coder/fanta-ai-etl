@@ -640,7 +640,7 @@ st.markdown("""
         </div>
     </div>
 </div>
-""", unsafe_unsafe_html=True)
+""", unsafe_allow_html=True)
 
 
 # ==========================================
