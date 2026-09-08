@@ -39,7 +39,7 @@ section.main, [data-testid="stMainBlockContainer"], [data-testid="stAppViewBlock
 ::-webkit-scrollbar-thumb { background: #334155; border-radius: 9999px; }
 ::-webkit-scrollbar-thumb:hover { background: #10B981; }
 
-/* Streamlit Native Input Styling Overrides */
+/* Input Styling */
 .stTextInput input, .stSelectbox [data-baseweb="select"] {
     background-color: #111827 !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
@@ -48,8 +48,15 @@ section.main, [data-testid="stMainBlockContainer"], [data-testid="stAppViewBlock
     font-size: 0.85rem !important;
 }
 
-/* Custom Radio Streamlit component as Roster List */
-[data-testid="stRadio"] div[role="radiogroup"] {
+/* 1. FILTRO RUOLI COLORATO (Orizzontale) */
+div[data-testid="stRadio"]:first-of-type label:nth-child(1) p { color: #FFFFFF !important; font-weight: 700 !important; }
+div[data-testid="stRadio"]:first-of-type label:nth-child(2) p { color: #B45309 !important; font-weight: 700 !important; } /* Marrone P */
+div[data-testid="stRadio"]:first-of-type label:nth-child(3) p { color: #3B82F6 !important; font-weight: 700 !important; } /* Blu D */
+div[data-testid="stRadio"]:first-of-type label:nth-child(4) p { color: #10B981 !important; font-weight: 700 !important; } /* Verde C */
+div[data-testid="stRadio"]:first-of-type label:nth-child(5) p { color: #EF4444 !important; font-weight: 700 !important; } /* Rosso A */
+
+/* 2. ROSTER LIST SCROLL VERTICALE (Target tramite Anchor) */
+#roster-anchor ~ div[data-testid="stRadio"] div[role="radiogroup"] {
     display: flex !important;
     flex-direction: column !important;
     gap: 6px !important;
@@ -58,12 +65,12 @@ section.main, [data-testid="stMainBlockContainer"], [data-testid="stAppViewBlock
     padding-right: 4px !important;
 }
 
-[data-testid="stRadio"] label > div:first-child,
-[data-testid="stRadio"] input[type="radio"] {
+#roster-anchor ~ div[data-testid="stRadio"] label > div:first-child,
+#roster-anchor ~ div[data-testid="stRadio"] input[type="radio"] {
     display: none !important;
 }
 
-[data-testid="stRadio"] label {
+#roster-anchor ~ div[data-testid="stRadio"] label {
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
@@ -76,91 +83,43 @@ section.main, [data-testid="stMainBlockContainer"], [data-testid="stAppViewBlock
     transition: all 0.2s ease !important;
 }
 
-[data-testid="stRadio"] label:hover {
+#roster-anchor ~ div[data-testid="stRadio"] label:hover {
     background: #1E293B !important;
     border-color: rgba(16, 185, 129, 0.3) !important;
 }
 
-[data-testid="stRadio"] label:has(input:checked) {
+#roster-anchor ~ div[data-testid="stRadio"] label:has(input:checked) {
     background: rgba(16, 185, 129, 0.12) !important;
     border: 1px solid #10B981 !important;
 }
 
-[data-testid="stRadio"] label p {
+#roster-anchor ~ div[data-testid="stRadio"] label p {
     color: #F1F5F9 !important;
     font-size: 0.88rem !important;
     font-weight: 600 !important;
 }
 
-[data-testid="stRadio"] label:has(input:checked) p {
+#roster-anchor ~ div[data-testid="stRadio"] label:has(input:checked) p {
     color: #34D399 !important;
     font-weight: 700 !important;
 }
 
 /* Glass & Card Containers */
-.glass-panel {
-    background: #111827;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 16px;
-    padding: 20px;
-}
-
-/* Custom Metric Cards */
-.kpi-card {
-    background: #111827;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 12px;
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-}
-
-.kpi-card .kpi-label {
-    color: #94A3B8;
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
-
-.kpi-card .kpi-value {
-    color: #F8FAFC;
-    font-size: 1.6rem;
-    font-weight: 800;
-    margin: 4px 0;
-    font-family: 'Inter', sans-serif;
-}
-
-.kpi-card .kpi-sub {
-    color: #64748B;
-    font-size: 0.75rem;
-}
+.glass-panel { background: #111827; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 20px; }
+.kpi-card { background: #111827; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; }
+.kpi-card .kpi-label { color: #94A3B8; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+.kpi-card .kpi-value { color: #F8FAFC; font-size: 1.6rem; font-weight: 800; margin: 4px 0; font-family: 'Inter', sans-serif; }
+.kpi-card .kpi-sub { color: #64748B; font-size: 0.75rem; }
 
 /* Badges */
-.badge-tier {
-    background: rgba(16, 185, 129, 0.15);
-    color: #34D399;
-    border: 1px solid rgba(16, 185, 129, 0.3);
-    padding: 4px 10px;
-    border-radius: 9999px;
-    font-size: 0.72rem;
-    font-weight: 700;
-    text-transform: uppercase;
-}
-
+.badge-tier { background: rgba(16, 185, 129, 0.15); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.3); padding: 4px 10px; border-radius: 9999px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; }
 .badge-role-A { background: rgba(239, 68, 68, 0.15); color: #F87171; border: 1px solid rgba(239, 68, 68, 0.3); }
 .badge-role-C { background: rgba(16, 185, 129, 0.15); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.3); }
 .badge-role-D { background: rgba(59, 130, 246, 0.15); color: #60A5FA; border: 1px solid rgba(59, 130, 246, 0.3); }
-.badge-role-P { background: rgba(245, 158, 11, 0.15); color: #FBBF24; border: 1px solid rgba(245, 158, 11, 0.3); }
+.badge-role-P { background: rgba(180, 83, 9, 0.15); color: #F59E0B; border: 1px solid rgba(180, 83, 9, 0.3); }
 
 /* Header Banner Styling */
-.top-header {
-    background: #111827;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    padding: 12px 20px;
-    border-radius: 12px;
-    margin-bottom: 16px;
-}
+.top-header { background: #111827; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding: 12px 20px; border-radius: 12px; margin-bottom: 16px; }
 </style>
 """
 st.markdown(_CUSTOM_CSS, unsafe_allow_html=True)
@@ -676,7 +635,6 @@ summary_df = compute_player_summaries(df, current_quot, ranking_df, titolari_df)
 
 col_roster, col_dossier = st.columns([0.33, 0.67], gap="medium")
 
-
 # ------------------------------------------
 # COLONNA SINISTRA: ROSTER & FILTRI
 # ------------------------------------------
@@ -688,10 +646,9 @@ with col_roster:
     </div>
     """, unsafe_allow_html=True)
 
-    # 1. Filtro Ricerca Testuale
     search_query = st.text_input("Ricerca", placeholder="Cerca giocatore o squadra...", label_visibility="collapsed")
 
-    # 2. Filtro Ruolo (P, D, C, A)
+    # Filtro Ruolo ora è Orizzontale
     selected_role = st.radio(
         "Seleziona Ruolo",
         ["Tutti", "P", "D", "C", "A"],
@@ -699,51 +656,35 @@ with col_roster:
         key="role_filter_btn"
     )
 
-    # 3. Squadra e Ordinamento
     squadre_raw = current_quot["squadra"].dropna().astype(str).str.strip().unique() if "squadra" in current_quot.columns else []
     squadre_list = ["Tutte"] + sorted(list(squadre_raw))
 
     c1, c2 = st.columns(2)
-    with c1:
-        selected_team = st.selectbox("Squadra", squadre_list, index=0)
-    with c2:
-        selected_sort = st.selectbox(
-            "Ordina per",
-            ["👑 Indice Ranking", "⭐ Fantamedia", "🔤 Nome (A-Z)", "💰 Quotazione"],
-            index=0
-        )
+    with c1: selected_team = st.selectbox("Squadra", squadre_list, index=0)
+    with c2: selected_sort = st.selectbox("Ordina per", ["👑 Indice Ranking", "⭐ Fantamedia", "🔤 Nome (A-Z)", "💰 Quotazione"], index=0)
 
-    # 4. Toggle Titolari & Slider Partite
     f1, f2 = st.columns([1.1, 1.9])
-    with f1:
-        only_titolari = st.checkbox("Solo Titolari", value=False)
-    with f2:
-        min_partite = st.slider("Partite minime", 0, 38, 0, step=1)
+    with f1: only_titolari = st.checkbox("Solo Titolari", value=False)
+    with f2: min_partite = st.slider("Partite minime", 0, 38, 0, step=1)
 
     st.markdown("<hr style='border-color: rgba(255,255,255,0.06); margin: 12px 0;'>", unsafe_allow_html=True)
 
-    # --- APPLICAZIONE FILTRI ALLA VISTA ROSTER ---
     quot_view = summary_df.copy()
 
     if selected_role != "Tutti" and "ruolo" in quot_view.columns:
         quot_view = quot_view[quot_view["ruolo"].astype(str).str.upper().str.strip() == selected_role]
-
     if selected_team != "Tutte" and "squadra" in quot_view.columns:
         quot_view = quot_view[quot_view["squadra"].astype(str).str.upper().str.strip() == selected_team.upper().strip()]
-
     if search_query.strip():
         q = search_query.upper().strip()
         match_nome = quot_view["nome"].astype(str).str.upper().str.contains(q, na=False) if "nome" in quot_view.columns else False
         match_squadra = quot_view["squadra"].astype(str).str.upper().str.contains(q, na=False) if "squadra" in quot_view.columns else False
         quot_view = quot_view[match_nome | match_squadra]
-
     if only_titolari and "is_titolare" in quot_view.columns:
         quot_view = quot_view[quot_view["is_titolare"] == True]
-
     if min_partite > 0 and "presenze_totali" in quot_view.columns:
         quot_view = quot_view[quot_view["presenze_totali"] >= min_partite]
 
-    # Ordinamento
     if selected_sort == "👑 Indice Ranking":
         quot_view = quot_view.sort_values(by=["indice_finale", "quotazione_attuale", "nome"], ascending=[False, False, True], na_position="last")
     elif selected_sort == "⭐ Fantamedia":
@@ -761,32 +702,24 @@ with col_roster:
     else:
         options_df = quot_view.drop_duplicates(subset="player_id").copy()
         labels, ids = [], []
-
         for row in options_df.itertuples():
             n = getattr(row, "nome", "Giocatore")
             s = getattr(row, "squadra", "-")
             pid = getattr(row, "player_id")
             r = getattr(row, "ruolo", "")
-
             ind = getattr(row, "indice_finale", None)
             fm = getattr(row, "fantamedia", None)
 
-            if pd.notna(ind):
-                lbl = f"{n} [{s}] • {r} | Ind: {float(ind):.1f}"
-            elif pd.notna(fm):
-                lbl = f"{n} [{s}] • {r} | FM: {float(fm):.2f}"
-            else:
-                lbl = f"{n} [{s}] • {r}"
+            if pd.notna(ind): lbl = f"{n} [{s}] • {r} | Ind: {float(ind):.1f}"
+            elif pd.notna(fm): lbl = f"{n} [{s}] • {r} | FM: {float(fm):.2f}"
+            else: lbl = f"{n} [{s}] • {r}"
 
-            if lbl in labels:
-                lbl = f"{lbl} #{int(pid)}"
-
+            if lbl in labels: lbl = f"{lbl} #{int(pid)}"
             labels.append(lbl)
             ids.append(int(pid))
 
         label_to_id = dict(zip(labels, ids))
         radio_key = "roster_radio"
-
         prev_label = st.session_state.get(radio_key)
         if prev_label not in labels:
             default_idx = 0
@@ -794,13 +727,15 @@ with col_roster:
                 default_idx = ids.index(st.session_state["active_player_id"])
             st.session_state[radio_key] = labels[default_idx]
 
+        # Anchor HTML per intercettare il CSS e far scrollare solo la lista dei giocatori
+        st.markdown('<div id="roster-anchor"></div>', unsafe_allow_html=True)
         selected_label = st.radio("Giocatori", options=labels, key=radio_key, label_visibility="collapsed")
         selected_id = label_to_id.get(selected_label)
         st.session_state["active_player_id"] = selected_id
 
 
 # ------------------------------------------
-# COLONNA DESTRA: DOSSIER ANALITICO DEGLI ELEMENTI
+# COLONNA DESTRA: DOSSIER ANALITICO
 # ------------------------------------------
 with col_dossier:
     if selected_id is None:
@@ -824,20 +759,36 @@ with col_dossier:
 
         nome_upper, squadra_upper = str(nome).upper().strip(), str(squadra).upper().strip()
         ranking_row = get_player_ranking(ranking_df, player_id)
-
         rigor_info = rigoristi_df[(rigoristi_df["giocatore"] == nome_upper) & (rigoristi_df["squadra"] == squadra_upper)]
-        puniz_info = punizioni_df[(punizioni_df["giocatore"] == nome_upper) & (punizioni_df["squadra"] == squadra_upper)]
         titolare_info = titolari_df[(titolari_df["nome_giocatore"] == nome_upper) & (titolari_df["squadra"] == squadra_upper)]
 
-        # --- HERO BANNER GIOCATORE ---
-        ind_score = float(ranking_row.get("indice_finale")) if ranking_row is not None and pd.notna(ranking_row.get("indice_finale")) else 94.8
+        # --- GESTIONE TAG TITOLARITA E INFORTUNIO ---
+        titolarita_val, infortunato_val, desc_infortunio = "", "", ""
+        if not titolare_info.empty:
+            t_row = titolare_info.iloc[0]
+            titolarita_val = str(t_row.get("titolarita", "")).lower().strip()
+            infortunato_val = str(t_row.get("infortunato", "")).lower().strip()
+            desc_infortunio = str(t_row.get("desc_infortunio", "")).strip()
+
+        tags_html = ""
+        if "titolare" in titolarita_val:
+            tags_html += '<span style="background: rgba(16, 185, 129, 0.15); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.3); padding: 4px 10px; border-radius: 9999px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase;">🟢 Titolare</span> '
+        elif "panchina" in titolarita_val or "riserva" in titolarita_val:
+            tags_html += '<span style="background: rgba(245, 158, 11, 0.15); color: #FBBF24; border: 1px solid rgba(245, 158, 11, 0.3); padding: 4px 10px; border-radius: 9999px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase;">🟠 Panchina</span> '
+        
+        if infortunato_val in ["sì", "si", "true", "1", "yes"]:
+            tags_html += '<span style="background: rgba(239, 68, 68, 0.15); color: #F87171; border: 1px solid rgba(239, 68, 68, 0.3); padding: 4px 10px; border-radius: 9999px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase;">🚑 Infortunato</span> '
+
+        desc_html = ""
+        if desc_infortunio and desc_infortunio.lower() != "nan":
+            desc_html = f'<div style="font-size: 0.8rem; color: #FCA5A5; margin-top: 8px; font-weight: 600; background: rgba(239, 68, 68, 0.1); padding: 6px 12px; border-radius: 6px; display: inline-block;">⚠️ {desc_infortunio}</div>'
+
+        # --- METRICHE E ASTA ---
         rk_ruolo = int(ranking_row.get("rank_ruolo")) if ranking_row is not None and pd.notna(ranking_row.get("rank_ruolo")) else 1
         tot_ruolo = int(ranking_row.get("totale_ruolo")) if ranking_row is not None and pd.notna(ranking_row.get("totale_ruolo")) else 68
-
         quota_val = current_quote.get("quotazione_attuale", 38) if current_quote is not None else 38
         fvm_val = current_quote.get("fvm", 320) if current_quote is not None else 320
 
-        # Card con profilo principale e Box Valutazione Asta
         st.markdown(f"""
         <div class="glass-panel" style="margin-bottom: 20px;">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
@@ -847,19 +798,19 @@ with col_dossier:
                     </div>
                     <div>
                         <div style="display: flex; align-items: center; gap: 8px;">
-                            <span class="badge-tier">Tier S+ Must-Buy</span>
                             <span class="badge-tier badge-role-{ruolo}">{ruolo} — {squadra}</span>
                         </div>
-                        <div style="font-size: 1.8rem; font-weight: 800; color: #F8FAFC; margin-top: 4px;">
-                            {nome}
+                        <div style="font-size: 1.8rem; font-weight: 800; color: #F8FAFC; margin-top: 4px; display: flex; align-items: center; gap: 10px;">
+                            {nome} 
+                            <div style="display: inline-flex; align-items: center; gap: 6px; margin-top: 2px;">{tags_html}</div>
                         </div>
-                        <div style="font-size: 0.8rem; color: #94A3B8; display: flex; gap: 12px; margin-top: 2px;">
+                        {desc_html}
+                        <div style="font-size: 0.8rem; color: #94A3B8; display: flex; gap: 12px; margin-top: 6px;">
                             <span>🏆 Rank Ruolo: <b>#{rk_ruolo} / {tot_ruolo}</b></span>
                             <span>🎯 Rigorista: <b>{'Sì (#' + str(int(rigor_info['posizione'].values[0])) + ')' if not rigor_info.empty else 'No'}</b></span>
                         </div>
                     </div>
                 </div>
-                <!-- BOX ASTA -->
                 <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px; padding: 12px 18px; text-align: right;">
                     <div style="font-size: 0.7rem; color: #34D399; font-weight: 700; letter-spacing: 0.05em;">VALUTAZIONE ASTA RECOMENDED</div>
                     <div style="font-size: 1.5rem; font-weight: 800; color: #F8FAFC; margin: 2px 0;">{fvm_val} <span style="font-size: 0.9rem; color: #94A3B8;">FM</span></div>
@@ -869,21 +820,15 @@ with col_dossier:
         </div>
         """, unsafe_allow_html=True)
 
-        # Normalizzazione Statistiche
-        if "stagione" in p_stats.columns:
-            p_stats["stagione"] = p_stats["stagione"].astype(str).str.strip()
-        if "giornata" in p_stats.columns:
-            p_stats["giornata"] = pd.to_numeric(p_stats["giornata"], errors="coerce")
-
+        if "stagione" in p_stats.columns: p_stats["stagione"] = p_stats["stagione"].astype(str).str.strip()
+        if "giornata" in p_stats.columns: p_stats["giornata"] = pd.to_numeric(p_stats["giornata"], errors="coerce")
         p_stats = remove_starred_vote_rows(p_stats)
 
         if not p_stats.empty:
             p_stats = calculate_bonus_malus(p_stats)
             is_goalkeeper = (ruolo == "P")
-
             p_stats_hist = p_stats[p_stats["stagione"].astype(str).str.strip() != "2026-27"].copy() if "stagione" in p_stats.columns else p_stats.copy()
-            if p_stats_hist.empty:
-                p_stats_hist = p_stats.copy()
+            if p_stats_hist.empty: p_stats_hist = p_stats.copy()
 
             rel = calculate_relative_metrics(p_stats_hist, is_goalkeeper=is_goalkeeper)
             media_voto = safe_mean(p_stats_hist, "voto")
@@ -918,33 +863,30 @@ with col_dossier:
                 </div>
                 """, unsafe_allow_html=True)
             with k4:
-                val_label = "GS Medi / Anno" if is_goalkeeper else "Gol Medi / Anno"
-                val_num = f"{rel['gs_stagione']:.2f}" if is_goalkeeper else f"{rel['gol_stagione']:.1f}"
-                sub_txt = f"{rel['rigori_parati']:.1f} Rig. Parati" if is_goalkeeper else f"{rel['assist_stagione']:.1f} Assist Medi"
+                val_label = "GS | RIG. PARATI MEDI" if is_goalkeeper else "GOL | ASSIST MEDI"
+                val_num_1 = f"{rel['gs_stagione']:.1f}" if is_goalkeeper else f"{rel['gol_stagione']:.1f}"
+                val_num_2 = f"{rel['rigori_parati']:.1f}" if is_goalkeeper else f"{rel['assist_stagione']:.1f}"
+                
                 st.markdown(f"""
                 <div class="kpi-card">
                     <div class="kpi-label">{val_label}</div>
-                    <div class="kpi-value" style="color: #60A5FA;">{val_num}</div>
-                    <div class="kpi-sub">{sub_txt}</div>
+                    <div class="kpi-value" style="color: #60A5FA;">{val_num_1} <span style="font-size: 1.15rem; color: #94A3B8; font-weight: 600;">| {val_num_2}</span></div>
+                    <div class="kpi-sub">Media per stagione</div>
                 </div>
                 """, unsafe_allow_html=True)
 
             st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
 
-            # --- SEZIONE CONTINUITÀ & RISCHIO ---
+            # --- SEZIONE CONTINUITÀ E RISCHIO ---
             r1, r2, r3, r4 = st.columns(4)
-            with r1:
-                st.metric("Varianza Voto", format_number(varianza_v), help="Valore < 0.5 indica altissima regolarità")
-            with r2:
-                st.metric("Varianza Gol", format_number(varianza_bin), help="Frequenza di bonus distribuiti")
-            with r3:
-                st.metric("Ammonizioni / Anno", f"{rel['ammonizioni']:.1f}")
-            with r4:
-                st.metric("Espulsioni / Anno", f"{rel['espulsioni']:.1f}")
+            with r1: st.metric("Varianza Voto", format_number(varianza_v), help="Valore < 0.5 indica altissima regolarità")
+            with r2: st.metric("Varianza Gol", format_number(varianza_bin), help="Frequenza di bonus distribuiti")
+            with r3: st.metric("Ammonizioni / Anno", f"{rel['ammonizioni']:.1f}")
+            with r4: st.metric("Espulsioni / Anno", f"{rel['espulsioni']:.1f}")
 
             st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
 
-            # --- GRAFICO TREND DI FORMA ---
+            # --- GRAFICO TREND (ALTEZZA AUMENTATA E RANGE DINAMICO) ---
             st.markdown("""
             <div style="font-weight: 700; font-size: 1rem; color: #F8FAFC; margin-bottom: 8px;">
                 📈 Trend di Forma (Rolling 5 Giornate)
@@ -954,53 +896,35 @@ with col_dossier:
             rolling_df = build_rolling_data(p_stats, window=5)
             if not rolling_df.empty:
                 fig = go.Figure()
+                
+                # Calcola dinamicamente il limite Y (Scala Minima 12.0)
+                upper_y = 12.0
+                if "media_mobile_fanta" in rolling_df.columns:
+                    max_fanta = rolling_df["media_mobile_fanta"].max()
+                    if pd.notna(max_fanta) and max_fanta > 11.0:
+                        upper_y = max_fanta + 1.0
 
                 if "media_mobile_fanta" in rolling_df.columns:
-                    fig.add_trace(
-                        go.Scatter(
-                            x=rolling_df["periodo"],
-                            y=rolling_df["media_mobile_fanta"],
-                            mode="lines",
-                            name="Fantamedia (5G)",
-                            line=dict(color="#10B981", width=3, shape="spline"),
-                            fill="tozeroy",
-                            fillcolor="rgba(16, 185, 129, 0.08)",
-                            hovertemplate="<b>%{x}</b><br>Fantamedia: <b>%{y:.2f}</b><extra></extra>",
-                        )
-                    )
-
+                    fig.add_trace(go.Scatter(x=rolling_df["periodo"], y=rolling_df["media_mobile_fanta"], mode="lines", name="Fantamedia (5G)", line=dict(color="#10B981", width=3, shape="spline"), fill="tozeroy", fillcolor="rgba(16, 185, 129, 0.08)", hovertemplate="<b>%{x}</b><br>Fantamedia: <b>%{y:.2f}</b><extra></extra>"))
                 if "media_mobile_voto" in rolling_df.columns:
-                    fig.add_trace(
-                        go.Scatter(
-                            x=rolling_df["periodo"],
-                            y=rolling_df["media_mobile_voto"],
-                            mode="lines",
-                            name="Media Voto (5G)",
-                            line=dict(color="#60A5FA", width=2, dash="dot", shape="spline"),
-                            hovertemplate="<b>%{x}</b><br>Media Voto: <b>%{y:.2f}</b><extra></extra>",
-                        )
-                    )
+                    fig.add_trace(go.Scatter(x=rolling_df["periodo"], y=rolling_df["media_mobile_voto"], mode="lines", name="Media Voto (5G)", line=dict(color="#60A5FA", width=2, dash="dot", shape="spline"), hovertemplate="<b>%{x}</b><br>Media Voto: <b>%{y:.2f}</b><extra></extra>"))
 
-                fig.add_hline(
-                    y=6.0, line_dash="dash", line_color="rgba(255,255,255,0.2)",
-                    annotation_text="Sufficienza (6.0)", annotation_position="bottom right"
-                )
+                fig.add_hline(y=6.0, line_dash="dash", line_color="rgba(255,255,255,0.2)", annotation_text="Sufficienza", annotation_position="bottom right")
 
                 fig.update_layout(
                     paper_bgcolor="rgba(0,0,0,0)",
                     plot_bgcolor="rgba(17, 24, 39, 0.6)",
                     font=dict(family="Plus Jakarta Sans", color="#94A3B8"),
                     hovermode="x unified",
-                    height=320,
+                    height=400,
                     margin=dict(l=10, r=10, t=30, b=10),
                     legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, bgcolor="rgba(0,0,0,0)"),
                     xaxis=dict(gridcolor="rgba(255,255,255,0.05)", showgrid=True),
-                    yaxis=dict(gridcolor="rgba(255,255,255,0.05)", showgrid=True, range=[4.5, 10.0]),
+                    yaxis=dict(gridcolor="rgba(255,255,255,0.05)", showgrid=True, range=[4.0, upper_y]),
                 )
-
                 st.plotly_chart(fig, use_container_width=True)
 
-            # --- TABELLA STORICO DETTAGLIATO ---
+            # --- TABELLA STORICO ---
             st.markdown("""
             <div style="font-weight: 700; font-size: 1rem; color: #F8FAFC; margin-top: 12px; margin-bottom: 8px;">
                 📅 Storico Prestazioni per Stagione
@@ -1012,42 +936,14 @@ with col_dossier:
                 for s, g in p_stats.groupby("stagione"):
                     gfanta = calculate_fantavoto(g)
                     if is_goalkeeper:
-                        rows.append({
-                            "Stagione": s,
-                            "Presenze": int(numeric_series(g, "voto").count()),
-                            "Media Voto": round(safe_mean(g, "voto"), 2),
-                            "Fantamedia": round(safe_mean(gfanta, "fanta_voto_calcolato"), 2),
-                            "Gol Subiti": int(safe_sum(g, "gs")),
-                            "Clean Sheet": (numeric_series(g, "gs") == 0).sum(),
-                            "Amm": int(safe_sum(g, "amm")),
-                            "Esp": int(safe_sum(g, "esp")),
-                        })
+                        rows.append({"Stagione": s, "Presenze": int(numeric_series(g, "voto").count()), "Media Voto": round(safe_mean(g, "voto"), 2), "Fantamedia": round(safe_mean(gfanta, "fanta_voto_calcolato"), 2), "Gol Subiti": int(safe_sum(g, "gs")), "Clean Sheet": (numeric_series(g, "gs") == 0).sum(), "Amm": int(safe_sum(g, "amm")), "Esp": int(safe_sum(g, "esp"))})
                     else:
-                        rows.append({
-                            "Stagione": s,
-                            "Presenze": int(numeric_series(g, "voto").count()),
-                            "Media Voto": round(safe_mean(g, "voto"), 2),
-                            "Fantamedia": round(safe_mean(gfanta, "fanta_voto_calcolato"), 2),
-                            "Gol": int(safe_sum(g, "gf") + safe_sum(g, "rf")),
-                            "Assist": int(safe_sum(g, "ass")),
-                            "Amm": int(safe_sum(g, "amm")),
-                            "Esp": int(safe_sum(g, "esp")),
-                        })
+                        rows.append({"Stagione": s, "Presenze": int(numeric_series(g, "voto").count()), "Media Voto": round(safe_mean(g, "voto"), 2), "Fantamedia": round(safe_mean(gfanta, "fanta_voto_calcolato"), 2), "Gol": int(safe_sum(g, "gf") + safe_sum(g, "rf")), "Assist": int(safe_sum(g, "ass")), "Amm": int(safe_sum(g, "amm")), "Esp": int(safe_sum(g, "esp"))})
 
                 season_df = pd.DataFrame(rows)
                 if not season_df.empty:
                     season_df["_sort"] = season_df["Stagione"].apply(season_sort_key)
                     season_df = season_df.sort_values("_sort", ascending=False).drop(columns="_sort")
-
-                    st.dataframe(
-                        season_df,
-                        use_container_width=True,
-                        hide_index=True,
-                        column_config={
-                            "Fantamedia": st.column_config.NumberColumn(format="%.2f ⭐"),
-                            "Media Voto": st.column_config.NumberColumn(format="%.2f"),
-                            "Presenze": st.column_config.ProgressColumn(min_value=0, max_value=38, format="%d / 38"),
-                        }
-                    )
+                    st.dataframe(season_df, use_container_width=True, hide_index=True, column_config={"Fantamedia": st.column_config.NumberColumn(format="%.2f ⭐"), "Media Voto": st.column_config.NumberColumn(format="%.2f"), "Presenze": st.column_config.ProgressColumn(min_value=0, max_value=38, format="%d / 38")})
         else:
             st.info("Nessuna statistica storica disponibile per questo calciatore.")
