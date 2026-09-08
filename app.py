@@ -146,26 +146,26 @@ white-space: nowrap;
 overflow: visible;
 }
 .st-key-hero_rank_row [data-testid="stMetric"] {
-padding: 8px 10px;
+padding: 6px 8px;
 }
 .st-key-hero_rank_row [data-testid="stMetricLabel"] {
-font-size: 0.7rem;
+font-size: 0.68rem;
 }
 .st-key-hero_rank_row [data-testid="stMetricValue"] {
-font-size: 1.05rem;
+font-size: 1rem;
 white-space: nowrap;
 }
 .st-key-hero_card [data-testid="stProgress"] {
-margin-top: 2px;
-margin-bottom: 2px;
+margin-top: 0px;
+margin-bottom: 0px;
 }
 .st-key-hero_card [data-testid="stProgress"] > div > div {
 border-radius: 9999px !important;
-height: 8px !important;
+height: 6px !important;
 }
 .st-key-hero_card [data-testid="stProgress"] p {
 color: #94A3B8 !important;
-font-size: 0.75rem !important;
+font-size: 0.72rem !important;
 }
 div[data-testid="stHorizontalBlock"] {
 align-items: flex-start !important;
@@ -1262,14 +1262,10 @@ def render_quote_hero_card(quota, fvm, ranking=None):
 
     if ranking is not None:
         indice_finale = ranking.get("indice_finale")
-        rank_generale = ranking.get("rank_generale")
-        totale_generale = ranking.get("totale_generale")
         rank_ruolo = ranking.get("rank_ruolo")
         totale_ruolo = ranking.get("totale_ruolo")
     else:
         indice_finale = None
-        rank_generale = None
-        totale_generale = None
         rank_ruolo = None
         totale_ruolo = None
 
@@ -1277,14 +1273,6 @@ def render_quote_hero_card(quota, fvm, ranking=None):
         None if indice_finale is None or pd.isna(indice_finale)
         else f"{float(indice_finale):.1f}"
     )
-
-    if (
-        rank_generale is not None and not pd.isna(rank_generale)
-        and totale_generale is not None and not pd.isna(totale_generale)
-    ):
-        generale_txt = f"#{int(rank_generale)} / {int(totale_generale)}"
-    else:
-        generale_txt = "N/D"
 
     if (
         rank_ruolo is not None and not pd.isna(rank_ruolo)
@@ -1305,19 +1293,17 @@ def render_quote_hero_card(quota, fvm, ranking=None):
 
         st.markdown("**👑 RANKING ASTA V3.1**")
 
-        # Indice, Generale e Ruolo sulla stessa riga (3 colonne): evita
-        # che l'Indice resti da solo a piena larghezza con mezza card
-        # vuota accanto al valore.
+        # Indice e Ruolo sulla stessa riga (2 colonne): evita che l'Indice
+        # resti da solo a piena larghezza con mezza card vuota accanto
+        # al valore.
         with st.container(key="hero_rank_row"):
-            r1, r2, r3 = st.columns(3)
+            r1, r2 = st.columns(2)
             with r1:
                 st.metric(
                     "Indice",
                     ranking_score if ranking_score is not None else "N/D",
                 )
             with r2:
-                st.metric("Generale", generale_txt)
-            with r3:
                 st.metric("Ruolo", ruolo_txt)
 
         # La progress bar occupa lo spazio orizzontale liberato e dà
