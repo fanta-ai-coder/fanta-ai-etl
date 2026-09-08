@@ -48,21 +48,21 @@ section.main, [data-testid="stMainBlockContainer"], [data-testid="stAppViewBlock
     font-size: 0.85rem !important;
 }
 
-/* 1. FILTRO RUOLI COLORATO (Orizzontale - Primo Radio Group) */
-div[data-testid="stRadio"] div[role="radiogroup"][aria-orientation="horizontal"] label:nth-child(1) p { color: #FFFFFF !important; font-weight: 700 !important; }
-div[data-testid="stRadio"] div[role="radiogroup"][aria-orientation="horizontal"] label:nth-child(2) p { color: #B45309 !important; font-weight: 700 !important; } /* Marrone P */
-div[data-testid="stRadio"] div[role="radiogroup"][aria-orientation="horizontal"] label:nth-child(3) p { color: #3B82F6 !important; font-weight: 700 !important; } /* Blu D */
-div[data-testid="stRadio"] div[role="radiogroup"][aria-orientation="horizontal"] label:nth-child(4) p { color: #10B981 !important; font-weight: 700 !important; } /* Verde C */
-div[data-testid="stRadio"] div[role="radiogroup"][aria-orientation="horizontal"] label:nth-child(5) p { color: #EF4444 !important; font-weight: 700 !important; } /* Rosso A */
+/* 1. FILTRO RUOLI COLORATO (Orizzontale) */
+div[data-testid="stRadio"]:first-of-type label:nth-child(1) p { color: #FFFFFF !important; font-weight: 700 !important; }
+div[data-testid="stRadio"]:first-of-type label:nth-child(2) p { color: #B45309 !important; font-weight: 700 !important; } /* Marrone P */
+div[data-testid="stRadio"]:first-of-type label:nth-child(3) p { color: #3B82F6 !important; font-weight: 700 !important; } /* Blu D */
+div[data-testid="stRadio"]:first-of-type label:nth-child(4) p { color: #10B981 !important; font-weight: 700 !important; } /* Verde C */
+div[data-testid="stRadio"]:first-of-type label:nth-child(5) p { color: #EF4444 !important; font-weight: 700 !important; } /* Rosso A */
 
-/* 2. ROSTER LIST SCROLL VERTICALE E TESTO BIANCO (Isolato tramite Anchor) */
+/* 2. ROSTER LIST SCROLL VERTICALE (Target tramite Anchor) */
 #roster-anchor ~ div[data-testid="stRadio"] div[role="radiogroup"] {
     display: flex !important;
     flex-direction: column !important;
     gap: 6px !important;
-    max-height: 550px !important;
+    max-height: 720px !important;
     overflow-y: auto !important;
-    padding-right: 6px !important;
+    padding-right: 4px !important;
 }
 
 #roster-anchor ~ div[data-testid="stRadio"] label > div:first-child,
@@ -89,13 +89,13 @@ div[data-testid="stRadio"] div[role="radiogroup"][aria-orientation="horizontal"]
 }
 
 #roster-anchor ~ div[data-testid="stRadio"] label:has(input:checked) {
-    background: rgba(16, 185, 129, 0.15) !important;
+    background: rgba(16, 185, 129, 0.12) !important;
     border: 1px solid #10B981 !important;
 }
 
 #roster-anchor ~ div[data-testid="stRadio"] label p {
-    color: #FFFFFF !important;
-    font-size: 0.85rem !important;
+    color: #F1F5F9 !important;
+    font-size: 0.88rem !important;
     font-weight: 600 !important;
 }
 
@@ -122,6 +122,7 @@ div[data-testid="stRadio"] div[role="radiogroup"][aria-orientation="horizontal"]
 .top-header { background: #111827; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding: 12px 20px; border-radius: 12px; margin-bottom: 16px; }
 </style>
 """
+st.markdown(_CUSTOM_CSS, unsafe_allow_html=True)
 
 
 # ==========================================
