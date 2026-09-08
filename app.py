@@ -175,6 +175,13 @@ div[data-testid="stRadio"]:first-of-type label:nth-child(5) p { color: #EF4444 !
     border-radius: 12px;
     margin-bottom: 16px;
 }
+
+[data-testid="stRadio"] label p,
+[data-testid="stRadio"] label p *,
+[data-testid="stRadio"] label span,
+[data-testid="stRadio"] label span * {
+    color: #F1F5F9 !important;
+}
 </style>
 """
 st.markdown(_CUSTOM_CSS, unsafe_allow_html=True)
