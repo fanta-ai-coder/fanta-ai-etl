@@ -31,7 +31,7 @@ html, body, [class*="css"], .stApp, [data-testid="stAppViewContainer"], [data-te
 
 section.main, [data-testid="stMainBlockContainer"], [data-testid="stAppViewBlockContainer"] {
     background-color: #0B0F19 !important;
-    padding-top: 1rem !important;
+    padding-top: 2rem !important;
     padding-bottom: 2rem !important;
 }
 
@@ -109,11 +109,6 @@ div[data-testid="stRadio"]:first-of-type label:nth-child(5) p { color: #EF4444 !
     color: #F1F5F9 !important;
     font-size: 0.88rem !important;
     font-weight: 600 !important;
-}
-
-#roster-anchor ~ div[data-testid="stRadio"] label:has(input:checked) p {
-    color: #34D399 !important;
-    font-weight: 700 !important;
 }
 
 /* --------------------------------------------
