@@ -84,7 +84,7 @@ st.markdown(_CUSTOM_CSS, unsafe_allow_html=True)
 # ... (la funzione render_player_detail rimane identica) ...
 
 # ==========================================
-# 6. APP CONTROLLER & MAIN UI (RIPROGETTATO)
+# 6. APP CONTROLLER & MAIN UI (NUOVO LAYOUT)
 # ==========================================
 
 try:
@@ -112,8 +112,13 @@ current_quot = (
     else quot.copy()
 )
 
+# Precalcolo summary (per filtri e lista)
+summary_df = compute_player_summaries(
+    df, current_quot, ranking_df, titolari_df
+)
+
 # ==========================================
-# HEADER (invariato)
+# HEADER
 # ==========================================
 title_col1, title_col2 = st.columns([0.06, 0.94])
 with title_col1:
@@ -122,13 +127,6 @@ with title_col2:
     st.title("FantaAI Analytics")
     st.caption("Design Intelligence & Decision Support per l'Asta")
 st.divider()
-
-# ==========================================
-# PRECALCOLO SUMMARY (per filtri e lista)
-# ==========================================
-summary_df = compute_player_summaries(
-    df, current_quot, ranking_df, titolari_df
-)
 
 # ==========================================
 # LAYOUT PRINCIPALE: SINISTRA (FILTRI+LISTA) / DESTRA (DETTAGLIO)
@@ -149,37 +147,28 @@ with col_left:
 
     # 2. Filtro ruolo (chip)
     st.markdown("**FILTRO RUOLO TATTICO**")
-    # Creo una riga con 5 colonne per i chip
     cols = st.columns(5)
     roles = ["Tutti", "P", "D", "C", "A"]
-    # Conteggi per ruolo (dai dati filtrati globalmente, per mostrare i totali)
-    # Per semplicità uso il summary_df completo (non ancora filtrato)
     total_counts = {}
     total_counts["Tutti"] = len(summary_df)
     for r in ["P","D","C","A"]:
         total_counts[r] = len(summary_df[summary_df["ruolo"].astype(str).str.upper().str.strip() == r])
     
-    # Gestione stato del ruolo attivo
     if "selected_role_chip" not in st.session_state:
         st.session_state.selected_role_chip = "Tutti"
     
     for i, r in enumerate(roles):
         with cols[i]:
-            # Uso un bottone con chiave univoca, e controllo se è attivo
             is_active = (st.session_state.selected_role_chip == r)
-            # Uso st.button con key e poi gestisco l'evento
             if st.button(
                 f"{r}\n{total_counts.get(r,0)}",
                 key=f"role_{r}",
                 use_container_width=True,
-                type="secondary" if not is_active else "primary",
+                type="primary" if is_active else "secondary",
                 help=f"Mostra solo {r}" if r!="Tutti" else "Mostra tutti"
             ):
                 st.session_state.selected_role_chip = r
                 st.rerun()
-            # Aggiungo classe per evidenziare l'attivo via CSS (non perfetto, ma funziona)
-            # usiamo il type primary per evidenziare, ma non è esattamente come nel design.
-            # Possiamo usare st.markdown per aggiungere style condizionale, ma per semplicità uso type.
 
     # 3. Filtro Squadra e Ordinamento
     squadre_raw = (
@@ -211,7 +200,7 @@ with col_left:
             key="sort_select"
         )
 
-    # 4. Filtri avanzati (titolari, partite minime)
+    # 4. Filtri avanzati
     only_titolari = st.checkbox(
         "✅ Solo Titolari (Formazione Tipo)",
         value=False,
@@ -229,7 +218,6 @@ with col_left:
     )
 
     # 5. APPLICAZIONE FILTRI E ORDINAMENTO
-    # Copio il codice di filtraggio dalla versione precedente, ma ora uso i valori dai widget left
     filtered = summary_df.copy()
     
     # Ruolo (dal chip)
@@ -295,7 +283,7 @@ with col_left:
             pid = getattr(row, "player_id")
             ruolo = getattr(row, "ruolo", "")
             
-            # Costruisco la label arricchita in base all'ordinamento
+            # Costruisco la label
             if selected_sort == "👑 Indice Ranking (Decrescente)":
                 ind = getattr(row, "indice_finale", None)
                 rk = getattr(row, "rank_ruolo", None)
@@ -318,9 +306,7 @@ with col_left:
             else:
                 lbl = f"{n} [{s}]"
             
-            # Aggiungo eventuali tag (rigorista, punizioni, titolare, infortunio) per arricchire la label?
-            # Per brevità li aggiungo come emoji alla fine
-            # Recupero info da rigoristi_df e punizioni_df
+            # Aggiunta tag (rigorista, punizioni, titolare, infortunato)
             nome_upper = str(n).upper().strip()
             squadra_upper = str(s).upper().strip()
             is_rig = not rigoristi_df[(rigoristi_df["giocatore"] == nome_upper) & (rigoristi_df["squadra"] == squadra_upper)].empty
@@ -329,20 +315,13 @@ with col_left:
                 lbl += " 🎯"
             if is_pun:
                 lbl += " ⚡"
-            # Stato titolare/infortunato (da titolari_df)
-            is_tit = False
-            is_inf = False
             tit_info = titolari_df[(titolari_df["nome_giocatore"] == nome_upper) & (titolari_df["squadra"] == squadra_upper)]
             if not tit_info.empty:
                 row_t = tit_info.iloc[0]
                 if str(row_t.get("titolarita", "")).lower() == "titolare":
-                    is_tit = True
+                    lbl += " ✅"
                 if str(row_t.get("infortunato", "no")).lower() == "si":
-                    is_inf = True
-            if is_tit:
-                lbl += " ✅"
-            if is_inf:
-                lbl += " 🤕"
+                    lbl += " 🤕"
             
             if lbl in labels:
                 lbl = f"{lbl} #{int(pid)}"
