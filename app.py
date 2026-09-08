@@ -31,285 +31,97 @@ _CUSTOM_CSS = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
-/* ==========================================
-   PALETTE (allineata al mockup Stitch)
-   bg #0F131C · surface-low #181B25 · surface #1C1F29
-   surface-high #262A34 · surface-highest #31353F
-   primary(C) #4EDEA3 · secondary(P) #FFB95F
-   tertiary(D) #ADC6FF · error(A) #FFB4AB
-   ========================================== */
-
-html, body, [class*="css"], .stApp, [data-testid="stAppViewContainer"], [data-testid="stHeader"] {
-font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-background-color: #0F131C !important;
-color: #DFE2EF !important;
+:root {
+  --bg:#0d1119; --panel:#151a24; --panel2:#1b202b; --panel3:#222834;
+  --line:rgba(255,255,255,.075); --text:#e7ebf4; --muted:#8791a1;
+  --green:#50e0a5; --orange:#ffb85c; --blue:#9db9ff; --red:#ff8e87;
 }
-section.main, [data-testid="stMainBlockContainer"], [data-testid="stAppViewBlockContainer"] {
-background-color: #0F131C !important;
+html, body, [class*="css"], .stApp, [data-testid="stAppViewContainer"] {
+  font-family:'Plus Jakarta Sans',sans-serif !important;
+  background:var(--bg) !important; color:var(--text) !important;
 }
+[data-testid="stHeader"] { background:var(--bg) !important; }
+[data-testid="stAppViewBlockContainer"] { max-width:1600px !important; padding:14px 18px 28px !important; }
+[data-testid="stVerticalBlock"] { gap:.42rem !important; }
+[data-testid="stHorizontalBlock"] { gap:.65rem !important; align-items:flex-start !important; }
 [data-testid="stVerticalBlockBorderWrapper"] {
-background-color: #181B25 !important;
-border: 1px solid rgba(255, 255, 255, 0.07) !important;
-border-radius: 12px !important;
+  background:var(--panel) !important; border:1px solid var(--line) !important;
+  border-radius:10px !important; box-shadow:none !important;
 }
-::-webkit-scrollbar {
-width: 6px;
-height: 6px;
-}
-::-webkit-scrollbar-track {
-background: transparent;
-}
-::-webkit-scrollbar-thumb {
-background: #31353F;
-border-radius: 9999px;
-}
-::-webkit-scrollbar-thumb:hover {
-background: #4EDEA3;
-}
+hr { margin:5px 0 !important; border-color:var(--line) !important; }
+h1 { font-size:1.45rem !important; line-height:1.1 !important; margin:0 !important; }
+h2 { font-size:1.12rem !important; margin:0 !important; }
+h3 { font-size:.92rem !important; margin:.15rem 0 !important; }
+p { line-height:1.35 !important; }
+[data-testid="stCaptionContainer"] { color:var(--muted) !important; font-size:.66rem !important; }
 
-/* ==========================================
-   LAYOUT COMPATTO
-   ========================================== */
-[data-testid="stAppViewBlockContainer"] {
-padding-top: 1.4rem !important;
-padding-bottom: 2rem !important;
-}
-[data-testid="stAppViewBlockContainer"] [data-testid="stVerticalBlock"] {
-gap: 0.55rem !important;
-}
-hr {
-margin: 0.35rem 0 !important;
-border-color: rgba(255, 255, 255, 0.08) !important;
-}
-h1 {
-font-size: 1.6rem !important;
-margin: 0 0 0.1rem 0 !important;
-padding: 0 !important;
-}
-h2 {
-font-size: 1.35rem !important;
-margin: 0 0 0.1rem 0 !important;
-padding: 0 !important;
-}
-h3 {
-font-size: 1.05rem !important;
-margin: 0.2rem 0 0.1rem 0 !important;
-padding: 0 !important;
-}
-[data-testid="stCaptionContainer"] {
-margin-bottom: 0.1rem !important;
-color: #BBCABF !important;
-}
+/* Top status bar */
+.st-key-topbar [data-testid="stVerticalBlockBorderWrapper"] { background:#10151e !important; border-radius:8px !important; }
+.st-key-topbar p { font-size:.61rem !important; text-transform:uppercase; letter-spacing:.04em; }
 
-/* ==========================================
-   TESTO COLORATO NATIVO (:red[] :blue[] ecc.)
-   Escludiamo gli span/p con inline style dalle
-   regole "colore forzato" qui sotto, cosi i
-   badge di ruolo colorati restano visibili.
-   ========================================== */
+/* Inputs */
+.stTextInput input, .stSelectbox [data-baseweb="select"] {
+  background:#10151e !important; color:var(--text) !important; border:1px solid var(--line) !important;
+  border-radius:7px !important; min-height:32px !important; font-size:.72rem !important;
+}
+[data-testid="stWidgetLabel"] p { color:#8f99a9 !important; font-size:.60rem !important; font-weight:700 !important; text-transform:uppercase; letter-spacing:.06em; }
+.stSlider [data-baseweb="slider"] { padding-top:0 !important; }
 
-/* ==========================================
-   RADIO — LISTA GIOCATORI (roster verticale)
-   ========================================== */
+/* Role chips */
+.st-key-role_filter_radio div[role="radiogroup"] { display:grid !important; grid-template-columns:repeat(5,1fr); gap:4px !important; }
+.st-key-role_filter_radio label { background:#10151e !important; border:1px solid var(--line) !important; border-radius:7px !important; padding:5px 2px !important; min-height:42px !important; }
+.st-key-role_filter_radio label:has(input:checked) { background:rgba(80,224,165,.12) !important; border-color:var(--green) !important; box-shadow:0 0 14px rgba(80,224,165,.12); }
+.st-key-role_filter_radio label p { font-size:.58rem !important; line-height:1.05 !important; }
+
+/* Player list */
 .st-key-player_radio div[role="radiogroup"] {
-display: flex !important;
-flex-direction: column !important;
-flex-wrap: nowrap !important;
-width: 100% !important;
-max-height: 620px !important;
-overflow-y: auto !important;
-overflow-x: hidden !important;
-background-color: #181B25 !important;
-border: 1px solid rgba(255, 255, 255, 0.07) !important;
-border-radius: 12px !important;
-padding: 8px !important;
-gap: 6px !important;
+  display:flex !important; flex-direction:column !important; gap:4px !important;
+  max-height:600px !important; overflow-y:auto !important; overflow-x:hidden !important;
+  background:#10151e !important; border:1px solid var(--line) !important; border-radius:9px !important; padding:5px !important;
 }
-.st-key-player_radio label > div:first-child,
-.st-key-player_radio input[type="radio"] {
-display: none !important;
-}
-.st-key-player_radio label {
-display: flex !important;
-align-items: flex-start !important;
-width: 100% !important;
-background-color: #1C1F29 !important;
-border: 1px solid rgba(255, 255, 255, 0.05) !important;
-border-radius: 10px !important;
-padding: 9px 12px !important;
-margin: 0 !important;
-cursor: pointer !important;
-transition: all 0.15s ease !important;
-}
-.st-key-player_radio label:hover {
-background-color: #262A34 !important;
-border-color: rgba(78, 222, 163, 0.35) !important;
-}
-.st-key-player_radio label p:not([style]),
-.st-key-player_radio label span:not([style]) {
-color: #DFE2EF !important;
-font-size: 13px !important;
-font-weight: 600 !important;
-margin: 0 !important;
-line-height: 1.55 !important;
-}
-.st-key-player_radio label strong:not([style]) {
-color: #DFE2EF !important;
-}
-.st-key-player_radio label code {
-background-color: rgba(255, 255, 255, 0.06) !important;
-color: #BBCABF !important;
-font-size: 11px !important;
-padding: 1px 5px !important;
-border-radius: 4px !important;
-}
-.st-key-player_radio label:has(input:checked) {
-background-color: rgba(78, 222, 163, 0.14) !important;
-border: 1.5px solid #4EDEA3 !important;
-box-shadow: 0 0 20px -6px rgba(78, 222, 163, 0.35);
-}
+.st-key-player_radio label { display:flex !important; width:100% !important; background:#171c26 !important; border:1px solid transparent !important; border-radius:7px !important; padding:6px 8px !important; margin:0 !important; }
+.st-key-player_radio label:hover { background:#202631 !important; border-color:rgba(80,224,165,.25) !important; }
+.st-key-player_radio label:has(input:checked) { background:rgba(80,224,165,.12) !important; border-color:var(--green) !important; }
+.st-key-player_radio label > div:first-child, .st-key-player_radio input { display:none !important; }
+.st-key-player_radio label p { font-size:.62rem !important; line-height:1.25 !important; margin:0 !important; }
+.st-key-player_radio label code { font-size:.52rem !important; padding:1px 4px !important; }
 
-/* ==========================================
-   RADIO — CHIP FILTRO RUOLO (orizzontale)
-   ========================================== */
-.st-key-role_filter_radio div[role="radiogroup"] {
-display: flex !important;
-flex-direction: row !important;
-flex-wrap: nowrap !important;
-gap: 6px !important;
-width: 100% !important;
-background: transparent !important;
-border: none !important;
-padding: 0 !important;
-}
-.st-key-role_filter_radio label > div:first-child,
-.st-key-role_filter_radio input[type="radio"] {
-display: none !important;
-}
-.st-key-role_filter_radio label {
-flex: 1 1 0;
-display: flex !important;
-flex-direction: column !important;
-align-items: center !important;
-justify-content: center !important;
-gap: 1px !important;
-background-color: #1C1F29 !important;
-border: 1px solid rgba(255, 255, 255, 0.06) !important;
-border-radius: 10px !important;
-padding: 8px 2px !important;
-margin: 0 !important;
-cursor: pointer !important;
-transition: all 0.15s ease !important;
-text-align: center !important;
-}
-.st-key-role_filter_radio label:hover {
-background-color: #262A34 !important;
-}
-.st-key-role_filter_radio label p:not([style]) {
-color: #86948A !important;
-font-size: 10px !important;
-font-weight: 600 !important;
-margin: 0 !important;
-line-height: 1.3 !important;
-}
-.st-key-role_filter_radio label strong:not([style]) {
-font-size: 13px !important;
-font-weight: 800 !important;
-color: #DFE2EF !important;
-}
-.st-key-role_filter_radio label:has(input:checked) {
-background-color: rgba(255, 255, 255, 0.07) !important;
-border-color: rgba(255, 255, 255, 0.3) !important;
-}
+/* Metrics */
+[data-testid="stMetric"] { background:#171c26 !important; border:1px solid var(--line) !important; border-radius:9px !important; padding:9px 11px !important; min-height:72px !important; }
+[data-testid="stMetricLabel"] p { color:#8993a3 !important; font-size:.58rem !important; text-transform:uppercase; font-weight:700 !important; letter-spacing:.04em; }
+[data-testid="stMetricValue"] { color:var(--text) !important; font-size:1.18rem !important; font-weight:800 !important; line-height:1.1 !important; }
+[data-testid="stMetricDelta"] { font-size:.58rem !important; }
+[data-testid="stProgress"] { margin-top:4px !important; height:4px !important; }
+[data-testid="stProgress"] > div > div { border-radius:99px !important; }
+.st-key-kpi_fantamedia [data-testid="stMetricValue"] { color:var(--green) !important; }
+.st-key-kpi_voto [data-testid="stMetricValue"] { color:var(--blue) !important; }
+.st-key-kpi_presenze [data-testid="stMetricValue"] { color:var(--orange) !important; }
+.st-key-kpi_gol [data-testid="stMetricValue"] { color:var(--red) !important; }
+.st-key-kpi_fantamedia [data-testid="stProgress"] > div > div { background:var(--green) !important; }
+.st-key-kpi_voto [data-testid="stProgress"] > div > div { background:var(--blue) !important; }
+.st-key-kpi_presenze [data-testid="stProgress"] > div > div { background:var(--orange) !important; }
+.st-key-kpi_gol [data-testid="stProgress"] > div > div { background:var(--red) !important; }
 
-/* ==========================================
-   INPUT / SELECT / LABEL
-   ========================================== */
-.stTextInput input,
-.stSelectbox [data-baseweb="select"] {
-background-color: #181B25 !important;
-border: 1px solid #31353F !important;
-border-radius: 8px !important;
-color: #DFE2EF !important;
-}
-[data-testid="stWidgetLabel"] p,
-[data-testid="stWidgetLabel"] label,
-[data-testid="stWidgetLabel"] span {
-color: #BBCABF !important;
-font-weight: 700 !important;
-font-size: 0.72rem !important;
-text-transform: uppercase !important;
-letter-spacing: 0.04em !important;
-}
+/* Hero auction card */
+.st-key-hero_card [data-testid="stVerticalBlockBorderWrapper"] { background:linear-gradient(145deg,#1b202b,#151a24) !important; border-color:rgba(255,184,92,.18) !important; }
+.st-key-hero_card [data-testid="stMetric"] { min-height:76px !important; background:#10151e !important; }
+.st-key-hero_card [data-testid="stMetricValue"] { color:var(--orange) !important; font-size:1.32rem !important; }
 
-/* ==========================================
-   METRICHE / KPI CARD
-   ========================================== */
-[data-testid="stMetric"] {
-background-color: #181B25;
-border: 1px solid rgba(255, 255, 255, 0.06);
-border-radius: 12px;
-padding: 14px 18px;
-}
-[data-testid="stMetricLabel"] p:not([style]) {
-color: #86948A !important;
-font-weight: 600;
-font-size: 0.72rem;
-text-transform: uppercase;
-letter-spacing: 0.04em;
-}
-[data-testid="stMetricValue"] {
-color: #DFE2EF !important;
-font-weight: 700;
-}
-[data-testid="stVerticalBlockBorderWrapper"] > div > [data-testid="stVerticalBlock"] {
-gap: 0.45rem;
-}
+/* Detail header */
+.st-key-detail_header [data-testid="stVerticalBlockBorderWrapper"] { background:linear-gradient(145deg,#18202a,#141923) !important; }
+.st-key-detail_header h1 { font-size:1.42rem !important; }
 
-/* Accent per singola KPI card (icona + progress bar colorati) */
-.st-key-kpi_fantamedia [data-testid="stMetricValue"] { color: #4EDEA3 !important; }
-.st-key-kpi_fantamedia [data-testid="stProgress"] > div > div { background-color: #4EDEA3 !important; }
-.st-key-kpi_voto [data-testid="stMetricValue"] { color: #ADC6FF !important; }
-.st-key-kpi_voto [data-testid="stProgress"] > div > div { background-color: #ADC6FF !important; }
-.st-key-kpi_presenze [data-testid="stMetricValue"] { color: #FFB95F !important; }
-.st-key-kpi_presenze [data-testid="stProgress"] > div > div { background-color: #FFB95F !important; }
-.st-key-kpi_gol [data-testid="stMetricValue"] { color: #FFB4AB !important; }
-.st-key-kpi_gol [data-testid="stProgress"] > div > div { background-color: #FFB4AB !important; }
-[data-testid="stMetric"] [data-testid="stProgress"] {
-margin-top: 6px !important;
-margin-bottom: 0 !important;
-}
-[data-testid="stMetric"] [data-testid="stProgress"] > div > div {
-border-radius: 9999px !important;
-height: 4px !important;
-}
+/* Section cards */
+.st-key-section_card [data-testid="stVerticalBlockBorderWrapper"] { padding:10px !important; }
 
-/* Hero card (Quotazione / FVM) */
-.st-key-hero_card [data-testid="stMetric"] {
-padding: 10px 14px;
-}
-.st-key-hero_card [data-testid="stMetricLabel"] {
-font-size: 0.72rem;
-}
-.st-key-hero_card [data-testid="stMetricValue"] {
-font-size: 1.5rem;
-color: #FFB95F !important;
-white-space: nowrap;
-overflow: visible;
-}
+/* Tables */
+[data-testid="stDataFrame"] { border:1px solid var(--line) !important; border-radius:8px !important; overflow:hidden !important; }
 
-/* ==========================================
-   LAYOUT: colonna lista sticky
-   ========================================== */
-div[data-testid="stHorizontalBlock"] {
-align-items: flex-start !important;
-}
-div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:first-child {
-position: sticky !important;
-top: 12px !important;
-align-self: flex-start !important;
-z-index: 10 !important;
-}
+/* Buttons */
+button[kind="secondary"] { border-color:var(--line) !important; background:#171c26 !important; }
+
+::-webkit-scrollbar { width:5px; height:5px; }
+::-webkit-scrollbar-thumb { background:#303746; border-radius:99px; }
 </style>
 """
 st.markdown(_CUSTOM_CSS, unsafe_allow_html=True)
@@ -1730,7 +1542,7 @@ def render_player_detail(
         elif status_kind == "success":
             st.success(status_text)
         elif status_kind == "info":
-            (status_text)
+            st.markdown(status_text)
 
     with header_col2:
 
@@ -2338,455 +2150,151 @@ def render_player_detail(
 # ==========================================
 # 6. APP CONTROLLER & MAIN UI
 # ==========================================
-
 try:
-
     df = load_stats()
-
     quot = load_quotazioni()
-
-    # ======================================
-    # NUOVO V3.1
-    # ======================================
-
     ranking_df = load_ranking()
-
 except Exception as e:
-
-    st.error(
-        f"❌ Errore nel caricamento dei dati: {e}"
-    )
-
+    st.error(f"❌ Errore nel caricamento dei dati: {e}")
     st.stop()
-
 
 if df.empty or quot.empty:
-
-    st.warning(
-        "⚠️ Tabelle statistiche o quotazioni vuote."
-    )
-
+    st.warning("⚠️ Tabelle statistiche o quotazioni vuote.")
     st.stop()
 
-
 df = normalize_dataframe(df)
-
 quot = normalize_dataframe(quot)
-
-ranking_df = normalize_dataframe(
-    ranking_df
-)
-
+ranking_df = normalize_dataframe(ranking_df)
 df = remove_starred_vote_rows(df)
 
-
-# ==========================================
-# STAGIONE CORRENTE
-# ==========================================
-
-latest_s = get_latest_season(
-    quot
-)
-
+latest_s = get_latest_season(quot)
 current_quot = (
-    quot[
-        quot["stagione"]
-        .astype(str)
-        .str.strip()
-        == str(latest_s).strip()
-    ].copy()
-    if latest_s
-    else quot.copy()
+    quot[quot["stagione"].astype(str).str.strip() == str(latest_s).strip()].copy()
+    if latest_s and "stagione" in quot.columns else quot.copy()
 )
 
+# ---------- TOP BAR ----------
+with st.container(border=True, key="topbar"):
+    top1, top2, top3 = st.columns([2.1, 1.2, 1.2])
+    with top1:
+        st.markdown("**⚽ FANTA AI ANALYTICS PRO**")
+    with top2:
+        st.markdown(f"🟢 **INTELLIGENCE ENGINE ACTIVE** · Archivio {latest_s or 'storico'}")
+    with top3:
+        st.markdown(f"**{len(current_quot)}** Calciatori Analizzati")
 
-# ==========================================
-# HEADER
-# ==========================================
-
-title_col1, title_col2 = st.columns([0.06, 0.94])
-with title_col1:
-    st.markdown("### ⚽")
-with title_col2:
-    st.title("FantaAI Analytics Pro")
-
-st.markdown(
-    "🟢 **DB LIVE AGGIORNATO**&nbsp;&nbsp;·&nbsp;&nbsp;"
-    f":orange[**{len(current_quot)} Calciatori Analizzati**]"
+# ---------- DATA / FILTER HELPERS ----------
+squadre_raw = (
+    current_quot["squadra"].dropna().astype(str).str.strip().unique()
+    if "squadra" in current_quot.columns else []
 )
-
-st.divider()
-
-
-# ==========================================
-# LAYOUT
-# ==========================================
-
-col_players, col_detail = st.columns(
-    [1.3, 2.7],
-    gap="medium"
+squadre_list = ["Tutte"] + sorted(list(squadre_raw))
+role_counts = (
+    current_quot["ruolo"].astype(str).str.upper().str.strip().value_counts()
+    if "ruolo" in current_quot.columns else pd.Series(dtype=int)
 )
+role_order = ["Tutti", "P", "D", "C", "A"]
+role_labels = []
+for r in role_order:
+    if r == "Tutti":
+        role_labels.append(f"**TUTTI**  \n{len(current_quot)}")
+    else:
+        color = ROLE_MD_COLOR.get(r, "gray")
+        role_labels.append(f":{color}[**{r}**]  \n{int(role_counts.get(r, 0))}")
 
+# ---------- FILTER + PLAYER SUMMARY ----------
+summary_df = compute_player_summaries(df, current_quot, ranking_df, titolari_df)
+quot_view = summary_df.copy()
 
-# ==========================================
-# FILTRI, ORDINAMENTO & LISTA GIOCATORI
-# (tutto nella colonna sinistra)
-# ==========================================
+# ---------- MAIN 2-COLUMN LAYOUT ----------
+col_players, col_detail = st.columns([1.05, 2.95], gap="medium")
 
 with col_players:
-
-    # --------------------------------------
-    # Riferimento squadre campionato
-    # --------------------------------------
-    squadre_raw = (
-        current_quot["squadra"]
-        .dropna()
-        .astype(str)
-        .str.strip()
-        .unique()
-        if "squadra" in current_quot.columns
-        else []
-    )
-    squadre_list = ["Tutte"] + sorted(list(squadre_raw))
-
-    # --------------------------------------
-    # Chip Filtro Ruolo (colorati: P arancio,
-    # D blu, C verde, A rosso, come nel mockup)
-    # --------------------------------------
-    role_counts = (
-        current_quot["ruolo"]
-        .astype(str)
-        .str.upper()
-        .str.strip()
-        .value_counts()
-        if "ruolo" in current_quot.columns
-        else pd.Series(dtype=int)
-    )
-
-    role_order = ["Tutti", "P", "D", "C", "A"]
-    role_labels = []
-    for r in role_order:
-        if r == "Tutti":
-            role_labels.append(f"**TUTTI**  \n{len(current_quot)}")
-        else:
-            color = ROLE_MD_COLOR.get(r, "gray")
-            cnt = int(role_counts.get(r, 0))
-            role_labels.append(f":{color}[**{r}**]  \n{cnt}")
+    st.markdown("### 🧭 Roster & Filtri")
+    search_query = st.text_input("Cerca", placeholder="🔍 Filtra per nome o squadra", key="search_left")
 
     selected_role_label = st.radio(
-        "Ruolo",
-        role_labels,
-        horizontal=True,
-        key="role_filter_radio",
-        label_visibility="collapsed",
+        "Ruolo", role_labels, horizontal=True, key="role_filter_radio", label_visibility="collapsed"
     )
     selected_role = role_order[role_labels.index(selected_role_label)]
 
-    # --------------------------------------
-    # Squadra / Ordinamento (impilati: la
-    # colonna è stretta, due select affiancati
-    # sarebbero troppo compressi)
-    # --------------------------------------
-    selected_team = st.selectbox(
-        "Squadra",
-        squadre_list,
-        index=0
-    )
-
-    sort_options = [
-        "👑 Indice Ranking (Decrescente)",
-        "⭐ Fantamedia (Decrescente)",
-        "🔤 Nome (A-Z)",
-        "💰 Quotazione (Decrescente)",
-    ]
-    selected_sort = st.selectbox(
-        "Ordina per",
-        sort_options,
-        index=0
-    )
-
-    search_query = st.text_input(
-        "Cerca giocatore o squadra",
-        placeholder="🔍 Cerca per nome o squadra..."
-    )
+    f1, f2 = st.columns(2)
+    with f1:
+        selected_team = st.selectbox("Squadra", squadre_list, index=0, key="team_filter")
+    with f2:
+        selected_sort = st.selectbox(
+            "Ordina",
+            ["👑 Ranking", "⭐ Fantamedia", "🔤 Nome", "💰 Quotazione"],
+            index=0,
+            key="sort_filter",
+        )
 
     only_titolari = st.checkbox(
-        "✅ Mostra solo titolari (formazione tipo)",
-        value=False,
-        help="Se selezionato, mostra solo i titolari della formazione tipo. Se deselezionato, mostra tutti i giocatori."
+        "Solo titolari / formazione tipo", value=True,
+        help="Mostra solo i giocatori indicati come titolari nella formazione tipo."
     )
+    min_partite = st.slider("Presenze minime storico", 0, 38, 0, 1)
 
-    min_partite = st.slider(
-        "Partite minime giocate (con voto)",
-        min_value=0,
-        max_value=38,
-        value=0,
-        step=1,
-        help="Filtra i giocatori che hanno disputato almeno questo numero di partite nello storico"
-    )
-
-    st.divider()
-
-    # --------------------------------------
-    # Filtro & ordinamento lista giocatori
-    # --------------------------------------
-
-    summary_df = compute_player_summaries(
-        df,
-        current_quot,
-        ranking_df,
-        titolari_df
-    )
-
-    quot_view = summary_df.copy()
-
-    # 1. Filtro Ruolo
-    if (
-        isinstance(selected_role, str)
-        and selected_role != "Tutti"
-        and "ruolo" in quot_view.columns
-    ):
-        quot_view = quot_view[
-            quot_view["ruolo"]
-            .astype(str)
-            .str.upper()
-            .str.strip()
-            == selected_role
-        ]
-
-    # 2. Filtro Squadra
-    if (
-        isinstance(selected_team, str)
-        and selected_team != "Tutte"
-        and "squadra" in quot_view.columns
-    ):
-        quot_view = quot_view[
-            quot_view["squadra"]
-            .astype(str)
-            .str.upper()
-            .str.strip()
-            == selected_team.upper().strip()
-        ]
-
-    # 3. Filtro Ricerca
-    if isinstance(search_query, str) and search_query.strip():
-        q = (
-            search_query
-            .upper()
-            .strip()
-        )
-        match_nome = (
-            quot_view["nome"]
-            .astype(str)
-            .str.upper()
-            .str.contains(
-                q,
-                na=False
-            )
-            if "nome" in quot_view.columns
-            else False
-        )
-        match_squadra = (
-            quot_view["squadra"]
-            .astype(str)
-            .str.upper()
-            .str.contains(
-                q,
-                na=False
-            )
-            if "squadra" in quot_view.columns
-            else False
-        )
-        quot_view = quot_view[
-            match_nome | match_squadra
-        ]
-
-    # 4. Filtro Titolari
-    if bool(only_titolari) is True and "is_titolare" in quot_view.columns:
+    if selected_role != "Tutti" and "ruolo" in quot_view.columns:
+        quot_view = quot_view[quot_view["ruolo"].astype(str).str.upper().str.strip() == selected_role]
+    if selected_team != "Tutte" and "squadra" in quot_view.columns:
+        quot_view = quot_view[quot_view["squadra"].astype(str).str.upper().str.strip() == selected_team.upper().strip()]
+    if search_query.strip():
+        q = search_query.upper().strip()
+        mn = quot_view["nome"].astype(str).str.upper().str.contains(q, na=False) if "nome" in quot_view else False
+        ms = quot_view["squadra"].astype(str).str.upper().str.contains(q, na=False) if "squadra" in quot_view else False
+        quot_view = quot_view[mn | ms]
+    if only_titolari and "is_titolare" in quot_view.columns:
         quot_view = quot_view[quot_view["is_titolare"] == True]
-
-    # 5. Filtro Partite Minime
-    if isinstance(min_partite, (int, float)) and min_partite > 0 and "presenze_totali" in quot_view.columns:
+    if min_partite > 0 and "presenze_totali" in quot_view.columns:
         quot_view = quot_view[quot_view["presenze_totali"] >= min_partite]
 
-    # 6. Ordinamento
-    if selected_sort == "👑 Indice Ranking (Decrescente)":
-        quot_view = quot_view.sort_values(
-            by=["indice_finale", "quotazione_attuale", "nome"],
-            ascending=[False, False, True],
-            na_position="last"
-        )
-    elif selected_sort == "⭐ Fantamedia (Decrescente)":
-        quot_view = quot_view.sort_values(
-            by=["fantamedia", "presenze_totali", "nome"],
-            ascending=[False, False, True],
-            na_position="last"
-        )
-    elif selected_sort == "🔤 Nome (A-Z)":
-        quot_view = quot_view.sort_values(
-            by=["nome"],
-            ascending=[True],
-            na_position="last"
-        )
-    elif selected_sort == "💰 Quotazione (Decrescente)":
-        quot_view = quot_view.sort_values(
-            by=["quotazione_attuale", "fvm", "nome"],
-            ascending=[False, False, True],
-            na_position="last"
-        )
+    if selected_sort == "👑 Ranking":
+        quot_view = quot_view.sort_values(["indice_finale", "quotazione_attuale", "nome"], ascending=[False, False, True], na_position="last")
+    elif selected_sort == "⭐ Fantamedia":
+        quot_view = quot_view.sort_values(["fantamedia", "presenze_totali", "nome"], ascending=[False, False, True], na_position="last")
+    elif selected_sort == "🔤 Nome":
+        quot_view = quot_view.sort_values(["nome"], ascending=[True], na_position="last")
+    else:
+        quot_view = quot_view.sort_values(["quotazione_attuale", "fvm", "nome"], ascending=[False, False, True], na_position="last")
 
-    # --------------------------------------
-    # Lista giocatori
-    # --------------------------------------
-
-    tit_label = " TITOLARI" if only_titolari else ""
-    st.caption(f"**GIOCATORI{tit_label} ({len(quot_view)})**")
+    st.caption(f"**{len(quot_view)} GIOCATORI** · lista scouting")
 
     if quot_view.empty:
-
-        st.info(
-            "Nessun giocatore trovato con questi filtri."
-        )
-
+        st.info("Nessun giocatore trovato.")
         selected_id = None
-
     else:
-
-        options_df = (
-            quot_view
-            .drop_duplicates(
-                subset="player_id"
-            )
-            .copy()
-        )
-
-        labels = []
-        ids = []
-
+        options_df = quot_view.drop_duplicates(subset="player_id").copy()
+        labels, ids = [], []
         for row in options_df.itertuples():
-
-            n = getattr(
-                row,
-                "nome",
-                "Giocatore"
-            )
-
-            s = getattr(
-                row,
-                "squadra",
-                "-"
-            )
-
-            r = str(
-                getattr(row, "ruolo", "")
-            ).upper().strip()
-
-            pid = getattr(
-                row,
-                "player_id"
-            )
-
+            n = getattr(row, "nome", "Giocatore")
+            team = getattr(row, "squadra", "-")
+            role = str(getattr(row, "ruolo", "")).upper().strip()
+            pid = getattr(row, "player_id")
             ind = getattr(row, "indice_finale", None)
             fm = getattr(row, "fantamedia", None)
-            q_val = getattr(row, "quotazione_attuale", None)
-            f_val = getattr(row, "fvm", None)
+            qv = getattr(row, "quotazione_attuale", None)
+            fv = getattr(row, "fvm", None)
+            ind_txt = f"{float(ind):.1f}" if pd.notna(ind) else "—"
+            fm_txt = f"{float(fm):.2f}" if pd.notna(fm) else "—"
+            q_txt = f"{qv:g}" if isinstance(qv, (int, float)) and pd.notna(qv) else "—"
+            fvm_txt = f"{fv:g}" if isinstance(fv, (int, float)) and pd.notna(fv) else "—"
+            lbl = f"{role_badge_md(role)} **{n}** · `{team}`  \n👑 {ind_txt} · FM {fm_txt} · Q {q_txt} · FVM {fvm_txt}"
+            labels.append(lbl); ids.append(int(pid))
 
-            ind_txt = f"{float(ind):.1f}" if pd.notna(ind) else "N/D"
-            fm_txt = f"{float(fm):.2f}" if pd.notna(fm) else "N/D"
-            q_txt = f"{q_val}" if pd.notna(q_val) else "N/D"
-            fvm_txt = f"{f_val}" if pd.notna(f_val) else "N/D"
-
-            # Riga 1: badge di ruolo colorato + nome + squadra.
-            # Riga 2: le 4 cifre che servono al volo in asta, sempre
-            # visibili (non solo quella legata all'ordinamento attivo).
-            line1 = f"{role_badge_md(r)} {n}  ·  `{s}`"
-            line2 = (
-                f"👑 {ind_txt}   ·   FM {fm_txt}   ·   "
-                f"Q {q_txt}   ·   FVM {fvm_txt}"
-            )
-            lbl = f"{line1}  \n{line2}"
-
-            if lbl in labels:
-                lbl = f"{lbl}  \n`#{int(pid)}`"
-
-            labels.append(lbl)
-
-            ids.append(
-                int(pid)
-            )
-
-        label_to_id = dict(
-            zip(
-                labels,
-                ids
-            )
-        )
-
+        label_to_id = dict(zip(labels, ids))
         radio_key = "player_radio"
-
-        prev_label = (
-            st.session_state
-            .get(radio_key)
-        )
-
-        if prev_label not in labels:
-
-            default_idx = 0
-
-            if (
-                "active_player_id"
-                in st.session_state
-                and
-                st.session_state[
-                    "active_player_id"
-                ] in ids
-            ):
-
-                default_idx = ids.index(
-                    st.session_state[
-                        "active_player_id"
-                    ]
-                )
-
-            st.session_state[
-                radio_key
-            ] = labels[default_idx]
-
-        selected_label = st.radio(
-            "Seleziona giocatore",
-            options=labels,
-            key=radio_key,
-            label_visibility="collapsed",
-        )
-
-        selected_id = (
-            label_to_id
-            .get(selected_label)
-        )
-
-        st.session_state[
-            "active_player_id"
-        ] = selected_id
-
-
-# ==========================================
-# PLAYER DETAIL
-# ==========================================
+        prev = st.session_state.get(radio_key)
+        if prev not in labels:
+            active = st.session_state.get("active_player_id")
+            st.session_state[radio_key] = labels[ids.index(active)] if active in ids else labels[0]
+        selected_label = st.radio("Seleziona giocatore", labels, key=radio_key, label_visibility="collapsed")
+        selected_id = label_to_id.get(selected_label)
+        st.session_state["active_player_id"] = selected_id
 
 with col_detail:
-
     if selected_id is None:
-
-        (
-            "👈 Seleziona un giocatore dalla lista "
-            "a sinistra per visualizzare la scheda analitica."
-        )
-
+        st.info("👈 Seleziona un giocatore dalla lista a sinistra.")
     else:
+        render_player_detail(selected_id, df, quot, ranking_df)
 
-        render_player_detail(
-            selected_id,
-            df,
-            quot,
-            ranking_df
-        )
