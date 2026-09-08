@@ -806,23 +806,36 @@ with col_dossier:
         current_quote = get_latest_quote_row(p_quotes)
         p_stats = df[df["player_id"] == player_id].copy()
 
+        # ---- Recupero info base ----
         if current_quote is not None:
             nome = current_quote.get("nome", "Giocatore")
             ruolo = str(current_quote.get("ruolo", "-")).upper().strip()
             squadra = current_quote.get("squadra", "-")
+            quota_val = current_quote.get("quotazione_attuale", 38)
+            fvm_val = current_quote.get("fvm", 320)
         elif not p_stats.empty:
             nome = p_stats.iloc[-1].get("nome", "Giocatore")
             ruolo = str(p_stats.iloc[-1].get("ruolo", "-")).upper().strip()
             squadra = p_stats.iloc[-1].get("squadra", "-")
+            quota_val = 38
+            fvm_val = 320
         else:
             nome, ruolo, squadra = "Giocatore", "-", "-"
+            quota_val, fvm_val = 38, 320
 
         nome_upper, squadra_upper = str(nome).upper().strip(), str(squadra).upper().strip()
+
+        # ---- Ranking ----
         ranking_row = get_player_ranking(ranking_df, player_id)
+        indice_finale = ranking_row.get("indice_finale") if ranking_row is not None else None
+        rank_ruolo = int(ranking_row.get("rank_ruolo")) if ranking_row is not None and pd.notna(ranking_row.get("rank_ruolo")) else 1
+        tot_ruolo = int(ranking_row.get("totale_ruolo")) if ranking_row is not None and pd.notna(ranking_row.get("totale_ruolo")) else 68
+
+        # ---- Tag extra ----
         rigor_info = rigoristi_df[(rigoristi_df["giocatore"] == nome_upper) & (rigoristi_df["squadra"] == squadra_upper)]
+        puniz_info = punizioni_df[(punizioni_df["giocatore"] == nome_upper) & (punizioni_df["squadra"] == squadra_upper)]
         titolare_info = titolari_df[(titolari_df["nome_giocatore"] == nome_upper) & (titolari_df["squadra"] == squadra_upper)]
 
-        # --- GESTIONE TAG TITOLARITA E INFORTUNIO ---
         titolarita_val, infortunato_val, desc_infortunio = "", "", ""
         if not titolare_info.empty:
             t_row = titolare_info.iloc[0]
@@ -830,179 +843,302 @@ with col_dossier:
             infortunato_val = str(t_row.get("infortunato", "")).lower().strip()
             desc_infortunio = str(t_row.get("desc_infortunio", "")).strip()
 
+        # ---- Costruzione tag HTML ----
         tags_html = ""
         if "titolare" in titolarita_val:
-            tags_html += '<span style="background: rgba(16, 185, 129, 0.15); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.3); padding: 4px 10px; border-radius: 9999px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase;">🟢 Titolare</span> '
+            tags_html += '<span class="badge-role-C" style="background: rgba(16,185,129,0.15); color: #34D399; border: 1px solid rgba(16,185,129,0.3); padding: 4px 10px; border-radius: 9999px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase;">✅ Titolare</span> '
         elif "panchina" in titolarita_val or "riserva" in titolarita_val:
-            tags_html += '<span style="background: rgba(245, 158, 11, 0.15); color: #FBBF24; border: 1px solid rgba(245, 158, 11, 0.3); padding: 4px 10px; border-radius: 9999px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase;">🟠 Panchina</span> '
-        
+            tags_html += '<span style="background: rgba(245,158,11,0.15); color: #FBBF24; border: 1px solid rgba(245,158,11,0.3); padding: 4px 10px; border-radius: 9999px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase;">🪑 Panchina</span> '
         if infortunato_val in ["sì", "si", "true", "1", "yes"]:
-            tags_html += '<span style="background: rgba(239, 68, 68, 0.15); color: #F87171; border: 1px solid rgba(239, 68, 68, 0.3); padding: 4px 10px; border-radius: 9999px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase;">🚑 Infortunato</span> '
+            tags_html += '<span style="background: rgba(239,68,68,0.15); color: #F87171; border: 1px solid rgba(239,68,68,0.3); padding: 4px 10px; border-radius: 9999px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase;">🤕 Infortunato</span> '
+        if not rigor_info.empty:
+            pos_r = int(rigor_info["posizione"].values[0])
+            tags_html += f'<span style="background: rgba(255,255,255,0.05); color: #F8FAFC; border: 1px solid rgba(255,255,255,0.1); padding: 4px 10px; border-radius: 9999px; font-size: 0.72rem; font-weight: 600;">🎯 Rigorista #{pos_r}</span> '
+        if not puniz_info.empty:
+            pos_p = int(puniz_info["posizione"].values[0])
+            tags_html += f'<span style="background: rgba(255,255,255,0.05); color: #F8FAFC; border: 1px solid rgba(255,255,255,0.1); padding: 4px 10px; border-radius: 9999px; font-size: 0.72rem; font-weight: 600;">⚡ Punizioni #{pos_p}</span> '
 
         desc_html = ""
         if desc_infortunio and desc_infortunio.lower() != "nan":
-            desc_html = f'<div style="font-size: 0.8rem; color: #FCA5A5; margin-top: 8px; font-weight: 600; background: rgba(239, 68, 68, 0.1); padding: 6px 12px; border-radius: 6px; display: inline-block;">⚠️ {desc_infortunio}</div>'
+            desc_html = f'<div style="font-size: 0.8rem; color: #FCA5A5; margin-top: 8px; font-weight: 600; background: rgba(239,68,68,0.1); padding: 6px 12px; border-radius: 6px; display: inline-block;">⚠️ {desc_infortunio}</div>'
 
-        # --- METRICHE E ASTA ---
-        rk_ruolo = int(ranking_row.get("rank_ruolo")) if ranking_row is not None and pd.notna(ranking_row.get("rank_ruolo")) else 1
-        tot_ruolo = int(ranking_row.get("totale_ruolo")) if ranking_row is not None and pd.notna(ranking_row.get("totale_ruolo")) else 68
-        quota_val = current_quote.get("quotazione_attuale", 38) if current_quote is not None else 38
-        fvm_val = current_quote.get("fvm", 320) if current_quote is not None else 320
+        # ---- Calcolo tier in base all'indice ----
+        tier_text = ""
+        if indice_finale is not None and pd.notna(indice_finale):
+            v = float(indice_finale)
+            if v >= 90:
+                tier_text = '<span style="background: rgba(16,185,129,0.15); color: #34D399; border: 1px solid rgba(16,185,129,0.3); padding: 4px 10px; border-radius: 9999px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase;">TIER S+ · MUST-BUY</span>'
+            elif v >= 80:
+                tier_text = '<span style="background: rgba(16,185,129,0.1); color: #34D399; border: 1px solid rgba(16,185,129,0.2); padding: 4px 10px; border-radius: 9999px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase;">TIER S · TOP TARGET</span>'
+            elif v >= 65:
+                tier_text = '<span style="background: rgba(245,158,11,0.15); color: #FBBF24; border: 1px solid rgba(245,158,11,0.3); padding: 4px 10px; border-radius: 9999px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase;">TIER A · SOLIDO</span>'
+            elif v >= 45:
+                tier_text = '<span style="background: rgba(59,130,246,0.15); color: #60A5FA; border: 1px solid rgba(59,130,246,0.3); padding: 4px 10px; border-radius: 9999px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase;">TIER B · ROTAZIONE</span>'
+            else:
+                tier_text = '<span style="background: rgba(255,255,255,0.05); color: #94A3B8; border: 1px solid rgba(255,255,255,0.1); padding: 4px 10px; border-radius: 9999px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase;">TIER C · SCOMMESSA</span>'
 
+        # ---- Intestazione con ranking e tier ----
+        ranking_badge = f"👑 {indice_finale:.1f}" if indice_finale is not None and pd.notna(indice_finale) else "N/D"
         st.markdown(f"""
-        <div class="glass-panel" style="margin-bottom: 20px;">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 4px;">
+            <span style="font-size: 1.2rem; font-weight: 800; color: #FBBF24;">{ranking_badge}</span>
+            <span>{tier_text}</span>
+            <span style="font-size: 0.75rem; color: #94A3B8;">#{rank_ruolo} / {tot_ruolo} nel ruolo</span>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # ---- Hero card: nome, ruolo, squadra, tag, e box asta ----
+        st.markdown(f"""
+        <div class="glass-panel" style="margin-bottom: 20px; padding: 20px;">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
                 <div style="display: flex; gap: 16px; align-items: center;">
                     <div style="width: 72px; height: 72px; border-radius: 50%; background: #1E293B; border: 2px solid #10B981; display: flex; align-items: center; justify-content: center; font-size: 2rem;">
                         👤
                     </div>
                     <div>
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <span class="badge-tier badge-role-{ruolo}">{ruolo} — {squadra}</span>
+                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                            <span style="font-weight: 700; font-size: 0.9rem; color: #94A3B8;">{ruolo} — {squadra}</span>
+                            {tags_html}
                         </div>
-                        <div style="font-size: 1.8rem; font-weight: 800; color: #F8FAFC; margin-top: 4px; display: flex; align-items: center; gap: 10px;">
-                            {nome} 
-                            <div style="display: inline-flex; align-items: center; gap: 6px; margin-top: 2px;">{tags_html}</div>
-                        </div>{desc_html}
-                        <div style="font-size: 0.8rem; color: #94A3B8; display: flex; gap: 12px; margin-top: 6px;">
-                            <span>🏆 Rank Ruolo: <b>#{rk_ruolo} / {tot_ruolo}</b></span>
-                            <span>🎯 Rigorista: <b>{'Sì (#' + str(int(rigor_info['posizione'].values[0])) + ')' if not rigor_info.empty else 'No'}</b></span>
+                        <div style="font-size: 1.8rem; font-weight: 800; color: #F8FAFC; margin-top: 4px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                            {nome}
                         </div>
+                        {desc_html}
                     </div>
                 </div>
-                <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px; padding: 12px 18px; text-align: right;">
-                    <div style="font-size: 0.7rem; color: #34D399; font-weight: 700; letter-spacing: 0.05em;">VALUTAZIONE ASTA RECOMENDED</div>
-                    <div style="font-size: 1.5rem; font-weight: 800; color: #F8FAFC; margin: 2px 0;">{fvm_val} <span style="font-size: 0.9rem; color: #94A3B8;">FM</span></div>
-                    <div style="font-size: 0.72rem; color: #94A3B8;">Quotazione Listino: <b style="color: #F8FAFC;">{quota_val} FM</b></div>
+
+                <!-- Box Valutazione Asta -->
+                <div style="background: rgba(16, 185, 129, 0.06); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px; padding: 14px 20px; min-width: 220px;">
+                    <div style="font-size: 0.7rem; color: #34D399; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; display: flex; justify-content: space-between;">
+                        <span>💰 VALUTAZIONE ASTA</span>
+                        <span style="color: #64748B;">SU 500 FM</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: baseline; margin: 6px 0 4px 0;">
+                        <span style="font-size: 0.8rem; color: #94A3B8;">FVM Consigliato:</span>
+                        <span style="font-size: 1.6rem; font-weight: 800; color: #FBBF24;">{fvm_val} FM</span>
+                    </div>
+                    <div style="width: 100%; background: #1E293B; border-radius: 9999px; height: 6px; overflow: hidden; margin: 6px 0;">
+                        <div style="width: {min(100, (fvm_val / 500) * 100)}%; background: linear-gradient(90deg, #10B981, #FBBF24); height: 100%; border-radius: 9999px;"></div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: #94A3B8; margin-top: 4px;">
+                        <span>Target Asta: <strong style="color: #F8FAFC;">{int(fvm_val * 0.95)} – {int(fvm_val * 1.05)} FM</strong></span>
+                        <span>Prezzo Max: <strong style="color: #F87171;">{int(fvm_val * 1.1)} FM</strong></span>
+                    </div>
+                    <div style="font-size: 0.7rem; color: #94A3B8; margin-top: 6px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 6px; display: flex; justify-content: space-between;">
+                        <span>Quotazione Listone:</span>
+                        <strong style="color: #F8FAFC;">{quota_val} FM</strong>
+                    </div>
                 </div>
             </div>
         </div>
         """, unsafe_allow_html=True)
 
-        if "stagione" in p_stats.columns: p_stats["stagione"] = p_stats["stagione"].astype(str).str.strip()
-        if "giornata" in p_stats.columns: p_stats["giornata"] = pd.to_numeric(p_stats["giornata"], errors="coerce")
+        # ---- Se non ci sono stats ----
+        if p_stats.empty:
+            st.info("ℹ️ Nessuna statistica storica disponibile per questo giocatore.")
+            continue
+
+        # ---- Preparazione dati per metriche ----
+        if "stagione" in p_stats.columns:
+            p_stats["stagione"] = p_stats["stagione"].astype(str).str.strip()
+        if "giornata" in p_stats.columns:
+            p_stats["giornata"] = pd.to_numeric(p_stats["giornata"], errors="coerce")
         p_stats = remove_starred_vote_rows(p_stats)
+        if p_stats.empty:
+            st.info("ℹ️ Nessuna prestazione valida registrata.")
+            continue
 
-        if not p_stats.empty:
-            p_stats = calculate_bonus_malus(p_stats)
-            is_goalkeeper = (ruolo == "P")
-            p_stats_hist = p_stats[p_stats["stagione"].astype(str).str.strip() != "2026-27"].copy() if "stagione" in p_stats.columns else p_stats.copy()
-            if p_stats_hist.empty: p_stats_hist = p_stats.copy()
+        p_stats = calculate_bonus_malus(p_stats)
+        is_goalkeeper = (ruolo == "P")
+        p_stats_hist = p_stats[p_stats["stagione"].astype(str).str.strip() != "2026-27"].copy() if "stagione" in p_stats.columns else p_stats.copy()
+        if p_stats_hist.empty:
+            p_stats_hist = p_stats.copy()
 
-            rel = calculate_relative_metrics(p_stats_hist, is_goalkeeper=is_goalkeeper)
-            media_voto = safe_mean(p_stats_hist, "voto")
-            fantamedia = safe_mean(p_stats_hist, "fanta_voto_calcolato")
-            varianza_bin = varianza_gol_binaria(p_stats_hist)
-            varianza_v = safe_variance(p_stats_hist, "voto")
+        rel = calculate_relative_metrics(p_stats_hist, is_goalkeeper=is_goalkeeper)
+        media_voto = safe_mean(p_stats_hist, "voto")
+        fantamedia = safe_mean(p_stats_hist, "fanta_voto_calcolato")
+        varianza_bin = varianza_gol_binaria(p_stats_hist)
+        varianza_v = safe_variance(p_stats_hist, "voto")
 
-            # --- MATRICE KPI ---
-            k1, k2, k3, k4 = st.columns(4)
-            with k1:
-                st.markdown(f"""
-                <div class="kpi-card">
-                    <div class="kpi-label">Fantamedia Pesata</div>
-                    <div class="kpi-value" style="color: #34D399;">{fantamedia:.2f}</div>
-                    <div class="kpi-sub">Bonus/Malus Inclusi</div>
-                </div>
-                """, unsafe_allow_html=True)
-            with k2:
-                st.markdown(f"""
-                <div class="kpi-card">
-                    <div class="kpi-label">Media Voto Pura</div>
-                    <div class="kpi-value">{media_voto:.2f}</div>
-                    <div class="kpi-sub">Stabilità Redazionale</div>
-                </div>
-                """, unsafe_allow_html=True)
-            with k3:
-                st.markdown(f"""
-                <div class="kpi-card">
-                    <div class="kpi-label">% Presenze Medie</div>
-                    <div class="kpi-value">{rel['presenza_pct']:.1f}%</div>
-                    <div class="kpi-sub">{rel['presenze_medie']:.1f} P/Stagione</div>
-                </div>
-                """, unsafe_allow_html=True)
-            with k4:
-                val_label = "GS | RIG. PARATI MEDI" if is_goalkeeper else "GOL | ASSIST MEDI"
-                val_num_1 = f"{rel['gs_stagione']:.1f}" if is_goalkeeper else f"{rel['gol_stagione']:.1f}"
-                val_num_2 = f"{rel['rigori_parati']:.1f}" if is_goalkeeper else f"{rel['assist_stagione']:.1f}"
-                
-                st.markdown(f"""
-                <div class="kpi-card">
-                    <div class="kpi-label">{val_label}</div>
-                    <div class="kpi-value" style="color: #60A5FA;">{val_num_1} <span style="font-size: 1.15rem; color: #94A3B8; font-weight: 600;">| {val_num_2}</span></div>
-                    <div class="kpi-sub">Media per stagione</div>
-                </div>
-                """, unsafe_allow_html=True)
-
-            st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
-
-            # --- SEZIONE CONTINUITÀ E RISCHIO ---
-            r1, r2, r3, r4 = st.columns(4)
-            with r1: st.metric("Varianza Voto", format_number(varianza_v), help="Valore < 0.5 indica altissima regolarità")
-            with r2: st.metric("Varianza Gol", format_number(varianza_bin), help="Frequenza di bonus distribuiti")
-            with r3: st.metric("Ammonizioni / Anno", f"{rel['ammonizioni']:.1f}")
-            with r4: st.metric("Espulsioni / Anno", f"{rel['espulsioni']:.1f}")
-
-            st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
-
-            # --- GRAFICO TREND (ALTEZZA AUMENTATA E RANGE DINAMICO) ---
-            st.markdown("""
-            <div style="font-weight: 700; font-size: 1rem; color: #F8FAFC; margin-bottom: 8px;">
-                📈 Trend di Forma (Rolling 5 Giornate)
+        # ---- MATRICE KPI con barre di progresso ----
+        st.markdown("#### 📊 Rendimento Complessivo")
+        k1, k2, k3, k4 = st.columns(4)
+        with k1:
+            st.markdown(f"""
+            <div class="kpi-card">
+                <div class="kpi-label">📈 Fantamedia Pesata</div>
+                <div class="kpi-value" style="color: #34D399;">{fantamedia:.2f}</div>
+                <div class="kpi-sub">Bonus/Malus inclusi</div>
+                <div style="width:100%; background:#1E293B; border-radius:9999px; height:4px; margin-top:6px;"><div style="width:{min(100, fantamedia/12*100)}%; background:#34D399; height:100%; border-radius:9999px;"></div></div>
+            </div>
+            """, unsafe_allow_html=True)
+        with k2:
+            st.markdown(f"""
+            <div class="kpi-card">
+                <div class="kpi-label">🎯 Media Voto Pura</div>
+                <div class="kpi-value">{media_voto:.2f}</div>
+                <div class="kpi-sub">Stabilità redazionale</div>
+                <div style="width:100%; background:#1E293B; border-radius:9999px; height:4px; margin-top:6px;"><div style="width:{min(100, media_voto/10*100)}%; background:#60A5FA; height:100%; border-radius:9999px;"></div></div>
+            </div>
+            """, unsafe_allow_html=True)
+        with k3:
+            st.markdown(f"""
+            <div class="kpi-card">
+                <div class="kpi-label">🏃 % Presenze Medie</div>
+                <div class="kpi-value">{rel['presenza_pct']:.1f}%</div>
+                <div class="kpi-sub">{rel['presenze_medie']:.1f} partite / anno</div>
+                <div style="width:100%; background:#1E293B; border-radius:9999px; height:4px; margin-top:6px;"><div style="width:{min(100, rel['presenza_pct'])}%; background:#FBBF24; height:100%; border-radius:9999px;"></div></div>
+            </div>
+            """, unsafe_allow_html=True)
+        with k4:
+            if is_goalkeeper:
+                label_k4 = "🧤 Gol Subiti / Anno"
+                val1 = rel['gs_stagione']
+                val2 = rel['rigori_parati']
+                sub_k4 = f"{val2:.1f} rigori parati medi"
+            else:
+                label_k4 = "⚽ Gol Medi / Anno"
+                val1 = rel['gol_stagione']
+                val2 = rel['assist_stagione']
+                sub_k4 = f"{val2:.1f} assist medi"
+            st.markdown(f"""
+            <div class="kpi-card">
+                <div class="kpi-label">{label_k4}</div>
+                <div class="kpi-value" style="color: #F87171;">{val1:.1f}</div>
+                <div class="kpi-sub">👟 {sub_k4}</div>
+                <div style="width:100%; background:#1E293B; border-radius:9999px; height:4px; margin-top:6px;"><div style="width:{min(100, val1/30*100)}%; background:#F87171; height:100%; border-radius:9999px;"></div></div>
             </div>
             """, unsafe_allow_html=True)
 
-            rolling_df = build_rolling_data(p_stats, window=5)
-            if not rolling_df.empty:
-                fig = go.Figure()
-                
-                # Calcola dinamicamente il limite Y (Scala Minima 12.0)
-                upper_y = 12.0
-                if "media_mobile_fanta" in rolling_df.columns:
-                    max_fanta = rolling_df["media_mobile_fanta"].max()
-                    if pd.notna(max_fanta) and max_fanta > 11.0:
-                        upper_y = max_fanta + 1.0
+        st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
 
-                if "media_mobile_fanta" in rolling_df.columns:
-                    fig.add_trace(go.Scatter(x=rolling_df["periodo"], y=rolling_df["media_mobile_fanta"], mode="lines", name="Fantamedia (5G)", line=dict(color="#10B981", width=3, shape="spline"), fill="tozeroy", fillcolor="rgba(16, 185, 129, 0.08)", hovertemplate="<b>%{x}</b><br>Fantamedia: <b>%{y:.2f}</b><extra></extra>"))
-                if "media_mobile_voto" in rolling_df.columns:
-                    fig.add_trace(go.Scatter(x=rolling_df["periodo"], y=rolling_df["media_mobile_voto"], mode="lines", name="Media Voto (5G)", line=dict(color="#60A5FA", width=2, dash="dot", shape="spline"), hovertemplate="<b>%{x}</b><br>Media Voto: <b>%{y:.2f}</b><extra></extra>"))
-
-                fig.add_hline(y=6.0, line_dash="dash", line_color="rgba(255,255,255,0.2)", annotation_text="Sufficienza", annotation_position="bottom right")
-
-                fig.update_layout(
-                    paper_bgcolor="rgba(0,0,0,0)",
-                    plot_bgcolor="rgba(17, 24, 39, 0.6)",
-                    font=dict(family="Plus Jakarta Sans", color="#94A3B8"),
-                    hovermode="x unified",
-                    height=400,
-                    margin=dict(l=10, r=10, t=30, b=10),
-                    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, bgcolor="rgba(0,0,0,0)"),
-                    xaxis=dict(gridcolor="rgba(255,255,255,0.05)", showgrid=True),
-                    yaxis=dict(gridcolor="rgba(255,255,255,0.05)", showgrid=True, range=[4.0, upper_y]),
-                )
-                st.plotly_chart(fig, use_container_width=True)
-
-            # --- TABELLA STORICO ---
-            st.markdown("""
-            <div style="font-weight: 700; font-size: 1rem; color: #F8FAFC; margin-top: 12px; margin-bottom: 8px;">
-                📅 Storico Prestazioni per Stagione
-            </div>
-            """, unsafe_allow_html=True)
-
-            if "stagione" in p_stats.columns:
-                rows = []
-                for s, g in p_stats.groupby("stagione"):
-                    gfanta = calculate_fantavoto(g)
-                    if is_goalkeeper:
-                        rows.append({"Stagione": s, "Presenze": int(numeric_series(g, "voto").count()), "Media Voto": round(safe_mean(g, "voto"), 2), "Fantamedia": round(safe_mean(gfanta, "fanta_voto_calcolato"), 2), "Gol Subiti": int(safe_sum(g, "gs")), "Clean Sheet": (numeric_series(g, "gs") == 0).sum(), "Amm": int(safe_sum(g, "amm")), "Esp": int(safe_sum(g, "esp"))})
-                    else:
-                        rows.append({"Stagione": s, "Presenze": int(numeric_series(g, "voto").count()), "Media Voto": round(safe_mean(g, "voto"), 2), "Fantamedia": round(safe_mean(gfanta, "fanta_voto_calcolato"), 2), "Gol": int(safe_sum(g, "gf") + safe_sum(g, "rf")), "Assist": int(safe_sum(g, "ass")), "Amm": int(safe_sum(g, "amm")), "Esp": int(safe_sum(g, "esp"))})
-
-                season_df = pd.DataFrame(rows)
-                if not season_df.empty:
-                    season_df["_sort"] = season_df["Stagione"].apply(season_sort_key)
-                    season_df = season_df.sort_values("_sort", ascending=False).drop(columns="_sort")
-                    st.dataframe(season_df, use_container_width=True, hide_index=True, column_config={"Fantamedia": st.column_config.NumberColumn(format="%.2f ⭐"), "Media Voto": st.column_config.NumberColumn(format="%.2f"), "Presenze": st.column_config.ProgressColumn(min_value=0, max_value=38, format="%d / 38")})
+        # ---- CONTINUITÀ E RISCHIO ----
+        # badge rischio
+        if varianza_v is None:
+            risk_badge = '<span style="color:#94A3B8;">Rischio N/D</span>'
+        elif varianza_v < 0.5:
+            risk_badge = '<span style="color:#34D399; font-weight:700;">🟢 Basso Rischio</span>'
+        elif varianza_v < 1.0:
+            risk_badge = '<span style="color:#FBBF24; font-weight:700;">🟠 Rischio Medio</span>'
         else:
-            st.info("Nessuna statistica storica disponibile per questo calciatore.")
+            risk_badge = '<span style="color:#F87171; font-weight:700;">🔴 Rischio Alto</span>'
+
+        st.markdown(f"""
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <div style="font-weight:700; font-size:1rem; color:#F8FAFC;">🎯 Continuità & Analisi del Rischio</div>
+            <div>{risk_badge}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        c1, c2, c3, c4 = st.columns(4)
+        with c1:
+            st.metric("Varianza Voto", format_number(varianza_v), help="Minore è il valore, più costante è il rendimento (valore < 0.5 = ottimo)")
+        with c2:
+            st.metric("Varianza Gol", format_number(varianza_bin), help="Frequenza con cui va a segno su più giornate diverse")
+        with c3:
+            st.metric("Ammonizioni / anno", f"{rel['ammonizioni']:.1f}")
+        with c4:
+            st.metric("Espulsioni / anno", f"{rel['espulsioni']:.1f}")
+
+        # ---- GRAFICO TREND ----
+        st.markdown("#### 📈 Trend di Forma (Rolling 5 Giornate)")
+        rolling_df = build_rolling_data(p_stats, window=5)
+        if not rolling_df.empty:
+            fig = go.Figure()
+            upper_y = 12.0
+            if "media_mobile_fanta" in rolling_df.columns:
+                max_fanta = rolling_df["media_mobile_fanta"].max()
+                if pd.notna(max_fanta) and max_fanta > 11.0:
+                    upper_y = max_fanta + 1.0
+
+            if "media_mobile_fanta" in rolling_df.columns:
+                fig.add_trace(go.Scatter(x=rolling_df["periodo"], y=rolling_df["media_mobile_fanta"], mode="lines", name="Fantamedia (5G)", line=dict(color="#10B981", width=3, shape="spline"), fill="tozeroy", fillcolor="rgba(16,185,129,0.08)", hovertemplate="<b>%{x}</b><br>Fantamedia: <b>%{y:.2f}</b><extra></extra>"))
+            if "media_mobile_voto" in rolling_df.columns:
+                fig.add_trace(go.Scatter(x=rolling_df["periodo"], y=rolling_df["media_mobile_voto"], mode="lines", name="Media Voto (5G)", line=dict(color="#60A5FA", width=2, dash="dot", shape="spline"), hovertemplate="<b>%{x}</b><br>Media Voto: <b>%{y:.2f}</b><extra></extra>"))
+
+            fig.add_hline(y=6.0, line_dash="dash", line_color="rgba(255,255,255,0.2)", annotation_text="Sufficienza (6.0)", annotation_position="bottom right")
+
+            fig.update_layout(
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(17,24,39,0.6)",
+                font=dict(family="Plus Jakarta Sans", color="#94A3B8"),
+                hovermode="x unified",
+                height=380,
+                margin=dict(l=10, r=10, t=30, b=10),
+                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, bgcolor="rgba(0,0,0,0)"),
+                xaxis=dict(gridcolor="rgba(255,255,255,0.05)", showgrid=True),
+                yaxis=dict(gridcolor="rgba(255,255,255,0.05)", showgrid=True, range=[4.0, upper_y]),
+            )
+            st.plotly_chart(fig, use_container_width=True)
+
+        # ---- TABELLA STORICO ----
+        st.markdown("#### 📅 Storico Dettagliato per Stagione")
+        if "stagione" in p_stats.columns:
+            rows = []
+            for s, g in p_stats.groupby("stagione"):
+                gfanta = calculate_fantavoto(g)
+                if is_goalkeeper:
+                    rows.append({
+                        "Stagione": s,
+                        "Presenze": int(numeric_series(g, "voto").count()),
+                        "Media Voto": round(safe_mean(g, "voto"), 2),
+                        "Fantamedia": round(safe_mean(gfanta, "fanta_voto_calcolato"), 2),
+                        "Gol Subiti": int(safe_sum(g, "gs")),
+                        "Clean Sheet": int((numeric_series(g, "gs") == 0).sum()),
+                        "Amm": int(safe_sum(g, "amm")),
+                        "Esp": int(safe_sum(g, "esp"))
+                    })
+                else:
+                    rows.append({
+                        "Stagione": s,
+                        "Presenze": int(numeric_series(g, "voto").count()),
+                        "Media Voto": round(safe_mean(g, "voto"), 2),
+                        "Fantamedia": round(safe_mean(gfanta, "fanta_voto_calcolato"), 2),
+                        "Gol": int(safe_sum(g, "gf") + safe_sum(g, "rf")),
+                        "Assist": int(safe_sum(g, "ass")),
+                        "Amm": int(safe_sum(g, "amm")),
+                        "Esp": int(safe_sum(g, "esp"))
+                    })
+            season_df = pd.DataFrame(rows)
+            if not season_df.empty:
+                season_df["_sort"] = season_df["Stagione"].apply(season_sort_key)
+                season_df = season_df.sort_values("_sort", ascending=False).drop(columns="_sort")
+                st.dataframe(season_df, use_container_width=True, hide_index=True, column_config={
+                    "Fantamedia": st.column_config.NumberColumn(format="%.2f ⭐"),
+                    "Media Voto": st.column_config.NumberColumn(format="%.2f"),
+                    "Presenze": st.column_config.ProgressColumn(min_value=0, max_value=38, format="%d / 38")
+                })
+
+        # ---- AI TACTICAL INSIGHT ----
+        st.markdown("""
+        <div style="margin-top: 24px; background: linear-gradient(135deg, #111827, #1E293B); border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 20px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="background: rgba(16,185,129,0.15); width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">🤖</div>
+                <div>
+                    <div style="font-weight: 700; font-size: 1rem; color: #F8FAFC;">Insight Tattico AI &amp; Verdetto Strategico Asta</div>
+                    <div style="font-size: 0.72rem; color: #34D399; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;">CONSIGLIO GOLD ASTA LIVE</div>
+                </div>
+            </div>
+            <div style="margin-top: 12px; font-size: 0.9rem; color: #94A3B8; line-height: 1.6;">
+                <strong style="color: #F8FAFC;">Top 1 assoluto per l'attacco.</strong> Presenta una costanza di rendimento senza rivali nell'intero campionato di Serie A con oltre 20 gol garantiti a stagione e status primario sui calci di rigore.
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px;">
+                <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);">
+                    <div style="font-size: 0.7rem; color: #34D399; font-weight: 700; text-transform: uppercase; display: flex; align-items: center; gap: 4px;">
+                        <span>✅</span> Coppia Consigliata in Rosa
+                    </div>
+                    <div style="font-size: 0.8rem; color: #94A3B8; margin-top: 4px;">
+                        Da accoppiare con un secondo slot solido da 10-12 gol garantiti (es. Retegui, Lucca, Castellanos) e profili low-cost titolari della fascia medio-bassa.
+                    </div>
+                </div>
+                <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);">
+                    <div style="font-size: 0.7rem; color: #FBBF24; font-weight: 700; text-transform: uppercase; display: flex; align-items: center; gap: 4px;">
+                        <span>📢</span> Tattica di Chiamata al Tavolo
+                    </div>
+                    <div style="font-size: 0.8rem; color: #94A3B8; margin-top: 4px;">
+                        In asta chiamarlo <strong style="color: #F8FAFC;">subito dopo i primi 2 top battuti</strong> (es. Vlahovic, Osimhen/Lukaku) per non subire l'effetto asta finale a crediti residui concentrati.
+                    </div>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
