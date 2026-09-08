@@ -58,12 +58,37 @@ section.main, [data-testid="stMainBlockContainer"], [data-testid="stAppViewBlock
    1. FILTRO RUOLI COLORATO (orizzontale)
    Usa il primo radio della pagina (quello dei filtri)
 -------------------------------------------- */
-div[data-testid="stRadio"]:first-of-type label:nth-child(1) p { color: #FFFFFF !important; font-weight: 700 !important; }
+/*div[data-testid="stRadio"]:first-of-type label:nth-child(1) p { color: #FFFFFF !important; font-weight: 700 !important; }
 div[data-testid="stRadio"]:first-of-type label:nth-child(2) p { color: #B45309 !important; font-weight: 700 !important; } /* P */
 div[data-testid="stRadio"]:first-of-type label:nth-child(3) p { color: #3B82F6 !important; font-weight: 700 !important; } /* D */
 div[data-testid="stRadio"]:first-of-type label:nth-child(4) p { color: #10B981 !important; font-weight: 700 !important; } /* C */
 div[data-testid="stRadio"]:first-of-type label:nth-child(5) p { color: #EF4444 !important; font-weight: 700 !important; } /* A */
+*/
 
+#role-filter-anchor ~ div[data-testid="stRadio"] label:nth-child(1) p {
+    color: #FFFFFF !important;
+    font-weight: 700 !important;
+}
+
+#role-filter-anchor ~ div[data-testid="stRadio"] label:nth-child(2) p {
+    color: #B45309 !important;
+    font-weight: 700 !important;
+}
+
+#role-filter-anchor ~ div[data-testid="stRadio"] label:nth-child(3) p {
+    color: #3B82F6 !important;
+    font-weight: 700 !important;
+}
+
+#role-filter-anchor ~ div[data-testid="stRadio"] label:nth-child(4) p {
+    color: #10B981 !important;
+    font-weight: 700 !important;
+}
+
+#role-filter-anchor ~ div[data-testid="stRadio"] label:nth-child(5) p {
+    color: #EF4444 !important;
+    font-weight: 700 !important;
+}
 /* --------------------------------------------
    2. ROSTER LIST – SCROLL VERTICALE
    Applicato SOLO al radio che segue #roster-anchor
@@ -710,7 +735,8 @@ with col_roster:
 
     search_query = st.text_input("Ricerca", placeholder="Cerca giocatore o squadra...", label_visibility="collapsed")
 
-    # Filtro Ruolo ora è Orizzontale
+    st.markdown('<div id="role-filter-anchor"></div>', unsafe_allow_html=True)
+    
     selected_role = st.radio(
         "Seleziona Ruolo",
         ["Tutti", "P", "D", "C", "A"],
