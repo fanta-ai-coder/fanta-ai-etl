@@ -1260,64 +1260,34 @@ def render_kpi_card(title, value, subtext="", highlight=False):
             st.caption(subtext)
 
 
+def format_ranking_badge(ranking):
+    """Indice ranking, da mostrare inline accanto al nome del giocatore
+    (unica fonte del dato: non viene più replicato nella card a destra)."""
+    if ranking is None:
+        return None
+    indice_finale = ranking.get("indice_finale")
+    if indice_finale is None or pd.isna(indice_finale):
+        return None
+    return f":orange[👑 {float(indice_finale):.1f}]"
+
+
 # ==========================================
 # CARD ASTA V3.1
 # ==========================================
 
-def render_quote_hero_card(quota, fvm, ranking=None):
-    """Native replacement for the old custom HTML hero card."""
-
-    if ranking is not None:
-        indice_finale = ranking.get("indice_finale")
-        rank_ruolo = ranking.get("rank_ruolo")
-        totale_ruolo = ranking.get("totale_ruolo")
-    else:
-        indice_finale = None
-        rank_ruolo = None
-        totale_ruolo = None
-
-    ranking_score = (
-        None if indice_finale is None or pd.isna(indice_finale)
-        else f"{float(indice_finale):.1f}"
-    )
-
-    if (
-        rank_ruolo is not None and not pd.isna(rank_ruolo)
-        and totale_ruolo is not None and not pd.isna(totale_ruolo)
-    ):
-        ruolo_txt = f"#{int(rank_ruolo)} / {int(totale_ruolo)}"
-    else:
-        ruolo_txt = "N/D"
+def render_quote_hero_card(quota, fvm):
+    """Solo Quotazione e FVM: le due cifre che servono al volo durante
+    l'asta. Il ranking (indice) vive ora accanto al nome del giocatore,
+    quindi non viene più replicato qui."""
 
     with st.container(border=True, key="hero_card"):
-        st.caption("⭐ VALUTAZIONI ASTA — GUIDA ASTA")
+        st.caption("💰 VALUTAZIONE ASTA")
 
         c1, c2 = st.columns(2)
         with c1:
             st.metric("Quotazione", f"{quota} FM")
         with c2:
             st.metric("FVM Consigliato", f"{fvm} FM")
-
-        st.markdown("**👑 RANKING ASTA V3.1**")
-
-        # Indice e Ruolo sulla stessa riga (2 colonne): evita che l'Indice
-        # resti da solo a piena larghezza con mezza card vuota accanto
-        # al valore.
-        with st.container(key="hero_rank_row"):
-            r1, r2 = st.columns(2)
-            with r1:
-                st.metric(
-                    "Indice",
-                    ranking_score if ranking_score is not None else "N/D",
-                )
-            with r2:
-                st.metric("Ruolo", ruolo_txt)
-
-        # La progress bar occupa lo spazio orizzontale liberato e dà
-        # subito il senso della scala 0-100 dell'indice.
-        if ranking_score is not None:
-            pct = max(0.0, min(float(ranking_score) / 100.0, 1.0))
-            st.progress(pct, text=f"{ranking_score} / 100")
 
 
 # ==========================================
@@ -1546,7 +1516,9 @@ def render_player_detail(
 
     with header_col1:
 
-        st.header(nome)
+        rank_badge = format_ranking_badge(ranking_row)
+        header_txt = f"{nome}   {rank_badge}" if rank_badge else nome
+        st.header(header_txt)
         st.write(" &nbsp;|&nbsp; ".join(tags))
 
         # st.error/warning/success/info interpretano il Markdown nel testo:
@@ -1576,14 +1548,9 @@ def render_player_detail(
             else "-"
         )
 
-        # ==================================
-        # QUI ENTRA IL RANKING V3.1
-        # ==================================
-
         render_quote_hero_card(
             quota_val,
             fvm_val,
-            ranking_row
         )
 
     # --------------------------------------
@@ -2284,7 +2251,7 @@ adv_c1, adv_c2 = st.columns([1.5, 2.5])
 
 with adv_c1:
     only_titolari = st.checkbox(
-        "Mostra solo titolari (formazione tipo)",
+        "✅ Mostra solo titolari (formazione tipo)",
         value=False,
         help="Se selezionato, mostra solo i titolari della formazione tipo. Se deselezionato, mostra tutti i giocatori."
     )
