@@ -791,25 +791,25 @@ with col_roster:
         # ROSTER SCROLLABILE
         # ==========================================
 
-# Anchor HTML per il CSS
-st.markdown('<div id="roster-anchor"></div>', unsafe_allow_html=True)
+        # Anchor HTML per il CSS
+        st.markdown('<div id="roster-anchor"></div>', unsafe_allow_html=True)
 
-# ==========================================
-# ROSTER SCROLLABILE
-# ==========================================
-with st.container(height=720, border=False):
+        # ==========================================
+        # ROSTER SCROLLABILE
+        # ==========================================
+        with st.container(height=720, border=False):
 
-    selected_label = st.radio(
-        "Giocatori",
-        options=labels,
-        key=radio_key,
-        label_visibility="collapsed"
-    )
+            selected_label = st.radio(
+                "Giocatori",
+                options=labels,
+                key=radio_key,
+                label_visibility="collapsed"
+            )
 
-selected_id = label_to_id.get(selected_label)
+        selected_id = label_to_id.get(selected_label)
 
-# Mantiene il giocatore selezionato tra i rerun
-st.session_state["active_player_id"] = selected_id
+        # Mantiene il giocatore selezionato tra i rerun
+        st.session_state["active_player_id"] = selected_id
 
 
 # ------------------------------------------
