@@ -116,6 +116,13 @@ border: 1px solid #374151 !important;
 border-radius: 8px !important;
 color: #F9FAFB !important;
 }
+[data-testid="stWidgetLabel"] p,
+[data-testid="stWidgetLabel"] label,
+[data-testid="stWidgetLabel"] span {
+color: #E2E8F0 !important;
+font-weight: 600 !important;
+font-size: 0.85rem !important;
+}
 [data-testid="stMetric"] {
 background-color: #111827;
 border: 1px solid rgba(255, 255, 255, 0.06);
@@ -2277,7 +2284,7 @@ adv_c1, adv_c2 = st.columns([1.5, 2.5])
 
 with adv_c1:
     only_titolari = st.checkbox(
-        "✅ Mostra solo titolari (formazione tipo)",
+        "Mostra solo titolari (formazione tipo)",
         value=False,
         help="Se selezionato, mostra solo i titolari della formazione tipo. Se deselezionato, mostra tutti i giocatori."
     )
