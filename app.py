@@ -803,8 +803,7 @@ with col_dossier:
                         <div style="font-size: 1.8rem; font-weight: 800; color: #F8FAFC; margin-top: 4px; display: flex; align-items: center; gap: 10px;">
                             {nome} 
                             <div style="display: inline-flex; align-items: center; gap: 6px; margin-top: 2px;">{tags_html}</div>
-                        </div>
-                        {desc_html}
+                        </div>{desc_html}
                         <div style="font-size: 0.8rem; color: #94A3B8; display: flex; gap: 12px; margin-top: 6px;">
                             <span>🏆 Rank Ruolo: <b>#{rk_ruolo} / {tot_ruolo}</b></span>
                             <span>🎯 Rigorista: <b>{'Sì (#' + str(int(rigor_info['posizione'].values[0])) + ')' if not rigor_info.empty else 'No'}</b></span>
