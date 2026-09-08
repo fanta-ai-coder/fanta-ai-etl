@@ -2419,65 +2419,80 @@ st.divider()
 
 
 # ==========================================
-# FILTRI & ORDINAMENTO
+# LAYOUT
 # ==========================================
 
-# 1. Riferimento squadre campionato
-squadre_raw = (
-    current_quot["squadra"]
-    .dropna()
-    .astype(str)
-    .str.strip()
-    .unique()
-    if "squadra" in current_quot.columns
-    else []
-)
-squadre_list = ["Tutte"] + sorted(list(squadre_raw))
-
-# --------------------------------------
-# Chip Filtro Ruolo (colorati: P arancio,
-# D blu, C verde, A rosso, come nel mockup)
-# --------------------------------------
-role_counts = (
-    current_quot["ruolo"]
-    .astype(str)
-    .str.upper()
-    .str.strip()
-    .value_counts()
-    if "ruolo" in current_quot.columns
-    else pd.Series(dtype=int)
+col_players, col_detail = st.columns(
+    [1.3, 2.7],
+    gap="medium"
 )
 
-role_order = ["Tutti", "P", "D", "C", "A"]
-role_labels = []
-for r in role_order:
-    if r == "Tutti":
-        role_labels.append(f"**TUTTI**  \n{len(current_quot)}")
-    else:
-        color = ROLE_MD_COLOR.get(r, "gray")
-        cnt = int(role_counts.get(r, 0))
-        role_labels.append(f":{color}[**{r}**]  \n{cnt}")
 
-selected_role_label = st.radio(
-    "Ruolo",
-    role_labels,
-    horizontal=True,
-    key="role_filter_radio",
-    label_visibility="collapsed",
-)
-selected_role = role_order[role_labels.index(selected_role_label)]
+# ==========================================
+# FILTRI, ORDINAMENTO & LISTA GIOCATORI
+# (tutto nella colonna sinistra)
+# ==========================================
 
-# Layout Filtri Principali
-filter_c1, filter_c2 = st.columns(2)
+with col_players:
 
-with filter_c1:
+    # --------------------------------------
+    # Riferimento squadre campionato
+    # --------------------------------------
+    squadre_raw = (
+        current_quot["squadra"]
+        .dropna()
+        .astype(str)
+        .str.strip()
+        .unique()
+        if "squadra" in current_quot.columns
+        else []
+    )
+    squadre_list = ["Tutte"] + sorted(list(squadre_raw))
+
+    # --------------------------------------
+    # Chip Filtro Ruolo (colorati: P arancio,
+    # D blu, C verde, A rosso, come nel mockup)
+    # --------------------------------------
+    role_counts = (
+        current_quot["ruolo"]
+        .astype(str)
+        .str.upper()
+        .str.strip()
+        .value_counts()
+        if "ruolo" in current_quot.columns
+        else pd.Series(dtype=int)
+    )
+
+    role_order = ["Tutti", "P", "D", "C", "A"]
+    role_labels = []
+    for r in role_order:
+        if r == "Tutti":
+            role_labels.append(f"**TUTTI**  \n{len(current_quot)}")
+        else:
+            color = ROLE_MD_COLOR.get(r, "gray")
+            cnt = int(role_counts.get(r, 0))
+            role_labels.append(f":{color}[**{r}**]  \n{cnt}")
+
+    selected_role_label = st.radio(
+        "Ruolo",
+        role_labels,
+        horizontal=True,
+        key="role_filter_radio",
+        label_visibility="collapsed",
+    )
+    selected_role = role_order[role_labels.index(selected_role_label)]
+
+    # --------------------------------------
+    # Squadra / Ordinamento (impilati: la
+    # colonna è stretta, due select affiancati
+    # sarebbero troppo compressi)
+    # --------------------------------------
     selected_team = st.selectbox(
         "Squadra",
         squadre_list,
         index=0
     )
 
-with filter_c2:
     sort_options = [
         "👑 Indice Ranking (Decrescente)",
         "⭐ Fantamedia (Decrescente)",
@@ -2490,22 +2505,17 @@ with filter_c2:
         index=0
     )
 
-search_query = st.text_input(
-    "Cerca giocatore o squadra",
-    placeholder="🔍 Cerca per nome o squadra..."
-)
+    search_query = st.text_input(
+        "Cerca giocatore o squadra",
+        placeholder="🔍 Cerca per nome o squadra..."
+    )
 
-# Layout Filtri Avanzati
-adv_c1, adv_c2 = st.columns([1.5, 2.5])
-
-with adv_c1:
     only_titolari = st.checkbox(
         "✅ Mostra solo titolari (formazione tipo)",
         value=False,
         help="Se selezionato, mostra solo i titolari della formazione tipo. Se deselezionato, mostra tutti i giocatori."
     )
 
-with adv_c2:
     min_partite = st.slider(
         "Partite minime giocate (con voto)",
         min_value=0,
@@ -2515,131 +2525,119 @@ with adv_c2:
         help="Filtra i giocatori che hanno disputato almeno questo numero di partite nello storico"
     )
 
+    st.divider()
 
-# ==========================================
-# FILTRO & ORDINAMENTO LISTA GIOCATORI
-# ==========================================
+    # --------------------------------------
+    # Filtro & ordinamento lista giocatori
+    # --------------------------------------
 
-summary_df = compute_player_summaries(
-    df,
-    current_quot,
-    ranking_df,
-    titolari_df
-)
-
-quot_view = summary_df.copy()
-
-# 1. Filtro Ruolo
-if (
-    isinstance(selected_role, str)
-    and selected_role != "Tutti"
-    and "ruolo" in quot_view.columns
-):
-    quot_view = quot_view[
-        quot_view["ruolo"]
-        .astype(str)
-        .str.upper()
-        .str.strip()
-        == selected_role
-    ]
-
-# 2. Filtro Squadra
-if (
-    isinstance(selected_team, str)
-    and selected_team != "Tutte"
-    and "squadra" in quot_view.columns
-):
-    quot_view = quot_view[
-        quot_view["squadra"]
-        .astype(str)
-        .str.upper()
-        .str.strip()
-        == selected_team.upper().strip()
-    ]
-
-# 3. Filtro Ricerca
-if isinstance(search_query, str) and search_query.strip():
-    q = (
-        search_query
-        .upper()
-        .strip()
+    summary_df = compute_player_summaries(
+        df,
+        current_quot,
+        ranking_df,
+        titolari_df
     )
-    match_nome = (
-        quot_view["nome"]
-        .astype(str)
-        .str.upper()
-        .str.contains(
-            q,
-            na=False
+
+    quot_view = summary_df.copy()
+
+    # 1. Filtro Ruolo
+    if (
+        isinstance(selected_role, str)
+        and selected_role != "Tutti"
+        and "ruolo" in quot_view.columns
+    ):
+        quot_view = quot_view[
+            quot_view["ruolo"]
+            .astype(str)
+            .str.upper()
+            .str.strip()
+            == selected_role
+        ]
+
+    # 2. Filtro Squadra
+    if (
+        isinstance(selected_team, str)
+        and selected_team != "Tutte"
+        and "squadra" in quot_view.columns
+    ):
+        quot_view = quot_view[
+            quot_view["squadra"]
+            .astype(str)
+            .str.upper()
+            .str.strip()
+            == selected_team.upper().strip()
+        ]
+
+    # 3. Filtro Ricerca
+    if isinstance(search_query, str) and search_query.strip():
+        q = (
+            search_query
+            .upper()
+            .strip()
         )
-        if "nome" in quot_view.columns
-        else False
-    )
-    match_squadra = (
-        quot_view["squadra"]
-        .astype(str)
-        .str.upper()
-        .str.contains(
-            q,
-            na=False
+        match_nome = (
+            quot_view["nome"]
+            .astype(str)
+            .str.upper()
+            .str.contains(
+                q,
+                na=False
+            )
+            if "nome" in quot_view.columns
+            else False
         )
-        if "squadra" in quot_view.columns
-        else False
-    )
-    quot_view = quot_view[
-        match_nome | match_squadra
-    ]
+        match_squadra = (
+            quot_view["squadra"]
+            .astype(str)
+            .str.upper()
+            .str.contains(
+                q,
+                na=False
+            )
+            if "squadra" in quot_view.columns
+            else False
+        )
+        quot_view = quot_view[
+            match_nome | match_squadra
+        ]
 
-# 4. Filtro Titolari
-if bool(only_titolari) is True and "is_titolare" in quot_view.columns:
-    quot_view = quot_view[quot_view["is_titolare"] == True]
+    # 4. Filtro Titolari
+    if bool(only_titolari) is True and "is_titolare" in quot_view.columns:
+        quot_view = quot_view[quot_view["is_titolare"] == True]
 
-# 5. Filtro Partite Minime
-if isinstance(min_partite, (int, float)) and min_partite > 0 and "presenze_totali" in quot_view.columns:
-    quot_view = quot_view[quot_view["presenze_totali"] >= min_partite]
+    # 5. Filtro Partite Minime
+    if isinstance(min_partite, (int, float)) and min_partite > 0 and "presenze_totali" in quot_view.columns:
+        quot_view = quot_view[quot_view["presenze_totali"] >= min_partite]
 
-# 6. Ordinamento
-if selected_sort == "👑 Indice Ranking (Decrescente)":
-    quot_view = quot_view.sort_values(
-        by=["indice_finale", "quotazione_attuale", "nome"],
-        ascending=[False, False, True],
-        na_position="last"
-    )
-elif selected_sort == "⭐ Fantamedia (Decrescente)":
-    quot_view = quot_view.sort_values(
-        by=["fantamedia", "presenze_totali", "nome"],
-        ascending=[False, False, True],
-        na_position="last"
-    )
-elif selected_sort == "🔤 Nome (A-Z)":
-    quot_view = quot_view.sort_values(
-        by=["nome"],
-        ascending=[True],
-        na_position="last"
-    )
-elif selected_sort == "💰 Quotazione (Decrescente)":
-    quot_view = quot_view.sort_values(
-        by=["quotazione_attuale", "fvm", "nome"],
-        ascending=[False, False, True],
-        na_position="last"
-    )
+    # 6. Ordinamento
+    if selected_sort == "👑 Indice Ranking (Decrescente)":
+        quot_view = quot_view.sort_values(
+            by=["indice_finale", "quotazione_attuale", "nome"],
+            ascending=[False, False, True],
+            na_position="last"
+        )
+    elif selected_sort == "⭐ Fantamedia (Decrescente)":
+        quot_view = quot_view.sort_values(
+            by=["fantamedia", "presenze_totali", "nome"],
+            ascending=[False, False, True],
+            na_position="last"
+        )
+    elif selected_sort == "🔤 Nome (A-Z)":
+        quot_view = quot_view.sort_values(
+            by=["nome"],
+            ascending=[True],
+            na_position="last"
+        )
+    elif selected_sort == "💰 Quotazione (Decrescente)":
+        quot_view = quot_view.sort_values(
+            by=["quotazione_attuale", "fvm", "nome"],
+            ascending=[False, False, True],
+            na_position="last"
+        )
 
-
-# ==========================================
-# LAYOUT
-# ==========================================
-
-col_players, col_detail = st.columns(
-    [1.1, 2.9],
-    gap="medium"
-)
-
-
-# ==========================================
-# LISTA GIOCATORI
-# ==========================================
-
-with col_players:
+    # --------------------------------------
+    # Lista giocatori
+    # --------------------------------------
 
     tit_label = " TITOLARI" if only_titolari else ""
     st.caption(f"**GIOCATORI{tit_label} ({len(quot_view)})**")
