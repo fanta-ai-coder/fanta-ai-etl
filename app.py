@@ -70,40 +70,29 @@ section.main, [data-testid="stMainBlockContainer"], [data-testid="stAppViewBlock
     margin-bottom: 16px; 
 }
 
-/* ROSTER ITEM CARD CONTAINER */
-.player-card {
-    background: #111827;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 12px;
-    padding: 12px 14px;
-    margin-bottom: 4px;
-    transition: all 0.2s ease-in-out;
-}
-.player-card:hover {
-    background: #161F33;
-    border-color: rgba(16, 185, 129, 0.4);
-}
-.player-card.active {
-    background: #182238;
-    border: 1.5px solid #10B981;
-    box-shadow: 0 0 12px rgba(16, 185, 129, 0.2);
+/* CARD PULSANTE UNIFICATA PER ROSTER */
+div[data-testid="stButton"] > button.player-card-btn {
+    width: 100% !important;
+    background: #111827 !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 12px !important;
+    padding: 10px 12px !important;
+    margin-bottom: 6px !important;
+    text-align: left !important;
+    transition: all 0.2s ease-in-out !important;
+    height: auto !important;
+    display: block !important;
 }
 
-/* MODIFICA BOTTONE DI SELEZIONE COMPATTO */
-div[data-testid="stButton"] > button {
-    background-color: rgba(255, 255, 255, 0.03) !important;
-    color: #94A3B8 !important;
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    border-radius: 6px !important;
-    font-size: 0.72rem !important;
-    font-weight: 600 !important;
-    padding: 2px 8px !important;
-    margin-bottom: 12px !important;
+div[data-testid="stButton"] > button.player-card-btn:hover {
+    background: #161F33 !important;
+    border-color: rgba(16, 185, 129, 0.4) !important;
 }
-div[data-testid="stButton"] > button:hover {
-    background-color: #10B981 !important;
-    color: #0B0F19 !important;
-    border-color: #10B981 !important;
+
+div[data-testid="stButton"] > button.player-card-btn.active-card {
+    background: #182238 !important;
+    border: 1.5px solid #10B981 !important;
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.2) !important;
 }
 </style>
 """
@@ -548,10 +537,11 @@ with col_roster:
                     badges_html += '<span style="background: rgba(245, 158, 11, 0.2); color: #FCD34D; padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: 700;">⚡ Punizioni</span> '
 
                 is_active = (st.session_state["active_player_id"] == pid)
-                active_class = "active" if is_active else ""
+                active_style = "border: 1.5px solid #10B981; background: #182238;" if is_active else "border: 1px solid rgba(255, 255, 255, 0.08); background: #111827;"
 
-                card_html = f"""
-                <div class="player-card {active_class}">
+                # Creazione label contenitore interamente cliccabile
+                button_label = f"""
+                <div style="width: 100%; text-align: left;">
                     <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
                         <div style="display: flex; align-items: center; gap: 10px;">
                             <div style="background: {bg_role}; color: #FFFFFF; font-weight: 800; border-radius: 6px; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;">
@@ -577,8 +567,8 @@ with col_roster:
                 </div>
                 """
 
-                st.markdown(card_html, unsafe_allow_html=True)
-                if st.button(f"Visualizza {n}", key=f"btn_{pid}", use_container_width=True):
+                # Renderizziamo l'intero player card come pulsante nativo privo di pulsanti esterni extra
+                if st.button(button_label, key=f"card_btn_{pid}", use_container_width=True):
                     st.session_state["active_player_id"] = pid
                     st.rerun()
 
@@ -637,24 +627,24 @@ with col_dossier:
         quota_val = current_quote.get("quotazione_attuale", 38) if current_quote is not None else 38
         fvm_val = current_quote.get("fvm", 320) if current_quote is not None else 320
 
-        # Riscritto pulito l'Header Dossier senza tag spuri
-        st.markdown(f"""
-        <div class="glass-panel">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <div>
-                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-                        <span style="background: #10B981; color: #0B0F19; font-weight: 800; font-size: 0.8rem; padding: 2px 8px; border-radius: 6px;">{ruolo}</span>
-                        <span style="color: #94A3B8; font-size: 0.9rem; font-weight: 600;">{squadra}</span>
-                    </div>
-                    <h1 style="margin: 0; font-size: 2.2rem; font-weight: 800; color: #F8FAFC; letter-spacing: -0.03em;">{nome}</h1>
-                    <div style="margin-top: 10px;">{tags_html}</div>
-                    {desc_html}
-                </div>
-                <div style="text-align: right; background: rgba(255,255,255,0.03); padding: 12px 18px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06);">
-                    <div style="font-size: 0.7rem; color: #94A3B8; font-weight: 700; text-transform: uppercase;">RANKING RUOLO</div>
-                    <div style="font-size: 1.8rem; font-weight: 800; color: #34D399; line-height: 1.2;">#{rk_ruolo} <span style="font-size: 0.9rem; color: #64748B;">/ {tot_ruolo}</span></div>
-                    <div style="font-size: 0.75rem; color: #CBD5E1; margin-top: 4px;">Quotazione: <b>{quota_val}</b> | FVM: <b style="color: #F59E0B;">{fvm_val} FM</b></div>
-                </div>
+        # Correzione del blocco HTML Dossier senza interruzioni di tag o rientri problematici
+        dossier_header_html = f"""<div class="glass-panel">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div>
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                <span style="background: #10B981; color: #0B0F19; font-weight: 800; font-size: 0.8rem; padding: 2px 8px; border-radius: 6px;">{ruolo}</span>
+                <span style="color: #94A3B8; font-size: 0.9rem; font-weight: 600;">{squadra}</span>
             </div>
+            <h1 style="margin: 0; font-size: 2.2rem; font-weight: 800; color: #F8FAFC; letter-spacing: -0.03em;">{nome}</h1>
+            <div style="margin-top: 10px;">{tags_html}</div>
+            {desc_html}
         </div>
-        """, unsafe_allow_html=True)
+        <div style="text-align: right; background: rgba(255,255,255,0.03); padding: 12px 18px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06);">
+            <div style="font-size: 0.7rem; color: #94A3B8; font-weight: 700; text-transform: uppercase;">RANKING RUOLO</div>
+            <div style="font-size: 1.8rem; font-weight: 800; color: #34D399; line-height: 1.2;">#{rk_ruolo} <span style="font-size: 0.9rem; color: #64748B;">/ {tot_ruolo}</span></div>
+            <div style="font-size: 0.75rem; color: #CBD5E1; margin-top: 4px;">Quotazione: <b>{quota_val}</b> | FVM: <b style="color: #F59E0B;">{fvm_val} FM</b></div>
+        </div>
+    </div>
+</div>"""
+
+        st.markdown(dossier_header_html, unsafe_allow_html=True)
