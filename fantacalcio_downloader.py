@@ -40,6 +40,14 @@ import os
 import re
 import sys
 import time
+
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+
+import env_loader
 from datetime import datetime, timezone
 from getpass import getpass
 from pathlib import Path

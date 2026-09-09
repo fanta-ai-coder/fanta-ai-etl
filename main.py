@@ -90,6 +90,7 @@ def git_commit_and_push(repo_dir: Path):
 
 def check_and_sync_excel(repo_dir: Path, stagione="2026-27"):
     """Controlla se ci sono file Excel recenti di quotazioni o voti da sincronizzare su Supabase."""
+    # 1. Sincronizzazione Listone Quotazioni
     quote_files = list(repo_dir.glob(f"Quotazioni_Fantacalcio_Stagione_{stagione.replace('-', '_')}*.xlsx"))
     if quote_files:
         quote_script = repo_dir / "fantacalcio_quotazioni_load.py"
@@ -97,6 +98,33 @@ def check_and_sync_excel(repo_dir: Path, stagione="2026-27"):
             print(f"\n[INFO] Rilevato file quotazioni: {quote_files[0].name}")
             print("       Verifica sincronizzazione listone...")
             run_command(f'python "{quote_script}" --file "{quote_files[0]}" --stagione {stagione}', cwd=repo_dir)
+
+    # 2. Sincronizzazione Voti Giornate
+    data_dirs = [
+        repo_dir / "data",
+        Path(r"C:\Users\andre\Documents\Python Scripts\fantacalcio\data"),
+    ]
+    data_dir = next((d for d in data_dirs if d.exists()), None)
+    if not data_dir:
+        data_dir = repo_dir / "data"
+        data_dir.mkdir(parents=True, exist_ok=True)
+
+    # Controlla se le credenziali Fantacalcio sono configurate per il download automatico
+    user = os.environ.get("FANTACALCIO_USERNAME")
+    pwd = os.environ.get("FANTACALCIO_PASSWORD")
+    downloader_script = repo_dir / "fantacalcio_downloader.py"
+
+    if user and pwd and downloader_script.exists():
+        print(f"\n[INFO] Credenziali Fantacalcio rilevate. Controllo download nuove giornate con Selenium...")
+        run_command(f'python "{downloader_script}" --headless --seasons {stagione}', cwd=repo_dir)
+
+    # Carica su Supabase eventuali nuove giornate presenti nella cartella data/{stagione}
+    bulk_script = repo_dir / "fantacalcio_bulk_load.py"
+    if bulk_script.exists() and (data_dir / stagione).exists():
+        xlsx_files = list((data_dir / stagione).glob("*.xlsx"))
+        if xlsx_files:
+            print(f"\n[INFO] Controllo sincronizzazione voti ({len(xlsx_files)} file trovati in {data_dir.name}/{stagione})...")
+            run_command(f'python "{bulk_script}" --data-dir "{data_dir}" --seasons {stagione} --skip-truncate', cwd=repo_dir)
 
 
 def main():
