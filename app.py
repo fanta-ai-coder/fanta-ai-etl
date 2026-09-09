@@ -20,9 +20,7 @@ _CUSTOM_CSS = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
 
-/* --------------------------------------------
-   GLOBAL STYLE RESET
--------------------------------------------- */
+/* GLOBAL RESET */
 html, body, [class*="css"], .stApp, [data-testid="stAppViewContainer"], [data-testid="stHeader"] {
     font-family: 'Plus Jakarta Sans', sans-serif !important;
     background-color: #0B0F19 !important;
@@ -31,21 +29,17 @@ html, body, [class*="css"], .stApp, [data-testid="stAppViewContainer"], [data-te
 
 section.main, [data-testid="stMainBlockContainer"], [data-testid="stAppViewBlockContainer"] {
     background-color: #0B0F19 !important;
-    padding-top: 2rem !important;
+    padding-top: 1.5rem !important;
     padding-bottom: 2rem !important;
 }
 
-/* --------------------------------------------
-   SCROLLBAR CUSTOM
--------------------------------------------- */
+/* SCROLLBAR CUSTOM */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #334155; border-radius: 9999px; }
 ::-webkit-scrollbar-thumb:hover { background: #10B981; }
 
-/* --------------------------------------------
-   INPUT & SELECT
--------------------------------------------- */
+/* INPUT & SELECT */
 .stTextInput input, .stSelectbox [data-baseweb="select"] {
     background-color: #111827 !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
@@ -54,158 +48,70 @@ section.main, [data-testid="stMainBlockContainer"], [data-testid="stAppViewBlock
     font-size: 0.85rem !important;
 }
 
-/* --------------------------------------------
-   1. FILTRO RUOLI COLORATO (orizzontale)
-   Usa il primo radio della pagina (quello dei filtri)
--------------------------------------------- */
+/* 1. FILTRO RUOLI COLORATO (ORIZZONTALE) */
+#role-filter-anchor + div[data-testid="stRadio"] label:nth-child(1) p { color: #FFFFFF !important; font-weight: 700 !important; }
+#role-filter-anchor + div[data-testid="stRadio"] label:nth-child(2) p { color: #F59E0B !important; font-weight: 700 !important; }
+#role-filter-anchor + div[data-testid="stRadio"] label:nth-child(3) p { color: #3B82F6 !important; font-weight: 700 !important; }
+#role-filter-anchor + div[data-testid="stRadio"] label:nth-child(4) p { color: #10B981 !important; font-weight: 700 !important; }
+#role-filter-anchor + div[data-testid="stRadio"] label:nth-child(5) p { color: #EF4444 !important; font-weight: 700 !important; }
 
-
-#role-filter-anchor ~ div[data-testid="stRadio"] label:nth-child(1) p {
-    color: #FFFFFF !important;
-    font-weight: 700 !important;
-}
-
-#role-filter-anchor ~ div[data-testid="stRadio"] label:nth-child(2) p {
-    color: #B45309 !important;
-    font-weight: 700 !important;
-}
-
-#role-filter-anchor ~ div[data-testid="stRadio"] label:nth-child(3) p {
-    color: #3B82F6 !important;
-    font-weight: 700 !important;
-}
-
-#role-filter-anchor ~ div[data-testid="stRadio"] label:nth-child(4) p {
-    color: #10B981 !important;
-    font-weight: 700 !important;
-}
-
-#role-filter-anchor ~ div[data-testid="stRadio"] label:nth-child(5) p {
-    color: #EF4444 !important;
-    font-weight: 700 !important;
-}
-# --------------------------------------------
-#   2. ROSTER LIST – SCROLL VERTICALE E CARD SEPARATE
-# --------------------------------------------
-#roster-anchor ~ div[data-testid="stRadio"] div[role="radiogroup"] {
+/* 2. ROSTER LIST SCROLLABILE CON CARDS SEPARATE */
+#roster-anchor + div[data-testid="stRadio"] div[role="radiogroup"] {
     display: flex !important;
     flex-direction: column !important;
-    gap: 10px !important;
-    max-height: 720px !important;
+    gap: 8px !important;
+    max-height: 680px !important;
     overflow-y: auto !important;
     padding-right: 6px !important;
 }
 
-#roster-anchor ~ div[data-testid="stRadio"] label > div:first-child,
-#roster-anchor ~ div[data-testid="stRadio"] input[type="radio"] {
+#roster-anchor + div[data-testid="stRadio"] label > div:first-child,
+#roster-anchor + div[data-testid="stRadio"] input[type="radio"] {
     display: none !important;
 }
 
-#roster-anchor ~ div[data-testid="stRadio"] label {
+#roster-anchor + div[data-testid="stRadio"] label {
     display: flex !important;
     align-items: center !important;
-    justify-content: space-between !important;
     background: #111827 !important;
     border: 1px solid rgba(255, 255, 255, 0.08) !important;
     border-radius: 10px !important;
     padding: 12px 16px !important;
     margin: 0 !important;
     cursor: pointer !important;
-    transition: all 0.2s ease !important;
+    transition: all 0.2s ease-in-out !important;
 }
 
-#roster-anchor ~ div[data-testid="stRadio"] label:hover {
+#roster-anchor + div[data-testid="stRadio"] label:hover {
     background: #1E293B !important;
     border-color: rgba(16, 185, 129, 0.4) !important;
 }
 
-#roster-anchor ~ div[data-testid="stRadio"] label:has(input:checked) {
+#roster-anchor + div[data-testid="stRadio"] label:has(input:checked) {
     background: rgba(16, 185, 129, 0.15) !important;
     border: 1px solid #10B981 !important;
 }
 
-#roster-anchor ~ div[data-testid="stRadio"] label p {
+#roster-anchor + div[data-testid="stRadio"] label p {
     color: #FFFFFF !important;
-    font-size: 0.95rem !important;
+    font-size: 0.98rem !important;
     font-weight: 600 !important;
+    margin: 0 !important;
 }
 
-#roster-anchor ~ div[data-testid="stRadio"] label:has(input:checked) p {
+#roster-anchor + div[data-testid="stRadio"] label:has(input:checked) p {
     color: #34D399 !important;
     font-weight: 700 !important;
 }
 
-/* --------------------------------------------
-   CLASSI DI UTILITÀ (per eventuali contenitori)
--------------------------------------------- */
-.glass-panel {
-    background: #111827;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 16px;
-    padding: 20px;
-}
+/* CARDS & PANELS */
+.glass-panel { background: #111827; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 20px; }
+.kpi-card { background: #111827; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; }
+.kpi-card .kpi-label { color: #94A3B8; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+.kpi-card .kpi-value { color: #F8FAFC; font-size: 1.6rem; font-weight: 800; margin: 4px 0; font-family: 'Inter', sans-serif; }
+.kpi-card .kpi-sub { color: #64748B; font-size: 0.75rem; }
 
-.kpi-card {
-    background: #111827;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 12px;
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-}
-
-.kpi-card .kpi-label {
-    color: #94A3B8;
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
-
-.kpi-card .kpi-value {
-    color: #F8FAFC;
-    font-size: 1.6rem;
-    font-weight: 800;
-    margin: 4px 0;
-    font-family: 'Inter', sans-serif;
-}
-
-.kpi-card .kpi-sub {
-    color: #64748B;
-    font-size: 0.75rem;
-}
-
-/* Badges di ruolo (se mai servissero) */
-.badge-tier {
-    background: rgba(16, 185, 129, 0.15);
-    color: #34D399;
-    border: 1px solid rgba(16, 185, 129, 0.3);
-    padding: 4px 10px;
-    border-radius: 9999px;
-    font-size: 0.72rem;
-    font-weight: 700;
-    text-transform: uppercase;
-}
-
-.badge-role-A { background: rgba(239, 68, 68, 0.15); color: #F87171; border: 1px solid rgba(239, 68, 68, 0.3); }
-.badge-role-C { background: rgba(16, 185, 129, 0.15); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.3); }
-.badge-role-D { background: rgba(59, 130, 246, 0.15); color: #60A5FA; border: 1px solid rgba(59, 130, 246, 0.3); }
-.badge-role-P { background: rgba(180, 83, 9, 0.15); color: #F59E0B; border: 1px solid rgba(180, 83, 9, 0.3); }
-
-.top-header {
-    background: #111827;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    padding: 12px 20px;
-    border-radius: 12px;
-    margin-bottom: 16px;
-}
-
-[data-testid="stRadio"] label p,
-[data-testid="stRadio"] label p *,
-[data-testid="stRadio"] label span,
-[data-testid="stRadio"] label span * {
-    color: #F1F5F9 !important;
-}
+.top-header { background: #111827; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding: 12px 20px; border-radius: 12px; margin-bottom: 16px; }
 </style>
 """
 st.markdown(_CUSTOM_CSS, unsafe_allow_html=True)
@@ -817,21 +723,14 @@ with col_roster:
         # ==========================================
         # ROSTER SCROLLABILE
         # ==========================================
-
-        # Anchor HTML per il CSS
         st.markdown('<div id="roster-anchor"></div>', unsafe_allow_html=True)
 
-        # ==========================================
-        # ROSTER SCROLLABILE
-        # ==========================================
-        with st.container(height=720, border=False):
-
-            selected_label = st.radio(
-                "Giocatori",
-                options=labels,
-                key=radio_key,
-                label_visibility="collapsed"
-            )
+        selected_label = st.radio(
+            "Giocatori",
+            options=labels,
+            key=radio_key,
+            label_visibility="collapsed"
+        )
 
         selected_id = label_to_id.get(selected_label)
 
