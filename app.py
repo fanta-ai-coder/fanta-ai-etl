@@ -71,20 +71,29 @@ div[data-testid="column"]:first-child [data-testid="stVerticalBlock"] {
 
 /* HIDE ALL DEFAULT RADIO DOTS / BULLETS COMPLETELY */
 div[data-testid="stRadio"] label > div:first-child,
-div[data-testid="stRadio"] label input[type="radio"],
+div[data-testid="stRadio"] [data-baseweb="radio"] > div:first-child,
 div[data-testid="stRadio"] [data-testid="stWidgetSelectionIndicator"],
+div[data-testid="stRadio"] input[type="radio"],
 div[data-testid="stRadio"] span[data-baseweb="radio-bullet"],
 div[data-testid="stRadio"] svg {
     display: none !important;
-    width: 0 !important;
-    height: 0 !important;
+    width: 0px !important;
+    height: 0px !important;
+    min-width: 0px !important;
+    min-height: 0px !important;
+    max-width: 0px !important;
+    max-height: 0px !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
     margin: 0 !important;
     padding: 0 !important;
-    visibility: hidden !important;
+    border: none !important;
+    position: absolute !important;
+    pointer-events: none !important;
 }
 
 /* ─────────────────────────────────────────────────────────────
-   1. ROLE BUTTONS (5 PULSANTI COMPATTI)
+   1. ROLE BUTTONS (Colore per ruolo + bordo attivo)
 ───────────────────────────────────────────────────────────── */
 div[data-testid="column"]:first-child .stButton button {
     min-height: 28px !important;
@@ -93,23 +102,70 @@ div[data-testid="column"]:first-child .stButton button {
     font-size: 0.75rem !important;
     font-weight: 800 !important;
     border-radius: 6px !important;
-    border: 1px solid rgba(255, 255, 255, 0.12) !important;
-    background-color: #1E293B !important;
-    color: #FFFFFF !important;
     white-space: nowrap !important;
     width: 100% !important;
+    transition: all 0.15s ease !important;
 }
 
-div[data-testid="column"]:first-child .stButton button:hover {
-    background-color: #334155 !important;
-    border-color: rgba(255, 255, 255, 0.3) !important;
+/* ALL Button: Grigio */
+[class*="st-key-btn_role_all"] button {
+    background-color: rgba(148, 163, 184, 0.12) !important;
+    border: 1px solid rgba(148, 163, 184, 0.35) !important;
+    color: #F8FAFC !important;
+}
+[class*="st-key-btn_role_all"] button p {
+    color: #F8FAFC !important;
+    font-weight: 800 !important;
 }
 
-/* Active Button State (primary) */
-div[data-testid="column"]:first-child .stButton button[kind="primary"],
-div[data-testid="column"]:first-child .stButton button[data-testid="baseButton-primary"] {
-    background-color: rgba(16, 185, 129, 0.25) !important;
-    border: 1.5px solid #10B981 !important;
+/* P Button: Giallo / Oro */
+[class*="st-key-btn_role_p"] button {
+    background-color: rgba(245, 158, 11, 0.14) !important;
+    border: 1px solid rgba(245, 158, 11, 0.45) !important;
+    color: #F59E0B !important;
+}
+[class*="st-key-btn_role_p"] button p {
+    color: #F59E0B !important;
+    font-weight: 800 !important;
+}
+
+/* D Button: Blu */
+[class*="st-key-btn_role_d"] button {
+    background-color: rgba(59, 130, 246, 0.14) !important;
+    border: 1px solid rgba(59, 130, 246, 0.45) !important;
+    color: #3B82F6 !important;
+}
+[class*="st-key-btn_role_d"] button p {
+    color: #3B82F6 !important;
+    font-weight: 800 !important;
+}
+
+/* C Button: Verde */
+[class*="st-key-btn_role_c"] button {
+    background-color: rgba(16, 185, 129, 0.14) !important;
+    border: 1px solid rgba(16, 185, 129, 0.45) !important;
+    color: #10B981 !important;
+}
+[class*="st-key-btn_role_c"] button p {
+    color: #10B981 !important;
+    font-weight: 800 !important;
+}
+
+/* A Button: Rosso */
+[class*="st-key-btn_role_a"] button {
+    background-color: rgba(239, 68, 68, 0.14) !important;
+    border: 1px solid rgba(239, 68, 68, 0.45) !important;
+    color: #EF4444 !important;
+}
+[class*="st-key-btn_role_a"] button p {
+    color: #EF4444 !important;
+    font-weight: 800 !important;
+}
+
+/* Tasto Selezionato: solo il bordino viene evidenziato con un bagliore */
+[class*="st-key-btn_role_"][class*="_act"] button {
+    border: 2px solid #FFFFFF !important;
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.45) !important;
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -762,7 +818,7 @@ with col_roster:
     # 1. Barra di ricerca
     search_query = st.text_input("Ricerca", placeholder="Cerca giocatore o squadra...", label_visibility="collapsed")
 
-    # 2. Pulsanti Ruolo Compatti (5 pulsanti)
+    # 2. Pulsanti Ruolo Compatti (5 pulsanti con colori specifici)
     if "role_filter" not in st.session_state:
         st.session_state["role_filter"] = "ALL"
 
@@ -770,23 +826,23 @@ with col_roster:
 
     b_all, b_p, b_d, b_c, b_a = st.columns(5, gap="small")
     with b_all:
-        if st.button("ALL", key="btn_role_all", use_container_width=True, type="primary" if cur_role == "ALL" else "secondary"):
+        if st.button("ALL", key="btn_role_all" + ("_act" if cur_role == "ALL" else ""), use_container_width=True):
             st.session_state["role_filter"] = "ALL"
             st.rerun()
     with b_p:
-        if st.button("P", key="btn_role_p", use_container_width=True, type="primary" if cur_role == "P" else "secondary"):
+        if st.button("P", key="btn_role_p" + ("_act" if cur_role == "P" else ""), use_container_width=True):
             st.session_state["role_filter"] = "P"
             st.rerun()
     with b_d:
-        if st.button("D", key="btn_role_d", use_container_width=True, type="primary" if cur_role == "D" else "secondary"):
+        if st.button("D", key="btn_role_d" + ("_act" if cur_role == "D" else ""), use_container_width=True):
             st.session_state["role_filter"] = "D"
             st.rerun()
     with b_c:
-        if st.button("C", key="btn_role_c", use_container_width=True, type="primary" if cur_role == "C" else "secondary"):
+        if st.button("C", key="btn_role_c" + ("_act" if cur_role == "C" else ""), use_container_width=True):
             st.session_state["role_filter"] = "C"
             st.rerun()
     with b_a:
-        if st.button("A", key="btn_role_a", use_container_width=True, type="primary" if cur_role == "A" else "secondary"):
+        if st.button("A", key="btn_role_a" + ("_act" if cur_role == "A" else ""), use_container_width=True):
             st.session_state["role_filter"] = "A"
             st.rerun()
 
@@ -839,14 +895,11 @@ with col_roster:
     else:
         options_df = quot_view.drop_duplicates(subset="player_id").copy()
 
-        # Pre-indicizza rigoristi e punizioni per performance
-        _rig_pos = {} if rigoristi_df.empty else {
-            (r["giocatore"], r["squadra"]): int(r["posizione"])
-            for _, r in rigoristi_df.iterrows()
-        }
-        _pun_pos = {} if punizioni_df.empty else {
-            (r["giocatore"], r["squadra"]): int(r["posizione"])
-            for _, r in punizioni_df.iterrows()
+        _ROLE_BADGES = {
+            "A": ":red[[A]]",
+            "C": ":green[[C]]",
+            "D": ":blue[[D]]",
+            "P": ":orange[[P]]"
         }
 
         labels, ids = [], []
@@ -869,22 +922,11 @@ with col_roster:
             _q   = str(int(_q_att)) if pd.notna(_q_att) else "—"
             _fvm_s = str(int(_fvm)) if pd.notna(_fvm) else "—"
 
-            # Tag rigorista / punizioni
-            _n_up, _s_up = _n.upper().strip(), _s.upper().strip()
-            _tags = []
-            if (_n_up, _s_up) in _rig_pos:
-                _tags.append(f"⚽ Rig #{_rig_pos[(_n_up, _s_up)]}")
-            if (_n_up, _s_up) in _pun_pos:
-                _tags.append(f"⚡ Pun #{_pun_pos[(_n_up, _s_up)]}")
+            _badge = _ROLE_BADGES.get(_r, f"[{_r}]")
 
-            # Badge ruolo [P], [D], [C], [A]
-            _badge = f"[{_r}]" if _r else "[?]"
-
-            # Etichetta esattamente su 2 righe come da schema:
+            # Etichetta esattamente su 2 righe come da schema (senza rigori/punizioni e con distanze pulite):
             _line1 = f"{_badge}  {_n} - {_s}    {_score}"
-            _line2 = f"      FM: {_fh}  •  PG: {_pg}  •  Q: {_q}  •  FVM: {_fvm_s}"
-            if _tags:
-                _line2 += "  •  " + "  ".join(_tags)
+            _line2 = f"      FM: {_fh}    •    PG: {_pg}    •    Q: {_q}    •    FVM: {_fvm_s}"
 
             _lbl = f"{_line1}\n{_line2}"
 
