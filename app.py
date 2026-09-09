@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 import pandas as pd
 import streamlit as st
 import plotly.graph_objects as go
@@ -271,6 +272,39 @@ div[data-testid="stSlider"] label,
     font-size: 0.75rem;
 }
 
+.sub-card {
+    background: #111827;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    box-sizing: border-box;
+}
+
+.sub-card .sub-label {
+    color: #94A3B8;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.sub-card .sub-value {
+    color: #F8FAFC;
+    font-size: 1.2rem;
+    font-weight: 800;
+    margin: 3px 0 2px 0;
+    font-family: 'Inter', sans-serif;
+}
+
+.sub-card .sub-desc {
+    color: #64748B;
+    font-size: 0.7rem;
+}
+
+
 /* Badges di ruolo */
 .badge-tier {
     background: rgba(16, 185, 129, 0.15);
@@ -523,6 +557,133 @@ def varianza_gol_binaria(p_stats):
         lambda df: 1 if (safe_sum(df, "gf") + safe_sum(df, "rf")) > 0 else 0
     )
     return 0.0 if len(gol_g) <= 1 else float(gol_g.var(ddof=1))
+
+
+def get_slot_asta(ruolo, rank_ruolo):
+    r = str(ruolo).upper().strip()
+    rk = int(rank_ruolo) if pd.notna(rank_ruolo) and rank_ruolo is not None else 99
+    
+    if r == "A":
+        if rk <= 6:
+            return "👑 1° SLOT TOP", "#10B981", "rgba(16, 185, 129, 0.15)"
+        elif rk <= 14:
+            return "⭐ 2° SLOT TITOLARE", "#38BDF8", "rgba(56, 189, 248, 0.15)"
+        elif rk <= 24:
+            return "🔷 3° SLOT ROTAZIONE", "#F59E0B", "rgba(245, 158, 11, 0.15)"
+        else:
+            return "🟢 SCOMMESSA / LOW-COST", "#94A3B8", "rgba(148, 163, 184, 0.15)"
+    elif r == "C":
+        if rk <= 8:
+            return "👑 1° SLOT TOP", "#10B981", "rgba(16, 185, 129, 0.15)"
+        elif rk <= 18:
+            return "⭐ 2° SLOT TITOLARE", "#38BDF8", "rgba(56, 189, 248, 0.15)"
+        elif rk <= 30:
+            return "🔷 3° SLOT ROTAZIONE", "#F59E0B", "rgba(245, 158, 11, 0.15)"
+        else:
+            return "🟢 SCOMMESSA / LOW-COST", "#94A3B8", "rgba(148, 163, 184, 0.15)"
+    elif r == "D":
+        if rk <= 8:
+            return "👑 1° SLOT TOP", "#10B981", "rgba(16, 185, 129, 0.15)"
+        elif rk <= 20:
+            return "⭐ 2° SLOT TITOLARE", "#38BDF8", "rgba(56, 189, 248, 0.15)"
+        elif rk <= 35:
+            return "🔷 3° SLOT ROTAZIONE", "#F59E0B", "rgba(245, 158, 11, 0.15)"
+        else:
+            return "🟢 SCOMMESSA / LOW-COST", "#94A3B8", "rgba(148, 163, 184, 0.15)"
+    else: # P
+        if rk <= 4:
+            return "👑 1° SLOT TOP (BIG)", "#10B981", "rgba(16, 185, 129, 0.15)"
+        elif rk <= 10:
+            return "⭐ 2° SLOT TITOLARE", "#38BDF8", "rgba(56, 189, 248, 0.15)"
+        else:
+            return "🔷 3° SLOT LOW-COST", "#94A3B8", "rgba(148, 163, 184, 0.15)"
+
+
+def format_bonus_frequency(player_row):
+    ruolo = str(player_row.get("ruolo", "")).upper().strip()
+    presenze = float(player_row.get("presenze_medie", 0.0)) if pd.notna(player_row.get("presenze_medie")) else 0.0
+    
+    if ruolo == "P":
+        gs = float(player_row.get("gs_stagione", 0.0)) if pd.notna(player_row.get("gs_stagione")) else 0.0
+        if gs > 0 and presenze > 0:
+            ratio = presenze / gs
+            if abs(ratio - 1.0) <= 0.1:
+                return "1 gol subito a partita", f"{gs/presenze:.2f} GS/partita", "Frequenza GS"
+            elif abs(ratio - 1.5) <= 0.15:
+                return "1 gol ogni partita e mezza", f"{gs/presenze:.2f} GS/partita", "Frequenza GS"
+            elif ratio < 1.0:
+                return f"{1.0/ratio:.1f} gol a partita", f"{gs/presenze:.2f} GS/partita", "Frequenza GS"
+            else:
+                return f"1 gol ogni {ratio:.1f} partite", f"{gs/presenze:.2f} GS/partita", "Frequenza GS"
+        else:
+            return "Porta inviolata frequente", "Zero o minimi gol subiti", "Frequenza GS"
+
+    gol = float(player_row.get("gol_stagione", 0.0)) if pd.notna(player_row.get("gol_stagione")) else 0.0
+    ass = float(player_row.get("assist_stagione", 0.0)) if pd.notna(player_row.get("assist_stagione")) else 0.0
+
+    if gol > 0 and presenze > 0:
+        ratio = presenze / gol
+        if abs(ratio - 1.0) <= 0.1:
+            val = "1 gol a partita"
+        elif abs(ratio - 1.5) <= 0.15:
+            val = "1 gol ogni partita e mezza"
+        elif ratio < 1.0:
+            val = f"{1.0/ratio:.1f} gol a partita"
+        else:
+            val = f"1 gol ogni {ratio:.1f} partite"
+        return val, f"{gol/presenze:.2f} gol/partita", "Frequenza Gol"
+    elif ass > 0 and presenze > 0:
+        ratio = presenze / ass
+        if abs(ratio - 1.0) <= 0.1:
+            val = "1 assist a partita"
+        elif abs(ratio - 1.5) <= 0.15:
+            val = "1 assist ogni partita e mezza"
+        elif ratio < 1.0:
+            val = f"{1.0/ratio:.1f} assist a partita"
+        else:
+            val = f"1 assist ogni {ratio:.1f} partite"
+        return val, f"{ass/presenze:.2f} assist/partita", "Frequenza Assist"
+    else:
+        return "Nessun bonus atteso", "Bonus rari o difensivi", "Frequenza Bonus"
+
+
+def build_radar_dna_chart(categories, values):
+    vals = values + [values[0]]
+    cats = categories + [categories[0]]
+    fig = go.Figure()
+    fig.add_trace(go.Scatterpolar(
+        r=vals,
+        theta=cats,
+        fill='toself',
+        fillcolor='rgba(16, 185, 129, 0.22)',
+        line=dict(color='#10B981', width=2.5),
+        marker=dict(size=6, color='#34D399'),
+        hoverinfo='text',
+        hovertext=[f"<b>{c}</b>: {v:.0f}/100" for c, v in zip(cats, vals)]
+    ))
+    fig.update_layout(
+        polar=dict(
+            bgcolor="rgba(17, 24, 39, 0.5)",
+            radialaxis=dict(
+                visible=True,
+                range=[0, 100],
+                showticklabels=False,
+                linecolor="rgba(255, 255, 255, 0.08)",
+                gridcolor="rgba(255, 255, 255, 0.08)",
+            ),
+            angularaxis=dict(
+                tickfont=dict(size=10, color="#CBD5E1", family="Plus Jakarta Sans"),
+                linecolor="rgba(255, 255, 255, 0.08)",
+                gridcolor="rgba(255, 255, 255, 0.08)",
+            )
+        ),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        showlegend=False,
+        height=260,
+        margin=dict(l=35, r=35, t=25, b=25)
+    )
+    return fig
 
 
 def season_sort_key(value):
@@ -940,6 +1101,10 @@ with col_dossier:
         tot_ruolo = int(player_row.get("totale_ruolo")) if pd.notna(player_row.get("totale_ruolo")) else 68
         quota_val = int(player_row.get("quotazione_attuale", 38)) if pd.notna(player_row.get("quotazione_attuale")) else 38
         fvm_val = int(player_row.get("fvm", 320)) if pd.notna(player_row.get("fvm")) else 320
+        target_min = int(max(1, round(fvm_val * 0.90)))
+        target_max = int(max(1, round(fvm_val * 1.10)))
+
+        slot_badge, slot_color, slot_bg = get_slot_asta(ruolo, rk_ruolo)
 
         rigor_pos = player_row.get("rigorista_pos")
         rigor_str = f"Sì (#{int(rigor_pos)})" if pd.notna(rigor_pos) and int(rigor_pos) > 0 else "No"
@@ -960,16 +1125,21 @@ with col_dossier:
                                 {tags_html}
                             </div>
                         </div>{desc_html}
-                        <div style="font-size: 0.8rem; color: #94A3B8; display: flex; gap: 12px; margin-top: 6px;">
+                        <div style="font-size: 0.8rem; color: #94A3B8; display: flex; gap: 14px; margin-top: 8px; align-items: center; flex-wrap: wrap;">
                             <span>🏆 Rank Ruolo: <b>#{rk_ruolo} / {tot_ruolo}</b></span>
                             <span>🎯 Rigorista: <b>{rigor_str}</b></span>
+                            <span>Slot Asta: <b style="color: {slot_color}; background: {slot_bg}; padding: 3px 8px; border-radius: 6px; border: 1px solid {slot_color}55;">{slot_badge}</b></span>
                         </div>
                     </div>
                 </div>
-                <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px; padding: 12px 18px; text-align: right;">
-                    <div style="font-size: 0.7rem; color: #34D399; font-weight: 700; letter-spacing: 0.05em;">VALUTAZIONE ASTA RECOMENDED</div>
-                    <div style="font-size: 1.5rem; font-weight: 800; color: #F8FAFC; margin: 2px 0;">{fvm_val} <span style="font-size: 0.9rem; color: #94A3B8;">FM</span></div>
-                    <div style="font-size: 0.72rem; color: #94A3B8;">Quotazione Listino: <b style="color: #F8FAFC;">{quota_val} FM</b></div>
+                <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px; padding: 14px 20px; text-align: right;">
+                    <div style="font-size: 0.68rem; color: #34D399; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;">Valutazione Asta Recommended</div>
+                    <div style="font-size: 1.6rem; font-weight: 800; color: #F8FAFC; margin: 2px 0;">{fvm_val} <span style="font-size: 0.85rem; color: #94A3B8;">FM</span></div>
+                    <div style="display: flex; gap: 10px; justify-content: flex-end; align-items: center; margin-top: 4px;">
+                        <span style="font-size: 0.72rem; color: #94A3B8;">Target: <b style="color: #38BDF8;">{target_min} - {target_max} FM</b></span>
+                        <span style="font-size: 0.72rem; color: #64748B;">•</span>
+                        <span style="font-size: 0.72rem; color: #94A3B8;">Listino: <b style="color: #F8FAFC;">{quota_val} FM</b></span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -991,14 +1161,19 @@ with col_dossier:
         ammonizioni = float(player_row.get("ammonizioni", 0.0)) if pd.notna(player_row.get("ammonizioni")) else 0.0
         espulsioni = float(player_row.get("espulsioni", 0.0)) if pd.notna(player_row.get("espulsioni")) else 0.0
 
-        # --- MATRICE KPI ---
+        # Calcolo frequenza bonus basata su partite
+        freq_val, freq_sub, freq_label = format_bonus_frequency(player_row)
+
+        # --- MATRICE 4 KPI PRINCIPALI ---
         k1, k2, k3, k4 = st.columns(4)
         with k1:
+            diff_suff = fantamedia - 6.0
+            suff_sign = f"+{diff_suff:.2f}" if diff_suff >= 0 else f"{diff_suff:.2f}"
             st.markdown(f"""
             <div class="kpi-card">
                 <div class="kpi-label">Fantamedia Pesata</div>
                 <div class="kpi-value" style="color: #34D399;">{fantamedia:.2f}</div>
-                <div class="kpi-sub">Bonus/Malus Inclusi</div>
+                <div class="kpi-sub">Sufficienza {suff_sign}</div>
             </div>
             """, unsafe_allow_html=True)
         with k2:
@@ -1012,32 +1187,121 @@ with col_dossier:
         with k3:
             st.markdown(f"""
             <div class="kpi-card">
-                <div class="kpi-label">% Presenze Medie</div>
-                <div class="kpi-value">{presenza_pct:.1f}%</div>
-                <div class="kpi-sub">{presenze_medie:.1f} P/Stagione</div>
+                <div class="kpi-label">{freq_label}</div>
+                <div class="kpi-value" style="color: #38BDF8; font-size: 1.22rem; line-height: 1.25; white-space: normal;">{freq_val}</div>
+                <div class="kpi-sub">{freq_sub}</div>
             </div>
             """, unsafe_allow_html=True)
         with k4:
-            val_label = "GS | RIG. PARATI MEDI" if is_goalkeeper else "GOL | ASSIST MEDI"
-            val_num_1 = f"{gs_stagione:.1f}" if is_goalkeeper else f"{gol_stagione:.1f}"
-            val_num_2 = f"{rigori_parati:.1f}" if is_goalkeeper else f"{assist_stagione:.1f}"
-            
             st.markdown(f"""
             <div class="kpi-card">
-                <div class="kpi-label">{val_label}</div>
-                <div class="kpi-value" style="color: #60A5FA;">{val_num_1} <span style="font-size: 1.15rem; color: #94A3B8; font-weight: 600;">| {val_num_2}</span></div>
-                <div class="kpi-sub">Media per stagione</div>
+                <div class="kpi-label">% Presenze Titolare</div>
+                <div class="kpi-value" style="color: #A78BFA;">{presenza_pct:.1f}%</div>
+                <div class="kpi-sub">{presenze_medie:.1f} Partite/Stagione</div>
             </div>
             """, unsafe_allow_html=True)
 
         st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
 
-        # --- SEZIONE CONTINUITÀ E RISCHIO ---
-        r1, r2, r3, r4 = st.columns(4)
-        with r1: st.metric("Varianza Voto", format_number(varianza_v), help="Valore < 0.5 indica altissima regolarità")
-        with r2: st.metric("Varianza Gol", format_number(varianza_bin), help="Frequenza di bonus distribuiti")
-        with r3: st.metric("Ammonizioni / Anno", f"{ammonizioni:.1f}")
-        with r4: st.metric("Espulsioni / Anno", f"{espulsioni:.1f}")
+        # --- CALCOLO SCORE DNA RADAR ---
+        if is_goalkeeper:
+            score_bonus = min(100.0, max(20.0, (fantamedia - 4.0) / 2.5 * 100.0))
+        else:
+            score_bonus = min(100.0, max(20.0, (fantamedia - 5.5) / 3.0 * 100.0))
+
+        score_titolare = min(100.0, max(15.0, presenza_pct))
+
+        if varianza_v is not None and pd.notna(varianza_v):
+            score_regolarita = min(100.0, max(20.0, 100.0 - (float(varianza_v) * 60.0)))
+        else:
+            score_regolarita = 70.0
+
+        score_affidabilita = 92.0
+        if infortunato_val in ["sì", "si", "true", "1", "yes"] or bool(player_row.get("infortunato", False)):
+            score_affidabilita -= 35.0
+        if presenze_medie < 20:
+            score_affidabilita -= 20.0
+        score_affidabilita = min(100.0, max(25.0, score_affidabilita))
+
+        score_disciplina = min(100.0, max(25.0, 100.0 - (ammonizioni * 6.0 + espulsioni * 20.0)))
+
+        dna_categories = ["Bonus/FM", "Titolarità", "Regolarità", "Affidabilità", "Disciplina"]
+        dna_values = [score_bonus, score_titolare, score_regolarita, score_affidabilita, score_disciplina]
+
+        # Classificazioni metriche secondarie
+        gap_val = fvm_val - quota_val
+        if gap_val > 15:
+            gap_desc = "Sottovalutato a listino"
+            gap_color = "#34D399"
+        elif gap_val >= 0:
+            gap_desc = "Prezzo allineato"
+            gap_color = "#94A3B8"
+        else:
+            gap_desc = "Sopravvalutato a listino"
+            gap_color = "#F87171"
+
+        if varianza_v is not None and pd.notna(varianza_v):
+            v_num = float(varianza_v)
+            if v_num < 0.4:
+                var_desc = "Altissima regolarità"
+            elif v_num < 0.7:
+                var_desc = "Buona regolarità"
+            else:
+                var_desc = "Rendimento altalenante"
+        else:
+            var_desc = "Dati storici limitati"
+
+        if score_affidabilita >= 80:
+            aff_desc = "Alta certezza titolare"
+        elif score_affidabilita >= 60:
+            aff_desc = "Buona affidabilità"
+        else:
+            aff_desc = "Profilo a rischio"
+
+        # --- SEZIONE SECONDARIA: METRICHE + DNA RADAR CHART ---
+        sec_col_left, sec_col_right = st.columns([0.56, 0.44], gap="medium")
+        with sec_col_left:
+            st.markdown("""
+            <div style="font-weight: 700; font-size: 0.92rem; color: #F8FAFC; margin-bottom: 8px;">
+                🎯 Indicatori Strategici Asta
+            </div>
+            """, unsafe_allow_html=True)
+            m1, m2 = st.columns(2)
+            with m1:
+                st.markdown(f"""
+                <div class="sub-card" style="margin-bottom: 10px;">
+                    <div class="sub-label">Varianza Voto</div>
+                    <div class="sub-value">{format_number(varianza_v)}</div>
+                    <div class="sub-desc">{var_desc}</div>
+                </div>
+                <div class="sub-card">
+                    <div class="sub-label">Disciplina & Malus</div>
+                    <div class="sub-value" style="color: #FBBF24;">{ammonizioni:.1f} <span style="font-size: 0.8rem; color: #94A3B8;">Amm</span> | {espulsioni:.1f} <span style="font-size: 0.8rem; color: #94A3B8;">Esp</span></div>
+                    <div class="sub-desc">Malus medio annuo</div>
+                </div>
+                """, unsafe_allow_html=True)
+            with m2:
+                st.markdown(f"""
+                <div class="sub-card" style="margin-bottom: 10px;">
+                    <div class="sub-label">Value Gap (FVM vs Listino)</div>
+                    <div class="sub-value" style="color: {gap_color};">{gap_val:+d} FM</div>
+                    <div class="sub-desc">{gap_desc}</div>
+                </div>
+                <div class="sub-card">
+                    <div class="sub-label">Affidabilità Asta</div>
+                    <div class="sub-value" style="color: #38BDF8;">{score_affidabilita:.0f}%</div>
+                    <div class="sub-desc">{aff_desc}</div>
+                </div>
+                """, unsafe_allow_html=True)
+
+        with sec_col_right:
+            st.markdown("""
+            <div style="font-weight: 700; font-size: 0.92rem; color: #F8FAFC; margin-bottom: 8px;">
+                🧬 DNA del Calciatore (Scala 0-100)
+            </div>
+            """, unsafe_allow_html=True)
+            fig_radar = build_radar_dna_chart(dna_categories, dna_values)
+            st.plotly_chart(fig_radar, use_container_width=True, config={"displayModeBar": False})
 
         st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
 
