@@ -934,8 +934,8 @@ with col_roster:
             _q_att = getattr(_row, "quotazione_attuale", None)
             _mv    = getattr(_row, "media_voto", None)
 
-            # Score principale (indice o fantamedia)
-            _score = f"{float(_ind):.1f}" if pd.notna(_ind) else (f"{float(_fm):.1f}" if pd.notna(_fm) else "—")
+            # Score principale con corona
+            _score_str = f"👑 {float(_ind):.1f}" if pd.notna(_ind) else (f"⭐ {float(_fm):.1f}" if pd.notna(_fm) else "—")
             _fh  = f"{float(_mv):.2f}" if pd.notna(_mv) else "—"
             _pg  = str(_pres)
             _q   = str(int(_q_att)) if pd.notna(_q_att) else "—"
@@ -943,9 +943,9 @@ with col_roster:
 
             _badge = _ROLE_BADGES.get(_r, f"[{_r}]")
 
-            # Etichetta esattamente su 2 righe a tutta larghezza e ben distanziata:
-            _line1 = f"{_badge}  {_n} - {_s}    {_score}"
-            _line2 = f"FM: {_fh}        •        PG: {_pg}        •        Q: {_q}        •        FVM: {_fvm_s}"
+            # Etichetta esattamente su 2 righe (senza puntini, ranking a destra con corona):
+            _line1 = f"{_badge}  {_n} - {_s}    {_score_str}"
+            _line2 = f"FM: {_fh}          PG: {_pg}          Q: {_q}          FVM: {_fvm_s}"
 
             _lbl = f"{_line1}\n{_line2}"
 
@@ -1038,12 +1038,13 @@ with col_dossier:
                         👤
                     </div>
                     <div>
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <span class="badge-tier badge-role-{ruolo}">{ruolo} — {squadra}</span>
-                        </div>
-                        <div style="font-size: 1.8rem; font-weight: 800; color: #F8FAFC; margin-top: 4px; display: flex; align-items: center; gap: 10px;">
-                            {nome} 
-                            <div style="display: inline-flex; align-items: center; gap: 6px; margin-top: 2px;">{tags_html}</div>
+                        <div style="font-size: 1.8rem; font-weight: 800; color: #F8FAFC; display: flex; align-items: center; flex-wrap: wrap; gap: 10px;">
+                            <span>{nome}</span>
+                            <div style="display: inline-flex; align-items: center; flex-wrap: wrap; gap: 6px;">
+                                <span class="badge-tier badge-role-{ruolo}">{ruolo}</span>
+                                <span style="background: rgba(255,255,255,0.08); color: #F1F5F9; border: 1px solid rgba(255,255,255,0.15); padding: 4px 10px; border-radius: 9999px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase;">🛡️ {squadra}</span>
+                                {tags_html}
+                            </div>
                         </div>{desc_html}
                         <div style="font-size: 0.8rem; color: #94A3B8; display: flex; gap: 12px; margin-top: 6px;">
                             <span>🏆 Rank Ruolo: <b>#{rk_ruolo} / {tot_ruolo}</b></span>
