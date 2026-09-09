@@ -54,52 +54,133 @@ section.main, [data-testid="stMainBlockContainer"], [data-testid="stAppViewBlock
     font-size: 0.85rem !important;
 }
 
-
-/* --------------------------------------------
-   2. ROSTER LIST – SCROLL VERTICALE
-   Applicato SOLO al radio che segue #roster-anchor
--------------------------------------------- */
-#roster-anchor ~ div[data-testid="stRadio"] div[role="radiogroup"] {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 6px !important;
-    max-height: 720px !important;
-    overflow-y: auto !important;
-    padding-right: 4px !important;
-}
-
-#roster-anchor ~ div[data-testid="stRadio"] label > div:first-child,
-#roster-anchor ~ div[data-testid="stRadio"] input[type="radio"] {
+/* ────────────────────────────────────────
+   HIDE ALL RADIO DOTS/CIRCLES IN RADIOGROUPS
+──────────────────────────────────────── */
+div[data-testid="stRadio"] label > div:first-child,
+div[data-testid="stRadio"] label input[type="radio"],
+div[data-testid="stRadio"] [data-testid="stWidgetSelectionIndicator"] {
     display: none !important;
 }
 
-#roster-anchor ~ div[data-testid="stRadio"] label {
+/* ────────────────────────────────────────
+   ROLE FILTER: compact tab-pills
+──────────────────────────────────────── */
+#role-filter-anchor + div[data-testid="stRadio"] div[role="radiogroup"] {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 6px !important;
+    flex-wrap: nowrap !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 4px 0 10px 0 !important;
+    overflow: visible !important;
+}
+
+#role-filter-anchor + div[data-testid="stRadio"] label {
+    background: #1E293B !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 8px !important;
+    padding: 8px 12px !important;
+    cursor: pointer !important;
+    flex: 1 1 0 !important;
     display: flex !important;
     align-items: center !important;
-    justify-content: space-between !important;
+    justify-content: center !important;
+    transition: all 0.15s ease !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+}
+
+#role-filter-anchor + div[data-testid="stRadio"] label:hover {
+    background: #334155 !important;
+    border-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+#role-filter-anchor + div[data-testid="stRadio"] label:has(input:checked) {
+    background: #0F2E23 !important;
+    border: 1.5px solid #10B981 !important;
+}
+
+#role-filter-anchor + div[data-testid="stRadio"] label p {
+    text-align: center !important;
+    font-size: 0.85rem !important;
+    font-weight: 800 !important;
+    margin: 0 !important;
+    letter-spacing: 0.05em !important;
+}
+
+/* Colori lettere ruoli */
+#role-filter-anchor + div[data-testid="stRadio"] label:nth-child(1) p { color: #FFFFFF !important; } /* TUTTI */
+#role-filter-anchor + div[data-testid="stRadio"] label:nth-child(2) p { color: #F59E0B !important; } /* P */
+#role-filter-anchor + div[data-testid="stRadio"] label:nth-child(3) p { color: #3B82F6 !important; } /* D */
+#role-filter-anchor + div[data-testid="stRadio"] label:nth-child(4) p { color: #10B981 !important; } /* C */
+#role-filter-anchor + div[data-testid="stRadio"] label:nth-child(5) p { color: #EF4444 !important; } /* A */
+
+/* ────────────────────────────────────────
+   FORM LABELS IN PURE WHITE
+──────────────────────────────────────── */
+div[data-testid="stSelectbox"] label p,
+div[data-testid="stSelectbox"] label,
+div[data-testid="stCheckbox"] label p,
+div[data-testid="stCheckbox"] label,
+div[data-testid="stSlider"] label p,
+div[data-testid="stSlider"] label {
+    color: #FFFFFF !important;
+    font-weight: 700 !important;
+    font-size: 0.82rem !important;
+}
+
+/* ────────────────────────────────────────
+   PLAYER CARDS: VERTICAL 2-ROW LIST
+──────────────────────────────────────── */
+#roster-anchor ~ div[data-testid="stRadio"] div[role="radiogroup"],
+#roster-anchor ~ * div[role="radiogroup"] {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    max-height: 700px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding-right: 4px !important;
+}
+
+#roster-anchor ~ div[data-testid="stRadio"] label,
+#roster-anchor ~ * div[data-testid="stRadio"] label {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    justify-content: center !important;
     background: #111827 !important;
-    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
     border-radius: 10px !important;
     padding: 10px 14px !important;
     margin: 0 !important;
     cursor: pointer !important;
-    transition: all 0.2s ease !important;
+    transition: all 0.15s ease !important;
 }
 
-#roster-anchor ~ div[data-testid="stRadio"] label:hover {
+#roster-anchor ~ div[data-testid="stRadio"] label:hover,
+#roster-anchor ~ * div[data-testid="stRadio"] label:hover {
     background: #1E293B !important;
-    border-color: rgba(16, 185, 129, 0.3) !important;
+    border-color: rgba(16, 185, 129, 0.4) !important;
 }
 
-#roster-anchor ~ div[data-testid="stRadio"] label:has(input:checked) {
+#roster-anchor ~ div[data-testid="stRadio"] label:has(input:checked),
+#roster-anchor ~ * div[data-testid="stRadio"] label:has(input:checked) {
     background: rgba(16, 185, 129, 0.12) !important;
-    border: 1px solid #10B981 !important;
+    border: 1.5px solid #10B981 !important;
 }
 
-#roster-anchor ~ div[data-testid="stRadio"] label p {
-    color: #F1F5F9 !important;
-    font-size: 0.88rem !important;
+#roster-anchor ~ div[data-testid="stRadio"] label p,
+#roster-anchor ~ * div[data-testid="stRadio"] label p {
+    color: #FFFFFF !important;
+    white-space: pre-line !important;
+    line-height: 1.45 !important;
+    font-size: 0.82rem !important;
     font-weight: 600 !important;
+    margin: 0 !important;
 }
 
 /* --------------------------------------------
@@ -142,7 +223,7 @@ section.main, [data-testid="stMainBlockContainer"], [data-testid="stAppViewBlock
     font-size: 0.75rem;
 }
 
-/* Badges di ruolo (se mai servissero) */
+/* Badges di ruolo */
 .badge-tier {
     background: rgba(16, 185, 129, 0.15);
     color: #34D399;
@@ -165,82 +246,6 @@ section.main, [data-testid="stMainBlockContainer"], [data-testid="stAppViewBlock
     padding: 12px 20px;
     border-radius: 12px;
     margin-bottom: 16px;
-}
-
-/* ────────────────────────────────────────
-   ROLE FILTER: compact tab-pills (anchor-based, no :first-of-type)
-──────────────────────────────────────── */
-#role-filter-anchor + div[data-testid="stRadio"] label > div:first-child,
-#role-filter-anchor + div[data-testid="stRadio"] input[type="radio"] {
-    display: none !important;
-}
-#role-filter-anchor + div[data-testid="stRadio"] div[role="radiogroup"] {
-    display: flex !important;
-    flex-direction: row !important;
-    gap: 4px !important;
-    flex-wrap: nowrap !important;
-    background: transparent !important;
-    border: none !important;
-    padding: 0 !important;
-    max-height: none !important;
-    overflow: visible !important;
-    width: auto !important;
-}
-#role-filter-anchor + div[data-testid="stRadio"] label {
-    background: #1E293B !important;
-    border: 1px solid rgba(255,255,255,0.07) !important;
-    border-radius: 8px !important;
-    padding: 5px 10px !important;
-    cursor: pointer !important;
-    flex: 0 0 auto !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    transition: background 0.15s !important;
-    min-width: 46px !important;
-    margin: 0 !important;
-}
-#role-filter-anchor + div[data-testid="stRadio"] label:hover {
-    background: #273449 !important;
-    border-color: rgba(16,185,129,0.3) !important;
-}
-#role-filter-anchor + div[data-testid="stRadio"] label:has(input:checked) {
-    background: rgba(16,185,129,0.15) !important;
-    border-color: #10B981 !important;
-}
-#role-filter-anchor + div[data-testid="stRadio"] label p {
-    white-space: pre-line !important;
-    text-align: center !important;
-    font-size: 0.68rem !important;
-    line-height: 1.25 !important;
-    margin: 0 !important;
-    font-weight: 700 !important;
-}
-#role-filter-anchor + div[data-testid="stRadio"] label:nth-child(1) p { color: #94A3B8 !important; }
-#role-filter-anchor + div[data-testid="stRadio"] label:nth-child(2) p { color: #F59E0B !important; }
-#role-filter-anchor + div[data-testid="stRadio"] label:nth-child(3) p { color: #3B82F6 !important; }
-#role-filter-anchor + div[data-testid="stRadio"] label:nth-child(4) p { color: #10B981 !important; }
-#role-filter-anchor + div[data-testid="stRadio"] label:nth-child(5) p { color: #EF4444 !important; }
-
-/* ────────────────────────────────────────
-   PLAYER CARDS: compact multi-line, VERTICAL list
-──────────────────────────────────────── */
-#roster-anchor ~ div[data-testid="stRadio"] div[role="radiogroup"] {
-    flex-direction: column !important;
-    max-height: 680px !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-}
-#roster-anchor ~ div[data-testid="stRadio"] label p {
-    white-space: pre-line !important;
-    line-height: 1.5 !important;
-    font-size: 0.78rem !important;
-    color: #F1F5F9 !important;
-    font-weight: 600 !important;
-}
-#roster-anchor ~ div[data-testid="stRadio"] label {
-    padding: 8px 12px !important;
-    align-items: flex-start !important;
 }
 </style>
 """
@@ -762,46 +767,34 @@ col_roster, col_dossier = st.columns([0.33, 0.67], gap="medium")
 # ------------------------------------------
 with col_roster:
 
-    # Pre-calcolo conteggi per ruolo
     total_n = len(summary_df)
-    role_counts = {"P": 0, "D": 0, "C": 0, "A": 0}
-    if "ruolo" in summary_df.columns:
-        rc = summary_df["ruolo"].astype(str).str.upper().str.strip().value_counts()
-        for _r in ["P", "D", "C", "A"]:
-            role_counts[_r] = int(rc.get(_r, 0))
 
     # Header compatto con counter totale
     st.markdown(f"""
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-    <div style="font-size:0.88rem;font-weight:800;color:#F8FAFC;letter-spacing:-0.02em;">
+    <div style="font-size:0.92rem;font-weight:800;color:#FFFFFF;letter-spacing:-0.02em;">
         ⚡ Roster & Filtri Scouting
     </div>
-    <div style="font-size:0.72rem;color:#10B981;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);padding:3px 10px;border-radius:99px;font-weight:700;">
-        {total_n}
+    <div style="font-size:0.75rem;color:#10B981;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);padding:3px 10px;border-radius:99px;font-weight:700;">
+        {total_n} giocatori
     </div>
 </div>
 """, unsafe_allow_html=True)
 
     # Barra di ricerca
-    search_query = st.text_input("Ricerca", placeholder="Filtra per cognome o ruolo...", label_visibility="collapsed")
+    search_query = st.text_input("Ricerca", placeholder="Filtra per cognome o squadra...", label_visibility="collapsed")
 
-    # FILTRO RUOLO TATTICO — compact tab pills con contatori
-    st.markdown("<div style='font-size:0.65rem;color:#64748B;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin:6px 0 4px;'>Filtro Ruolo Tattico</div>", unsafe_allow_html=True)
+    # FILTRO RUOLO TATTICO
+    st.markdown("<div style='font-size:0.75rem;color:#FFFFFF;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin:8px 0 4px;'>Filtro Ruolo Tattico</div>", unsafe_allow_html=True)
 
-    role_label_opts = [
-        f"TUTTI\n{total_n}",
-        f"P\n{role_counts['P']}",
-        f"D\n{role_counts['D']}",
-        f"C\n{role_counts['C']}",
-        f"A\n{role_counts['A']}",
-    ]
-    _role_key_map = dict(zip(role_label_opts, ["Tutti", "P", "D", "C", "A"]))
+    role_label_opts = ["TUTTI", "P", "D", "C", "A"]
+    _role_key_map = {"TUTTI": "Tutti", "P": "P", "D": "D", "C": "C", "A": "A"}
 
-    # Se il valore in session_state non è più valido (per cambio di contatori), reset
+    # Se il valore in session_state non è più valido, reset
     if st.session_state.get("role_filter_btn") not in role_label_opts:
         st.session_state["role_filter_btn"] = role_label_opts[0]
 
-    # Anchor CSS: il CSS usa #role-filter-anchor + div per targetare SOLO questo radio
+    # Anchor CSS per targetare SOLO questo radio
     st.markdown('<div id="role-filter-anchor"></div>', unsafe_allow_html=True)
     selected_role_lbl = st.radio(
         "Ruolo",
@@ -820,13 +813,13 @@ with col_roster:
     with c1: selected_team = st.selectbox("Club Serie A", squadre_list, index=0)
     with c2: selected_sort = st.selectbox("Ordinamento", ["👑 Indice Ranking", "⭐ Fantamedia", "🔤 Nome (A-Z)", "💰 Quotazione"], index=0)
 
-    f1, f2 = st.columns([1.4, 1.6])
-    with f1: only_titolari = st.checkbox("Solo Titolari (Formazione Tipo)", value=False)
+    f1, f2 = st.columns([1.3, 1.7])
+    with f1: only_titolari = st.checkbox("Solo titolari", value=False)
     with f2:
-        st.markdown("<div style='font-size:0.7rem;color:#64748B;margin-bottom:2px;'>Partite minime giocate</div>", unsafe_allow_html=True)
+        st.markdown("<div style='font-size:0.75rem;color:#FFFFFF;font-weight:700;margin-bottom:2px;'>Partite minime</div>", unsafe_allow_html=True)
         min_partite = st.slider("PG min", 0, 38, 0, step=1, label_visibility="collapsed")
 
-    st.markdown("<hr style='border-color:rgba(255,255,255,0.06);margin:8px 0;'>", unsafe_allow_html=True)
+    st.markdown("<hr style='border-color:rgba(255,255,255,0.08);margin:10px 0;'>", unsafe_allow_html=True)
 
     # ── APPLICA FILTRI ──────────────────────────────
     quot_view = summary_df.copy()
@@ -856,7 +849,7 @@ with col_roster:
 
     n_filtered = len(quot_view)
     st.markdown(
-        f"<div style='font-size:0.7rem;color:#64748B;font-weight:700;margin-bottom:6px;'>"
+        f"<div style='font-size:0.75rem;color:#FFFFFF;font-weight:700;margin-bottom:8px;'>"
         f"ROSTER SELEZIONATO ({n_filtered})</div>",
         unsafe_allow_html=True
     )
@@ -877,8 +870,6 @@ with col_roster:
             for _, r in punizioni_df.iterrows()
         }
 
-        _ROLE_ICON = {"A": "🔴", "C": "🟢", "D": "🔵", "P": "🟡"}
-
         labels, ids = [], []
         for _row in options_df.itertuples():
             _n     = getattr(_row, "nome", "Giocatore")
@@ -894,7 +885,6 @@ with col_roster:
 
             # Score principale (indice o fantamedia)
             _score = f"{float(_ind):.1f}" if pd.notna(_ind) else (f"{float(_fm):.1f}" if pd.notna(_fm) else "—")
-            # Riga statistiche
             _fh  = f"{float(_mv):.2f}" if pd.notna(_mv) else "—"
             _pg  = str(_pres)
             _q   = str(int(_q_att)) if pd.notna(_q_att) else "—"
@@ -908,15 +898,16 @@ with col_roster:
             if (_n_up, _s_up) in _pun_pos:
                 _tags.append(f"⚡ Pun #{_pun_pos[(_n_up, _s_up)]}")
 
-            # Ruolo icon
-            _icon = _ROLE_ICON.get(_r, "⚪")
+            # Badge ruolo [P], [D], [C], [A]
+            _badge = f"[{_r}]" if _r else "[?]"
 
-            # Etichetta multiriga
-            _line1 = f"{_icon} {_n}  ·  {_s}   {_score}"
-            _line2 = f"{_r}  ·  FH:{_fh}  PG:{_pg}  Q:{_q}  FVM:{_fvm_s} FM"
-            _lbl = f"{_line1}\n{_line2}"
+            # Etichetta rigorosamente a 2 righe
+            _line1 = f"{_badge} {_n} - {_s}    {_score}"
+            _line2 = f"FM: {_fh}  •  PG: {_pg}  •  Q: {_q}  •  FVM: {_fvm_s} FM"
             if _tags:
-                _lbl += "\n" + "  ".join(_tags)
+                _line2 += "  •  " + "  ".join(_tags)
+
+            _lbl = f"{_line1}\n{_line2}"
 
             if _lbl in labels:
                 _lbl = f"{_lbl} #{int(_pid)}"
@@ -932,7 +923,7 @@ with col_roster:
                 default_idx = ids.index(st.session_state["active_player_id"])
             st.session_state[radio_key] = labels[default_idx]
 
-        # Anchor CSS
+        # Anchor CSS per roster
         st.markdown('<div id="roster-anchor"></div>', unsafe_allow_html=True)
 
         with st.container(height=720, border=False):
