@@ -48,10 +48,24 @@ section.main, [data-testid="stMainBlockContainer"], [data-testid="stAppViewBlock
 ───────────────────────────────────────────────────────────── */
 .stTextInput input, .stSelectbox [data-baseweb="select"] {
     background-color: #111827 !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    border-radius: 8px !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 6px !important;
     color: #F9FAFB !important;
-    font-size: 0.85rem !important;
+    font-size: 0.80rem !important;
+    min-height: 34px !important;
+    height: 34px !important;
+}
+
+div[data-testid="stSelectbox"] div[data-baseweb="select"] > div {
+    min-height: 34px !important;
+    height: 34px !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+/* TIGHTEN VERTICAL GAP IN LEFT COLUMN */
+div[data-testid="column"]:first-child [data-testid="stVerticalBlock"] {
+    gap: 6px !important;
 }
 
 /* HIDE ALL DEFAULT RADIO DOTS / BULLETS COMPLETELY */
@@ -69,27 +83,27 @@ div[data-testid="stRadio"] svg {
 }
 
 /* ─────────────────────────────────────────────────────────────
-   1. FILTRO RUOLO TATTICO (Orizzontale - 5 Box)
+   1. FILTRO RUOLO TATTICO (Orizzontale - 5 Box Compatti)
 ───────────────────────────────────────────────────────────── */
 div[data-testid="column"]:first-child div[data-testid="stRadio"]:first-of-type div[role="radiogroup"],
 div[data-testid="stRadio"]:has(div[role="radiogroup"][aria-orientation="horizontal"]) div[role="radiogroup"] {
     display: flex !important;
     flex-direction: row !important;
-    gap: 6px !important;
+    gap: 4px !important;
     flex-wrap: nowrap !important;
     background: transparent !important;
     border: none !important;
     padding: 0 !important;
-    margin: 4px 0 10px 0 !important;
+    margin: 2px 0 6px 0 !important;
     overflow: visible !important;
 }
 
 div[data-testid="column"]:first-child div[data-testid="stRadio"]:first-of-type label,
 div[data-testid="stRadio"]:has(div[role="radiogroup"][aria-orientation="horizontal"]) label {
     background: #1E293B !important;
-    border: 1px solid rgba(255, 255, 255, 0.15) !important;
-    border-radius: 8px !important;
-    padding: 8px 12px !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 6px !important;
+    padding: 5px 8px !important;
     cursor: pointer !important;
     flex: 1 1 0 !important;
     display: flex !important;
@@ -98,6 +112,7 @@ div[data-testid="stRadio"]:has(div[role="radiogroup"][aria-orientation="horizont
     transition: all 0.15s ease !important;
     min-width: 0 !important;
     margin: 0 !important;
+    height: 30px !important;
 }
 
 div[data-testid="column"]:first-child div[data-testid="stRadio"]:first-of-type label:hover,
@@ -115,7 +130,7 @@ div[data-testid="stRadio"]:has(div[role="radiogroup"][aria-orientation="horizont
 div[data-testid="column"]:first-child div[data-testid="stRadio"]:first-of-type label p,
 div[data-testid="stRadio"]:has(div[role="radiogroup"][aria-orientation="horizontal"]) label p {
     text-align: center !important;
-    font-size: 0.85rem !important;
+    font-size: 0.76rem !important;
     font-weight: 800 !important;
     margin: 0 !important;
     letter-spacing: 0.05em !important;
@@ -136,7 +151,7 @@ div[data-testid="column"]:first-child div[data-testid="stRadio"]:last-of-type di
 div[data-testid="stRadio"]:has(div[role="radiogroup"][aria-orientation="vertical"]) div[role="radiogroup"] {
     display: flex !important;
     flex-direction: column !important;
-    gap: 8px !important;
+    gap: 6px !important;
     padding-right: 4px !important;
 }
 
@@ -148,9 +163,9 @@ div[data-testid="stRadio"]:has(div[role="radiogroup"][aria-orientation="vertical
     align-items: stretch !important;
     justify-content: center !important;
     background: #111827 !important;
-    border: 1px solid rgba(255, 255, 255, 0.12) !important;
-    border-radius: 10px !important;
-    padding: 12px 16px !important;
+    border: 1px solid rgba(255, 255, 255, 0.10) !important;
+    border-radius: 8px !important;
+    padding: 8px 12px !important;
     margin: 0 !important;
     cursor: pointer !important;
     transition: all 0.15s ease !important;
@@ -177,8 +192,8 @@ div[data-testid="column"]:first-child div[data-testid="stRadio"] label div[data-
 div[data-testid="stRadio"]:has(div[role="radiogroup"][aria-orientation="vertical"]) label p {
     color: #FFFFFF !important;
     white-space: pre-line !important;
-    line-height: 1.6 !important;
-    font-size: 0.82rem !important;
+    line-height: 1.45 !important;
+    font-size: 0.78rem !important;
     font-weight: 600 !important;
     margin: 0 !important;
     width: 100% !important;
@@ -197,7 +212,8 @@ div[data-testid="stSlider"] label,
 .stTextInput label {
     color: #FFFFFF !important;
     font-weight: 700 !important;
-    font-size: 0.82rem !important;
+    font-size: 0.78rem !important;
+    margin-bottom: 2px !important;
 }
 
 /* --------------------------------------------
@@ -777,7 +793,7 @@ summary_df = compute_player_summaries(df, current_quot, ranking_df, titolari_df)
 # 6. MAIN MASTER-DETAIL LAYOUT
 # ==========================================
 
-col_roster, col_dossier = st.columns([0.33, 0.67], gap="medium")
+col_roster, col_dossier = st.columns([0.28, 0.72], gap="small")
 
 # ------------------------------------------
 # COLONNA SINISTRA: ROSTER & FILTRI COMPATTI
@@ -788,21 +804,21 @@ with col_roster:
 
     # Header compatto con counter totale
     st.markdown(f"""
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-    <div style="font-size:0.92rem;font-weight:800;color:#FFFFFF;letter-spacing:-0.02em;">
-        ⚡ Roster & Filtri Scouting
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+    <div style="font-size:0.88rem;font-weight:800;color:#FFFFFF;letter-spacing:-0.02em;">
+        ⚡ Roster & Filtri
     </div>
-    <div style="font-size:0.75rem;color:#10B981;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);padding:3px 10px;border-radius:99px;font-weight:700;">
-        {total_n} giocatori
+    <div style="font-size:0.72rem;color:#10B981;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);padding:2px 8px;border-radius:99px;font-weight:700;">
+        {total_n}
     </div>
 </div>
 """, unsafe_allow_html=True)
 
     # Barra di ricerca
-    search_query = st.text_input("Ricerca", placeholder="Filtra per cognome o squadra...", label_visibility="collapsed")
+    search_query = st.text_input("Ricerca", placeholder="Cerca giocatore o squadra...", label_visibility="collapsed")
 
     # FILTRO RUOLO TATTICO
-    st.markdown("<div style='font-size:0.75rem;color:#FFFFFF;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin:8px 0 4px;'>Filtro Ruolo Tattico</div>", unsafe_allow_html=True)
+    st.markdown("<div style='font-size:0.72rem;color:#FFFFFF;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin:4px 0 2px;'>Filtro Ruolo</div>", unsafe_allow_html=True)
 
     role_label_opts = ["TUTTI", "P", "D", "C", "A"]
     _role_key_map = {"TUTTI": "Tutti", "P": "P", "D": "D", "C": "C", "A": "A"}
