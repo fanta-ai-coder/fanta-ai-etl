@@ -55,8 +55,20 @@ section.main, [data-testid="stMainBlockContainer"], [data-testid="stAppViewBlock
 #role-filter-anchor + div[data-testid="stRadio"] label:nth-child(5) p { color: #EF4444 !important; font-weight: 700 !important; }
 
 /* CARDS & PANELS */
-.glass-panel { background: #111827; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 20px; }
-.top-header { background: #111827; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding: 12px 20px; border-radius: 12px; margin-bottom: 16px; }
+.glass-panel { 
+    background: #111827; 
+    border: 1px solid rgba(255, 255, 255, 0.08); 
+    border-radius: 16px; 
+    padding: 20px; 
+}
+
+.top-header { 
+    background: #111827; 
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08); 
+    padding: 12px 20px; 
+    border-radius: 12px; 
+    margin-bottom: 16px; 
+}
 
 /* ROSTER ITEM CARD CONTAINER */
 .player-card {
@@ -64,7 +76,7 @@ section.main, [data-testid="stMainBlockContainer"], [data-testid="stAppViewBlock
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
     padding: 12px 14px;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
     transition: all 0.2s ease-in-out;
 }
 .player-card:hover {
@@ -75,6 +87,23 @@ section.main, [data-testid="stMainBlockContainer"], [data-testid="stAppViewBlock
     background: #182238;
     border: 1.5px solid #10B981;
     box-shadow: 0 0 12px rgba(16, 185, 129, 0.2);
+}
+
+/* MODIFICA BOTTONE DI SELEZIONE COMPATTO */
+div[data-testid="stButton"] > button {
+    background-color: rgba(255, 255, 255, 0.03) !important;
+    color: #94A3B8 !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 6px !important;
+    font-size: 0.72rem !important;
+    font-weight: 600 !important;
+    padding: 2px 8px !important;
+    margin-bottom: 12px !important;
+}
+div[data-testid="stButton"] > button:hover {
+    background-color: #10B981 !important;
+    color: #0B0F19 !important;
+    border-color: #10B981 !important;
 }
 </style>
 """
@@ -549,7 +578,7 @@ with col_roster:
                 """
 
                 st.markdown(card_html, unsafe_allow_html=True)
-                if st.button(f"Seleziona {n}", key=f"btn_{pid}", use_container_width=True):
+                if st.button(f"Visualizza {n}", key=f"btn_{pid}", use_container_width=True):
                     st.session_state["active_player_id"] = pid
                     st.rerun()
 
@@ -608,7 +637,8 @@ with col_dossier:
         quota_val = current_quote.get("quotazione_attuale", 38) if current_quote is not None else 38
         fvm_val = current_quote.get("fvm", 320) if current_quote is not None else 320
 
-        header_html = f"""
+        # Riscritto pulito l'Header Dossier senza tag spuri
+        st.markdown(f"""
         <div class="glass-panel">
             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                 <div>
@@ -627,5 +657,4 @@ with col_dossier:
                 </div>
             </div>
         </div>
-        """
-        st.markdown(header_html, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
