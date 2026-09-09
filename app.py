@@ -72,21 +72,36 @@ div[data-testid="column"]:first-child [data-testid="stVerticalBlock"] {
 
 /* HIDE ALL DEFAULT RADIO DOTS / BULLETS COMPLETELY */
 div[data-testid="stRadio"] input[type="radio"],
-div[data-testid="stRadio"] input[type="radio"] + div,
+div[data-testid="stRadio"] label > div:first-child,
+div[data-testid="stRadio"] label > div:first-child *,
+div[data-testid="stRadio"] label > span:first-child,
+div[data-testid="stRadio"] label > span:first-child *,
+div[data-testid="stRadio"] label > div:not([data-testid="stMarkdownContainer"]),
+div[data-testid="stRadio"] label > div:not([data-testid="stMarkdownContainer"]) *,
+div[data-testid="stRadio"] label > span:not([data-testid="stMarkdownContainer"]),
+div[data-testid="stRadio"] label > span:not([data-testid="stMarkdownContainer"]) *,
 div[data-testid="stRadio"] [data-testid="stWidgetSelectionIndicator"],
 div[data-testid="stRadio"] [data-baseweb="radio"] > div:first-child:not([data-testid="stMarkdownContainer"]),
+div[data-testid="stRadio"] [data-baseweb="radio"] > span:first-child:not([data-testid="stMarkdownContainer"]),
 div[data-testid="stRadio"] span[data-baseweb="radio-bullet"],
 div[data-testid="stRadio"] svg {
     display: none !important;
     width: 0px !important;
     height: 0px !important;
+    max-width: 0px !important;
+    max-height: 0px !important;
+    min-width: 0px !important;
+    min-height: 0px !important;
     opacity: 0 !important;
     visibility: hidden !important;
-    margin: 0 !important;
-    padding: 0 !important;
+    margin: 0px !important;
+    padding: 0px !important;
     border: none !important;
+    background: transparent !important;
     pointer-events: none !important;
+    position: absolute !important;
 }
+
 
 /* ─────────────────────────────────────────────────────────────
    1. ROLE BUTTONS (Colore per ruolo + bordo attivo)
@@ -165,20 +180,27 @@ div[data-testid="column"]:first-child .stButton button {
 }
 
 /* ─────────────────────────────────────────────────────────────
-   2. ROSTER LISTA GIOCATORI (Card a Larghezza Intera)
+   2. ROSTER LISTA GIOCATORI (Card a Larghezza Intera 100%)
 ───────────────────────────────────────────────────────────── */
-div[data-testid="stRadio"] div[role="radiogroup"] {
+div[data-testid="column"]:first-child div[data-testid="stVerticalBlockBorderWrapper"],
+div[data-testid="column"]:first-child div[data-testid="stVerticalBlockBorderWrapper"] > div,
+div[data-testid="stRadio"],
+div[data-testid="stRadio"] > div,
+div[data-testid="stRadio"] div[role="radiogroup"],
+div[data-testid="stRadio"] div[role="radiogroup"] > div,
+div[data-testid="stRadio"] [data-baseweb="radio"] {
     display: flex !important;
     flex-direction: column !important;
-    gap: 8px !important;
     width: 100% !important;
+    min-width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    align-self: stretch !important;
+    gap: 8px !important;
 }
 
 div[data-testid="stRadio"] label {
-    display: flex !important;
-    flex-direction: row !important;
-    align-items: center !important;
-    justify-content: flex-start !important;
+    display: block !important;
     background: #111827 !important;
     border: 1px solid rgba(255, 255, 255, 0.12) !important;
     border-radius: 8px !important;
@@ -187,6 +209,8 @@ div[data-testid="stRadio"] label {
     cursor: pointer !important;
     transition: all 0.15s ease !important;
     width: 100% !important;
+    min-width: 100% !important;
+    max-width: 100% !important;
     box-sizing: border-box !important;
 }
 
@@ -202,14 +226,16 @@ div[data-testid="stRadio"] label:has(input:checked) {
 
 div[data-testid="stRadio"] label [data-testid="stMarkdownContainer"] {
     width: 100% !important;
+    max-width: 100% !important;
     display: block !important;
+    box-sizing: border-box !important;
 }
 
 div[data-testid="stRadio"] label [data-testid="stMarkdownContainer"] p {
     color: #FFFFFF !important;
     white-space: pre-line !important;
     line-height: 1.6 !important;
-    font-size: 0.82rem !important;
+    font-size: 0.84rem !important;
     font-weight: 600 !important;
     margin: 0 !important;
     width: 100% !important;
@@ -906,8 +932,8 @@ st.markdown("""
     </div>
     <div style="display: flex; align-items: center; gap: 16px;">
         <div style="background: rgba(255,255,255,0.05); padding: 6px 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); text-align: right;">
-            <div style="font-size: 0.65rem; color: #64748B;">BUDGET FANTAMEDIA</div>
-            <div style="font-size: 0.85rem; font-weight: 700; color: #F8FAFC;">342 / 500 FM</div>
+            <div style="font-size: 0.65rem; color: #64748B;">BUDGET FANTAMILIONI</div>
+            <div style="font-size: 0.85rem; font-weight: 700; color: #F8FAFC;">342 / 500 FMV</div>
         </div>
         <div style="background: rgba(16, 185, 129, 0.1); padding: 6px 12px; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.2); color: #34D399; font-size: 0.75rem; font-weight: 600;">
             ● Supabase Live
@@ -934,7 +960,8 @@ summary_df = normalize_dataframe(summary_df)
 # 6. MAIN MASTER-DETAIL LAYOUT
 # ==========================================
 
-col_roster, col_dossier = st.columns([0.33, 0.67], gap="medium")
+col_roster, col_dossier = st.columns([0.38, 0.62], gap="medium")
+
 
 # ------------------------------------------
 # COLONNA SINISTRA: ROSTER & FILTRI COMPATTI
@@ -989,8 +1016,8 @@ with col_roster:
     # 4. Budget Asta & Solo titolari
     b1, b2 = st.columns([1.1, 1.9], gap="small")
     with b1:
-        budget_mode = st.selectbox("Budget Lega", ["1000 FM", "500 FM"], index=0)
-        is_1000 = (budget_mode == "1000 FM")
+        budget_mode = st.selectbox("Budget Lega", ["1000 FMV", "500 FMV"], index=0)
+        is_1000 = (budget_mode == "1000 FMV")
     with b2:
         only_titolari = st.checkbox("Solo titolari", value=False)
         min_partite = st.slider("Partite minime", 0, 38, 0, step=1)
@@ -1051,18 +1078,19 @@ with col_roster:
             _mv    = getattr(_row, "media_voto", None)
             _stima = getattr(_row, stima_col, None)
 
-            # Score principale con corona
-            _score_str = f"👑 {float(_ind):.1f}" if pd.notna(_ind) else (f"⭐ {float(_fm):.1f}" if pd.notna(_fm) else "—")
-            _fh  = f"{float(_mv):.2f}" if pd.notna(_mv) else "—"
-            _pg  = str(_pres)
-            _q   = str(int(_q_att)) if pd.notna(_q_att) else "—"
-            _stima_s = f"{int(_stima)} FM" if pd.notna(_stima) else f"{int(_fvm)} FM"
+            # FM (FantaMedia con bonus): prioritizza fantamedia, fallback media voto
+            _fm_val = f"{float(_fm):.2f}" if pd.notna(_fm) else (f"{float(_mv):.2f}" if pd.notna(_mv) else "—")
+            _pg = str(_pres)
+            _q = str(int(_q_att)) if pd.notna(_q_att) else "—"
+            # FMV (Valore FantaMilioni): stima ML per l'asta
+            _fmv_num = str(int(_stima)) if pd.notna(_stima) else (str(int(_fvm)) if pd.notna(_fvm) else "—")
 
             _badge = _ROLE_BADGES.get(_r, f"[{_r}]")
 
-            # Etichetta su 2 righe con evidenza stima ML
-            _line1 = f"{_badge}  {_n} - {_s}    {_score_str}"
-            _line2 = f"FM: {_fh}   PG: {_pg}   🤖 ML: {_stima_s}   List: {_q}"
+            # Riga 1: Solo ruolo, nome e squadra (rimosse stelle e corone)
+            _line1 = f"{_badge}  {_n} - {_s}"
+            # Riga 2: Distinzione chiara FM (FantaMedia) e FMV (Fantamilioni Asta)
+            _line2 = f"FM: {_fm_val}          PG: {_pg}          Q: {_q}          FMV: {_fmv_num}"
 
             _lbl = f"{_line1}\n{_line2}"
 
@@ -1182,15 +1210,15 @@ with col_dossier:
                         <span style="background: rgba(16, 185, 129, 0.2); padding: 1px 6px; border-radius: 4px; font-size: 0.62rem; color: #6EE7B7;">R² {r2_val:.2f}</span>
                     </div>
                     <div style="font-size: 1.75rem; font-weight: 800; color: #F8FAFC; margin: 2px 0;">
-                        {stima_val:.0f} <span style="font-size: 0.85rem; color: #94A3B8;">FM</span>
+                        {stima_val:.0f} <span style="font-size: 0.85rem; color: #94A3B8;">FMV</span>
                     </div>
                     <div style="font-size: 0.74rem; color: #38BDF8; font-weight: 700; margin-bottom: 4px;">
-                        🎯 Range Asta (±{rmse_val:.0f}): <b>{range_min:.0f} - {range_max:.0f} FM</b>
+                        🎯 Range Asta (±{rmse_val:.0f}): <b>{range_min:.0f} - {range_max:.0f} FMV</b>
                     </div>
                     <div style="display: flex; gap: 8px; justify-content: flex-end; align-items: center; font-size: 0.68rem; color: #94A3B8; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 4px; margin-top: 3px;">
-                        <span>FVM: <b style="color: #F8FAFC;">{fvm_val} FM</b></span>
+                        <span>FVM: <b style="color: #F8FAFC;">{fvm_val} FMV</b></span>
                         <span style="color: #64748B;">•</span>
-                        <span>Listino: <b style="color: #F8FAFC;">{quota_val} FM</b></span>
+                        <span>Listino: <b style="color: #F8FAFC;">{quota_val} FMV</b></span>
                     </div>
                 </div>
             </div>
@@ -1336,7 +1364,7 @@ with col_dossier:
                 st.markdown(f"""
                 <div class="sub-card" style="margin-bottom: 10px;">
                     <div class="sub-label">Value Gap (FVM vs Listino)</div>
-                    <div class="sub-value" style="color: {gap_color};">{gap_val:+d} FM</div>
+                    <div class="sub-value" style="color: {gap_color};">{gap_val:+d} FMV</div>
                     <div class="sub-desc">{gap_desc}</div>
                 </div>
                 <div class="sub-card">
