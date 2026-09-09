@@ -43,9 +43,9 @@ section.main, [data-testid="stMainBlockContainer"], [data-testid="stAppViewBlock
 ::-webkit-scrollbar-thumb { background: #334155; border-radius: 9999px; }
 ::-webkit-scrollbar-thumb:hover { background: #10B981; }
 
-/* --------------------------------------------
-   INPUT & SELECT
--------------------------------------------- */
+/* ─────────────────────────────────────────────────────────────
+   GLOBAL & WIDGET RESET
+───────────────────────────────────────────────────────────── */
 .stTextInput input, .stSelectbox [data-baseweb="select"] {
     background-color: #111827 !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
@@ -54,19 +54,25 @@ section.main, [data-testid="stMainBlockContainer"], [data-testid="stAppViewBlock
     font-size: 0.85rem !important;
 }
 
-/* ────────────────────────────────────────
-   HIDE ALL RADIO DOTS/CIRCLES IN RADIOGROUPS
-──────────────────────────────────────── */
+/* HIDE ALL DEFAULT RADIO DOTS / BULLETS COMPLETELY */
 div[data-testid="stRadio"] label > div:first-child,
 div[data-testid="stRadio"] label input[type="radio"],
-div[data-testid="stRadio"] [data-testid="stWidgetSelectionIndicator"] {
+div[data-testid="stRadio"] [data-testid="stWidgetSelectionIndicator"],
+div[data-testid="stRadio"] span[data-baseweb="radio-bullet"],
+div[data-testid="stRadio"] svg {
     display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    visibility: hidden !important;
 }
 
-/* ────────────────────────────────────────
-   ROLE FILTER: compact tab-pills
-──────────────────────────────────────── */
-#role-filter-anchor + div[data-testid="stRadio"] div[role="radiogroup"] {
+/* ─────────────────────────────────────────────────────────────
+   1. FILTRO RUOLO TATTICO (Orizzontale - 5 Box)
+───────────────────────────────────────────────────────────── */
+div[data-testid="column"]:first-child div[data-testid="stRadio"]:first-of-type div[role="radiogroup"],
+div[data-testid="stRadio"]:has(div[role="radiogroup"][aria-orientation="horizontal"]) div[role="radiogroup"] {
     display: flex !important;
     flex-direction: row !important;
     gap: 6px !important;
@@ -78,9 +84,10 @@ div[data-testid="stRadio"] [data-testid="stWidgetSelectionIndicator"] {
     overflow: visible !important;
 }
 
-#role-filter-anchor + div[data-testid="stRadio"] label {
+div[data-testid="column"]:first-child div[data-testid="stRadio"]:first-of-type label,
+div[data-testid="stRadio"]:has(div[role="radiogroup"][aria-orientation="horizontal"]) label {
     background: #1E293B !important;
-    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
     border-radius: 8px !important;
     padding: 8px 12px !important;
     cursor: pointer !important;
@@ -93,17 +100,20 @@ div[data-testid="stRadio"] [data-testid="stWidgetSelectionIndicator"] {
     margin: 0 !important;
 }
 
-#role-filter-anchor + div[data-testid="stRadio"] label:hover {
+div[data-testid="column"]:first-child div[data-testid="stRadio"]:first-of-type label:hover,
+div[data-testid="stRadio"]:has(div[role="radiogroup"][aria-orientation="horizontal"]) label:hover {
     background: #334155 !important;
-    border-color: rgba(255, 255, 255, 0.25) !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
 }
 
-#role-filter-anchor + div[data-testid="stRadio"] label:has(input:checked) {
-    background: #0F2E23 !important;
+div[data-testid="column"]:first-child div[data-testid="stRadio"]:first-of-type label:has(input:checked),
+div[data-testid="stRadio"]:has(div[role="radiogroup"][aria-orientation="horizontal"]) label:has(input:checked) {
+    background: rgba(16, 185, 129, 0.22) !important;
     border: 1.5px solid #10B981 !important;
 }
 
-#role-filter-anchor + div[data-testid="stRadio"] label p {
+div[data-testid="column"]:first-child div[data-testid="stRadio"]:first-of-type label p,
+div[data-testid="stRadio"]:has(div[role="radiogroup"][aria-orientation="horizontal"]) label p {
     text-align: center !important;
     font-size: 0.85rem !important;
     font-weight: 800 !important;
@@ -112,75 +122,82 @@ div[data-testid="stRadio"] [data-testid="stWidgetSelectionIndicator"] {
 }
 
 /* Colori lettere ruoli */
-#role-filter-anchor + div[data-testid="stRadio"] label:nth-child(1) p { color: #FFFFFF !important; } /* TUTTI */
-#role-filter-anchor + div[data-testid="stRadio"] label:nth-child(2) p { color: #F59E0B !important; } /* P */
-#role-filter-anchor + div[data-testid="stRadio"] label:nth-child(3) p { color: #3B82F6 !important; } /* D */
-#role-filter-anchor + div[data-testid="stRadio"] label:nth-child(4) p { color: #10B981 !important; } /* C */
-#role-filter-anchor + div[data-testid="stRadio"] label:nth-child(5) p { color: #EF4444 !important; } /* A */
+div[data-testid="column"]:first-child div[data-testid="stRadio"]:first-of-type label:nth-child(1) p { color: #FFFFFF !important; } /* TUTTI */
+div[data-testid="column"]:first-child div[data-testid="stRadio"]:first-of-type label:nth-child(2) p { color: #F59E0B !important; } /* P */
+div[data-testid="column"]:first-child div[data-testid="stRadio"]:first-of-type label:nth-child(3) p { color: #3B82F6 !important; } /* D */
+div[data-testid="column"]:first-child div[data-testid="stRadio"]:first-of-type label:nth-child(4) p { color: #10B981 !important; } /* C */
+div[data-testid="column"]:first-child div[data-testid="stRadio"]:first-of-type label:nth-child(5) p { color: #EF4444 !important; } /* A */
 
-/* ────────────────────────────────────────
-   FORM LABELS IN PURE WHITE
-──────────────────────────────────────── */
-div[data-testid="stSelectbox"] label p,
-div[data-testid="stSelectbox"] label,
-div[data-testid="stCheckbox"] label p,
-div[data-testid="stCheckbox"] label,
-div[data-testid="stSlider"] label p,
-div[data-testid="stSlider"] label {
-    color: #FFFFFF !important;
-    font-weight: 700 !important;
-    font-size: 0.82rem !important;
-}
-
-/* ────────────────────────────────────────
-   PLAYER CARDS: VERTICAL 2-ROW LIST
-──────────────────────────────────────── */
-#roster-anchor ~ div[data-testid="stRadio"] div[role="radiogroup"],
-#roster-anchor ~ * div[role="radiogroup"] {
+/* ─────────────────────────────────────────────────────────────
+   2. ROSTER LISTA GIOCATORI (Card Verticali a 2 Righe)
+───────────────────────────────────────────────────────────── */
+div[data-testid="column"]:first-child div[data-testid="stRadio"]:nth-of-type(2) div[role="radiogroup"],
+div[data-testid="column"]:first-child div[data-testid="stRadio"]:last-of-type div[role="radiogroup"],
+div[data-testid="stRadio"]:has(div[role="radiogroup"][aria-orientation="vertical"]) div[role="radiogroup"] {
     display: flex !important;
     flex-direction: column !important;
     gap: 8px !important;
-    max-height: 700px !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
     padding-right: 4px !important;
 }
 
-#roster-anchor ~ div[data-testid="stRadio"] label,
-#roster-anchor ~ * div[data-testid="stRadio"] label {
+div[data-testid="column"]:first-child div[data-testid="stRadio"]:nth-of-type(2) label,
+div[data-testid="column"]:first-child div[data-testid="stRadio"]:last-of-type label,
+div[data-testid="stRadio"]:has(div[role="radiogroup"][aria-orientation="vertical"]) label {
     display: flex !important;
     flex-direction: column !important;
     align-items: stretch !important;
     justify-content: center !important;
     background: #111827 !important;
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
     border-radius: 10px !important;
-    padding: 10px 14px !important;
+    padding: 12px 16px !important;
     margin: 0 !important;
     cursor: pointer !important;
     transition: all 0.15s ease !important;
+    width: 100% !important;
 }
 
-#roster-anchor ~ div[data-testid="stRadio"] label:hover,
-#roster-anchor ~ * div[data-testid="stRadio"] label:hover {
+div[data-testid="column"]:first-child div[data-testid="stRadio"]:nth-of-type(2) label:hover,
+div[data-testid="column"]:first-child div[data-testid="stRadio"]:last-of-type label:hover,
+div[data-testid="stRadio"]:has(div[role="radiogroup"][aria-orientation="vertical"]) label:hover {
     background: #1E293B !important;
     border-color: rgba(16, 185, 129, 0.4) !important;
 }
 
-#roster-anchor ~ div[data-testid="stRadio"] label:has(input:checked),
-#roster-anchor ~ * div[data-testid="stRadio"] label:has(input:checked) {
-    background: rgba(16, 185, 129, 0.12) !important;
+div[data-testid="column"]:first-child div[data-testid="stRadio"]:nth-of-type(2) label:has(input:checked),
+div[data-testid="column"]:first-child div[data-testid="stRadio"]:last-of-type label:has(input:checked),
+div[data-testid="stRadio"]:has(div[role="radiogroup"][aria-orientation="vertical"]) label:has(input:checked) {
+    background: rgba(16, 185, 129, 0.14) !important;
     border: 1.5px solid #10B981 !important;
 }
 
-#roster-anchor ~ div[data-testid="stRadio"] label p,
-#roster-anchor ~ * div[data-testid="stRadio"] label p {
+div[data-testid="column"]:first-child div[data-testid="stRadio"]:nth-of-type(2) label p,
+div[data-testid="column"]:first-child div[data-testid="stRadio"]:last-of-type label p,
+div[data-testid="column"]:first-child div[data-testid="stRadio"] label div[data-testid="stMarkdownContainer"] p,
+div[data-testid="stRadio"]:has(div[role="radiogroup"][aria-orientation="vertical"]) label p {
     color: #FFFFFF !important;
     white-space: pre-line !important;
-    line-height: 1.45 !important;
+    line-height: 1.6 !important;
     font-size: 0.82rem !important;
     font-weight: 600 !important;
     margin: 0 !important;
+    width: 100% !important;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   3. TUTTE LE LABEL IN BIANCO PURO
+───────────────────────────────────────────────────────────── */
+div[data-testid="stSelectbox"] label p,
+div[data-testid="stSelectbox"] label,
+div[data-testid="stCheckbox"] label p,
+div[data-testid="stCheckbox"] label,
+div[data-testid="stSlider"] label p,
+div[data-testid="stSlider"] label,
+.stTextInput label p,
+.stTextInput label {
+    color: #FFFFFF !important;
+    font-weight: 700 !important;
+    font-size: 0.82rem !important;
 }
 
 /* --------------------------------------------
@@ -901,9 +918,9 @@ with col_roster:
             # Badge ruolo [P], [D], [C], [A]
             _badge = f"[{_r}]" if _r else "[?]"
 
-            # Etichetta rigorosamente a 2 righe
-            _line1 = f"{_badge} {_n} - {_s}    {_score}"
-            _line2 = f"FM: {_fh}  •  PG: {_pg}  •  Q: {_q}  •  FVM: {_fvm_s} FM"
+            # Etichetta esattamente su 2 righe come da schema:
+            _line1 = f"{_badge}  {_n} - {_s}    {_score}"
+            _line2 = f"      FM: {_fh}  •  PG: {_pg}  •  Q: {_q}  •  FVM: {_fvm_s}"
             if _tags:
                 _line2 += "  •  " + "  ".join(_tags)
 
