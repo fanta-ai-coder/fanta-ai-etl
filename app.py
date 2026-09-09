@@ -70,25 +70,20 @@ div[data-testid="column"]:first-child [data-testid="stVerticalBlock"] {
 }
 
 /* HIDE ALL DEFAULT RADIO DOTS / BULLETS COMPLETELY */
-div[data-testid="stRadio"] label > div:first-child,
-div[data-testid="stRadio"] [data-baseweb="radio"] > div:first-child,
-div[data-testid="stRadio"] [data-testid="stWidgetSelectionIndicator"],
 div[data-testid="stRadio"] input[type="radio"],
+div[data-testid="stRadio"] input[type="radio"] + div,
+div[data-testid="stRadio"] [data-testid="stWidgetSelectionIndicator"],
+div[data-testid="stRadio"] [data-baseweb="radio"] > div:first-child:not([data-testid="stMarkdownContainer"]),
 div[data-testid="stRadio"] span[data-baseweb="radio-bullet"],
 div[data-testid="stRadio"] svg {
     display: none !important;
     width: 0px !important;
     height: 0px !important;
-    min-width: 0px !important;
-    min-height: 0px !important;
-    max-width: 0px !important;
-    max-height: 0px !important;
     opacity: 0 !important;
     visibility: hidden !important;
     margin: 0 !important;
     padding: 0 !important;
     border: none !important;
-    position: absolute !important;
     pointer-events: none !important;
 }
 
@@ -171,24 +166,18 @@ div[data-testid="column"]:first-child .stButton button {
 /* ─────────────────────────────────────────────────────────────
    2. ROSTER LISTA GIOCATORI (Card a Larghezza Intera)
 ───────────────────────────────────────────────────────────── */
-div[data-testid="column"]:first-child,
-div[data-testid="column"]:first-child [data-testid="stVerticalBlock"],
-div[data-testid="column"]:first-child div[data-testid="stRadio"],
-div[data-testid="column"]:first-child div[role="radiogroup"],
 div[data-testid="stRadio"] div[role="radiogroup"] {
     display: flex !important;
     flex-direction: column !important;
-    gap: 6px !important;
+    gap: 8px !important;
     width: 100% !important;
-    min-width: 100% !important;
-    box-sizing: border-box !important;
 }
 
 div[data-testid="stRadio"] label {
     display: flex !important;
-    flex-direction: column !important;
-    align-items: stretch !important;
-    justify-content: center !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
     background: #111827 !important;
     border: 1px solid rgba(255, 255, 255, 0.12) !important;
     border-radius: 8px !important;
@@ -197,7 +186,6 @@ div[data-testid="stRadio"] label {
     cursor: pointer !important;
     transition: all 0.15s ease !important;
     width: 100% !important;
-    min-width: 100% !important;
     box-sizing: border-box !important;
 }
 
@@ -211,26 +199,19 @@ div[data-testid="stRadio"] label:has(input:checked) {
     border: 1.5px solid #10B981 !important;
 }
 
-div[data-testid="stRadio"] label > div:first-child:not([data-testid="stMarkdownContainer"]),
-div[data-testid="stRadio"] label div[class*="st-emotion-cache"]:first-child {
-    display: none !important;
-    width: 0 !important;
-    height: 0 !important;
-    opacity: 0 !important;
-    visibility: hidden !important;
-    position: absolute !important;
+div[data-testid="stRadio"] label [data-testid="stMarkdownContainer"] {
+    width: 100% !important;
+    display: block !important;
 }
 
-div[data-testid="stRadio"] label div[data-testid="stMarkdownContainer"],
-div[data-testid="stRadio"] label div[data-testid="stMarkdownContainer"] p {
+div[data-testid="stRadio"] label [data-testid="stMarkdownContainer"] p {
     color: #FFFFFF !important;
     white-space: pre-line !important;
-    line-height: 1.55 !important;
-    font-size: 0.80rem !important;
+    line-height: 1.6 !important;
+    font-size: 0.82rem !important;
     font-weight: 600 !important;
     margin: 0 !important;
     width: 100% !important;
-    display: block !important;
 }
 
 /* ─────────────────────────────────────────────────────────────
