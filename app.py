@@ -54,15 +54,6 @@ section.main, [data-testid="stMainBlockContainer"], [data-testid="stAppViewBlock
     font-size: 0.85rem !important;
 }
 
-/* --------------------------------------------
-   1. FILTRO RUOLI COLORATO (orizzontale)
-   Usa il primo radio della pagina (quello dei filtri)
--------------------------------------------- */
-div[data-testid="stRadio"]:first-of-type label:nth-child(1) p { color: #FFFFFF !important; font-weight: 700 !important; }
-div[data-testid="stRadio"]:first-of-type label:nth-child(2) p { color: #B45309 !important; font-weight: 700 !important; } /* P */
-div[data-testid="stRadio"]:first-of-type label:nth-child(3) p { color: #3B82F6 !important; font-weight: 700 !important; } /* D */
-div[data-testid="stRadio"]:first-of-type label:nth-child(4) p { color: #10B981 !important; font-weight: 700 !important; } /* C */
-div[data-testid="stRadio"]:first-of-type label:nth-child(5) p { color: #EF4444 !important; font-weight: 700 !important; } /* A */
 
 /* --------------------------------------------
    2. ROSTER LIST – SCROLL VERTICALE
@@ -174,6 +165,71 @@ div[data-testid="stRadio"]:first-of-type label:nth-child(5) p { color: #EF4444 !
     padding: 12px 20px;
     border-radius: 12px;
     margin-bottom: 16px;
+}
+
+/* ────────────────────────────────────────
+   ROLE FILTER: compact tab-pills
+──────────────────────────────────────── */
+div[data-testid="stRadio"]:first-of-type label > div:first-child,
+div[data-testid="stRadio"]:first-of-type input[type="radio"] {
+    display: none !important;
+}
+div[data-testid="stRadio"]:first-of-type div[role="radiogroup"] {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 4px !important;
+    flex-wrap: nowrap !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+}
+div[data-testid="stRadio"]:first-of-type label {
+    background: #1E293B !important;
+    border: 1px solid rgba(255,255,255,0.07) !important;
+    border-radius: 8px !important;
+    padding: 5px 8px !important;
+    cursor: pointer !important;
+    flex: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: background 0.15s !important;
+    min-width: 0 !important;
+}
+div[data-testid="stRadio"]:first-of-type label:hover {
+    background: #273449 !important;
+    border-color: rgba(16,185,129,0.3) !important;
+}
+div[data-testid="stRadio"]:first-of-type label:has(input:checked) {
+    background: rgba(16,185,129,0.15) !important;
+    border-color: #10B981 !important;
+}
+div[data-testid="stRadio"]:first-of-type label p {
+    white-space: pre-line !important;
+    text-align: center !important;
+    font-size: 0.7rem !important;
+    line-height: 1.3 !important;
+    margin: 0 !important;
+    font-weight: 700 !important;
+}
+div[data-testid="stRadio"]:first-of-type label:nth-child(1) p { color: #94A3B8 !important; }
+div[data-testid="stRadio"]:first-of-type label:nth-child(2) p { color: #F59E0B !important; }
+div[data-testid="stRadio"]:first-of-type label:nth-child(3) p { color: #3B82F6 !important; }
+div[data-testid="stRadio"]:first-of-type label:nth-child(4) p { color: #10B981 !important; }
+div[data-testid="stRadio"]:first-of-type label:nth-child(5) p { color: #EF4444 !important; }
+
+/* ────────────────────────────────────────
+   PLAYER CARDS: compact multi-line cards
+──────────────────────────────────────── */
+#roster-anchor ~ div[data-testid="stRadio"] label p {
+    white-space: pre-line !important;
+    line-height: 1.55 !important;
+    font-size: 0.78rem !important;
+}
+#roster-anchor ~ div[data-testid="stRadio"] label {
+    padding: 8px 12px !important;
 }
 </style>
 """
@@ -691,39 +747,75 @@ summary_df = compute_player_summaries(df, current_quot, ranking_df, titolari_df)
 col_roster, col_dossier = st.columns([0.33, 0.67], gap="medium")
 
 # ------------------------------------------
-# COLONNA SINISTRA: ROSTER & FILTRI
+# COLONNA SINISTRA: ROSTER & FILTRI COMPATTI
 # ------------------------------------------
 with col_roster:
-    st.markdown("""
-    <div style="margin-bottom: 12px;">
-        <div style="font-size: 0.95rem; font-weight: 800; color: #F8FAFC;">🔍 FILTRI SCOUTING</div>
-        <div style="font-size: 0.72rem; color: #64748B;">Trova e ordina i calciatori nel listone</div>
+
+    # Pre-calcolo conteggi per ruolo
+    total_n = len(summary_df)
+    role_counts = {"P": 0, "D": 0, "C": 0, "A": 0}
+    if "ruolo" in summary_df.columns:
+        rc = summary_df["ruolo"].astype(str).str.upper().str.strip().value_counts()
+        for _r in ["P", "D", "C", "A"]:
+            role_counts[_r] = int(rc.get(_r, 0))
+
+    # Header compatto con counter totale
+    st.markdown(f"""
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+    <div style="font-size:0.88rem;font-weight:800;color:#F8FAFC;letter-spacing:-0.02em;">
+        ⚡ Roster & Filtri Scouting
     </div>
-    """, unsafe_allow_html=True)
+    <div style="font-size:0.72rem;color:#10B981;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);padding:3px 10px;border-radius:99px;font-weight:700;">
+        {total_n}
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
-    search_query = st.text_input("Ricerca", placeholder="Cerca giocatore o squadra...", label_visibility="collapsed")
+    # Barra di ricerca
+    search_query = st.text_input("Ricerca", placeholder="Filtra per cognome o ruolo...", label_visibility="collapsed")
 
-    # Filtro Ruolo ora è Orizzontale
-    selected_role = st.radio(
-        "Seleziona Ruolo",
-        ["Tutti", "P", "D", "C", "A"],
+    # FILTRO RUOLO TATTICO — compact tab pills con contatori
+    st.markdown("<div style='font-size:0.65rem;color:#64748B;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin:6px 0 4px;'>Filtro Ruolo Tattico</div>", unsafe_allow_html=True)
+
+    role_label_opts = [
+        f"TUTTI\n{total_n}",
+        f"P\n{role_counts['P']}",
+        f"D\n{role_counts['D']}",
+        f"C\n{role_counts['C']}",
+        f"A\n{role_counts['A']}",
+    ]
+    _role_key_map = dict(zip(role_label_opts, ["Tutti", "P", "D", "C", "A"]))
+
+    # Se il valore in session_state non è più valido (per cambio di contatori), reset
+    if st.session_state.get("role_filter_btn") not in role_label_opts:
+        st.session_state["role_filter_btn"] = role_label_opts[0]
+
+    selected_role_lbl = st.radio(
+        "Ruolo",
+        role_label_opts,
         horizontal=True,
-        key="role_filter_btn"
+        key="role_filter_btn",
+        label_visibility="collapsed"
     )
+    selected_role = _role_key_map.get(selected_role_lbl, "Tutti")
 
+    # Club + Ordinamento
     squadre_raw = current_quot["squadra"].dropna().astype(str).str.strip().unique() if "squadra" in current_quot.columns else []
     squadre_list = ["Tutte"] + sorted(list(squadre_raw))
 
     c1, c2 = st.columns(2)
-    with c1: selected_team = st.selectbox("Squadra", squadre_list, index=0)
-    with c2: selected_sort = st.selectbox("Ordina per", ["👑 Indice Ranking", "⭐ Fantamedia", "🔤 Nome (A-Z)", "💰 Quotazione"], index=0)
+    with c1: selected_team = st.selectbox("Club Serie A", squadre_list, index=0)
+    with c2: selected_sort = st.selectbox("Ordinamento", ["👑 Indice Ranking", "⭐ Fantamedia", "🔤 Nome (A-Z)", "💰 Quotazione"], index=0)
 
-    f1, f2 = st.columns([1.1, 1.9])
-    with f1: only_titolari = st.checkbox("Solo Titolari", value=False)
-    with f2: min_partite = st.slider("Partite minime", 0, 38, 0, step=1)
+    f1, f2 = st.columns([1.4, 1.6])
+    with f1: only_titolari = st.checkbox("Solo Titolari (Formazione Tipo)", value=False)
+    with f2:
+        st.markdown("<div style='font-size:0.7rem;color:#64748B;margin-bottom:2px;'>Partite minime giocate</div>", unsafe_allow_html=True)
+        min_partite = st.slider("PG min", 0, 38, 0, step=1, label_visibility="collapsed")
 
-    st.markdown("<hr style='border-color: rgba(255,255,255,0.06); margin: 12px 0;'>", unsafe_allow_html=True)
+    st.markdown("<hr style='border-color:rgba(255,255,255,0.06);margin:8px 0;'>", unsafe_allow_html=True)
 
+    # ── APPLICA FILTRI ──────────────────────────────
     quot_view = summary_df.copy()
 
     if selected_role != "Tutti" and "ruolo" in quot_view.columns:
@@ -731,9 +823,9 @@ with col_roster:
     if selected_team != "Tutte" and "squadra" in quot_view.columns:
         quot_view = quot_view[quot_view["squadra"].astype(str).str.upper().str.strip() == selected_team.upper().strip()]
     if search_query.strip():
-        q = search_query.upper().strip()
-        match_nome = quot_view["nome"].astype(str).str.upper().str.contains(q, na=False) if "nome" in quot_view.columns else False
-        match_squadra = quot_view["squadra"].astype(str).str.upper().str.contains(q, na=False) if "squadra" in quot_view.columns else False
+        _q = search_query.upper().strip()
+        match_nome = quot_view["nome"].astype(str).str.upper().str.contains(_q, na=False) if "nome" in quot_view.columns else False
+        match_squadra = quot_view["squadra"].astype(str).str.upper().str.contains(_q, na=False) if "squadra" in quot_view.columns else False
         quot_view = quot_view[match_nome | match_squadra]
     if only_titolari and "is_titolare" in quot_view.columns:
         quot_view = quot_view[quot_view["is_titolare"] == True]
@@ -741,37 +833,82 @@ with col_roster:
         quot_view = quot_view[quot_view["presenze_totali"] >= min_partite]
 
     if selected_sort == "👑 Indice Ranking":
-        quot_view = quot_view.sort_values(by=["indice_finale", "quotazione_attuale", "nome"], ascending=[False, False, True], na_position="last")
+        quot_view = quot_view.sort_values(["indice_finale", "quotazione_attuale", "nome"], ascending=[False, False, True], na_position="last")
     elif selected_sort == "⭐ Fantamedia":
-        quot_view = quot_view.sort_values(by=["fantamedia", "presenze_totali", "nome"], ascending=[False, False, True], na_position="last")
+        quot_view = quot_view.sort_values(["fantamedia", "presenze_totali", "nome"], ascending=[False, False, True], na_position="last")
     elif selected_sort == "🔤 Nome (A-Z)":
-        quot_view = quot_view.sort_values(by=["nome"], ascending=[True], na_position="last")
+        quot_view = quot_view.sort_values(["nome"], ascending=True, na_position="last")
     elif selected_sort == "💰 Quotazione":
-        quot_view = quot_view.sort_values(by=["quotazione_attuale", "fvm", "nome"], ascending=[False, False, True], na_position="last")
+        quot_view = quot_view.sort_values(["quotazione_attuale", "fvm", "nome"], ascending=[False, False, True], na_position="last")
 
-    st.markdown(f"<div style='font-size: 0.75rem; color: #94A3B8; font-weight: 700; margin-bottom: 8px;'>ROSTER SELEZIONATO ({len(quot_view)})</div>", unsafe_allow_html=True)
+    n_filtered = len(quot_view)
+    st.markdown(
+        f"<div style='font-size:0.7rem;color:#64748B;font-weight:700;margin-bottom:6px;'>"
+        f"ROSTER SELEZIONATO ({n_filtered})</div>",
+        unsafe_allow_html=True
+    )
 
     if quot_view.empty:
         st.info("Nessun giocatore trovato con questi filtri.")
         selected_id = None
     else:
         options_df = quot_view.drop_duplicates(subset="player_id").copy()
+
+        # Pre-indicizza rigoristi e punizioni per performance
+        _rig_pos = {} if rigoristi_df.empty else {
+            (r["giocatore"], r["squadra"]): int(r["posizione"])
+            for _, r in rigoristi_df.iterrows()
+        }
+        _pun_pos = {} if punizioni_df.empty else {
+            (r["giocatore"], r["squadra"]): int(r["posizione"])
+            for _, r in punizioni_df.iterrows()
+        }
+
+        _ROLE_ICON = {"A": "🔴", "C": "🟢", "D": "🔵", "P": "🟡"}
+
         labels, ids = [], []
-        for row in options_df.itertuples():
-            n = getattr(row, "nome", "Giocatore")
-            s = getattr(row, "squadra", "-")
-            pid = getattr(row, "player_id")
-            r = getattr(row, "ruolo", "")
-            ind = getattr(row, "indice_finale", None)
-            fm = getattr(row, "fantamedia", None)
+        for _row in options_df.itertuples():
+            _n     = getattr(_row, "nome", "Giocatore")
+            _s     = getattr(_row, "squadra", "-")
+            _pid   = getattr(_row, "player_id")
+            _r     = str(getattr(_row, "ruolo", "")).upper().strip()
+            _ind   = getattr(_row, "indice_finale", None)
+            _fm    = getattr(_row, "fantamedia", None)
+            _fvm   = getattr(_row, "fvm", None)
+            _pres  = int(getattr(_row, "presenze_totali", 0) or 0)
+            _q_att = getattr(_row, "quotazione_attuale", None)
+            _mv    = getattr(_row, "media_voto", None)
 
-            if pd.notna(ind): lbl = f"{n} [{s}] • {r} | Ind: {float(ind):.1f}"
-            elif pd.notna(fm): lbl = f"{n} [{s}] • {r} | FM: {float(fm):.2f}"
-            else: lbl = f"{n} [{s}] • {r}"
+            # Score principale (indice o fantamedia)
+            _score = f"{float(_ind):.1f}" if pd.notna(_ind) else (f"{float(_fm):.1f}" if pd.notna(_fm) else "—")
+            # Riga statistiche
+            _fh  = f"{float(_mv):.2f}" if pd.notna(_mv) else "—"
+            _pg  = str(_pres)
+            _q   = str(int(_q_att)) if pd.notna(_q_att) else "—"
+            _fvm_s = str(int(_fvm)) if pd.notna(_fvm) else "—"
 
-            if lbl in labels: lbl = f"{lbl} #{int(pid)}"
-            labels.append(lbl)
-            ids.append(int(pid))
+            # Tag rigorista / punizioni
+            _n_up, _s_up = _n.upper().strip(), _s.upper().strip()
+            _tags = []
+            if (_n_up, _s_up) in _rig_pos:
+                _tags.append(f"⚽ Rig #{_rig_pos[(_n_up, _s_up)]}")
+            if (_n_up, _s_up) in _pun_pos:
+                _tags.append(f"⚡ Pun #{_pun_pos[(_n_up, _s_up)]}")
+
+            # Ruolo icon
+            _icon = _ROLE_ICON.get(_r, "⚪")
+
+            # Etichetta multiriga
+            _line1 = f"{_icon} {_n}  ·  {_s}   {_score}"
+            _line2 = f"{_r}  ·  FH:{_fh}  PG:{_pg}  Q:{_q}  FVM:{_fvm_s} FM"
+            _lbl = f"{_line1}\n{_line2}"
+            if _tags:
+                _lbl += "\n" + "  ".join(_tags)
+
+            if _lbl in labels:
+                _lbl = f"{_lbl} #{int(_pid)}"
+            labels.append(_lbl)
+            ids.append(int(_pid))
 
         label_to_id = dict(zip(labels, ids))
         radio_key = "roster_radio"
@@ -782,18 +919,10 @@ with col_roster:
                 default_idx = ids.index(st.session_state["active_player_id"])
             st.session_state[radio_key] = labels[default_idx]
 
-        # ==========================================
-        # ROSTER SCROLLABILE
-        # ==========================================
-
-        # Anchor HTML per il CSS
+        # Anchor CSS
         st.markdown('<div id="roster-anchor"></div>', unsafe_allow_html=True)
 
-        # ==========================================
-        # ROSTER SCROLLABILE
-        # ==========================================
         with st.container(height=720, border=False):
-
             selected_label = st.radio(
                 "Giocatori",
                 options=labels,
@@ -802,8 +931,6 @@ with col_roster:
             )
 
         selected_id = label_to_id.get(selected_label)
-
-        # Mantiene il giocatore selezionato tra i rerun
         st.session_state["active_player_id"] = selected_id
 
 
