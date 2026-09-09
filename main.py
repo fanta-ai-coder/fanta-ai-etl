@@ -66,6 +66,10 @@ def git_commit_and_push(repo_dir: Path):
         "titolari_infortuni",
         "titolari_infortuni.csv",
         "player_kpi_summary.csv",
+        "historical_auctions.csv",
+        "auction_predictions.csv",
+        "schema_historical_auctions.sql",
+        "alter_player_kpi_summary_ml.sql",
     ]
     for f in files_to_add:
         if (repo_dir / f).exists():
@@ -177,13 +181,23 @@ def main():
         print(f"[ERRORE] Calcolo KPI fallito: {e}", file=sys.stderr)
         sys.exit(1)
 
-    # STEP 5: Push su GitHub
+    # STEP 5: Addestramento Modello ML Stima Prezzi Asta
+    print("\n[STEP 5/5] Addestramento Modello Machine Learning Stima Asta...")
+    try:
+        from train_auction_model import main as train_model_main
+        train_model_main()
+        print("       [OK] Previsioni ML Prezzi Asta calcolate con range RMSE.")
+    except Exception as e:
+        print(f"[AVVISO] Modello ML asta: {e}")
+
+    # Push su GitHub
     if args.push:
         git_commit_and_push(repo_dir)
 
     print("\n" + "=" * 60)
     print("🎉 PIPELINE ETL COMPLETATA CON SUCCESSO!")
     print("=" * 60)
+
 
 
 if __name__ == "__main__":

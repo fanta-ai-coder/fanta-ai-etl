@@ -358,26 +358,47 @@ supabase = init_supabase()
 
 @st.cache_data(ttl=300)
 def load_kpi_summary():
-    """Carica la tabella precalcolata player_kpi_summary (o fallback locale)."""
+    """Carica la tabella precalcolata player_kpi_summary (o fallback locale) e integra le previsioni ML d'asta."""
+    df = pd.DataFrame()
     try:
         if supabase:
             res = supabase.table("player_kpi_summary").select("*").execute()
             if res.data and len(res.data) > 0:
-                return pd.DataFrame(res.data)
+                df = pd.DataFrame(res.data)
     except Exception:
         pass
 
     # Fallback locale
-    local_csv = Path(__file__).resolve().parent / "player_kpi_summary.csv"
-    if local_csv.exists():
-        return pd.read_csv(local_csv)
+    if df.empty:
+        local_csv = Path(__file__).resolve().parent / "player_kpi_summary.csv"
+        if local_csv.exists():
+            df = pd.read_csv(local_csv)
+        else:
+            url = "https://raw.githubusercontent.com/fanta-ai-coder/fanta-ai-etl/refs/heads/main/player_kpi_summary.csv"
+            try:
+                df = pd.read_csv(url)
+            except Exception:
+                df = pd.DataFrame()
 
-    # Fallback remoto GitHub
-    url = "https://raw.githubusercontent.com/fanta-ai-coder/fanta-ai-etl/refs/heads/main/player_kpi_summary.csv"
-    try:
-        return pd.read_csv(url)
-    except Exception:
-        return pd.DataFrame()
+    # Integrazione delle predizioni ML d'asta (da file locale o se non presenti in Supabase)
+    pred_csv = Path(__file__).resolve().parent / "auction_predictions.csv"
+    if not df.empty and pred_csv.exists():
+        try:
+            preds = pd.read_csv(pred_csv)
+            ml_cols = [
+                "player_id", "stima_prezzo_1000", "range_min_1000", "range_max_1000",
+                "stima_prezzo_500", "range_min_500", "range_max_500", "rmse_modello_1000", "r2_modello"
+            ]
+            avail_ml = [c for c in ml_cols if c in preds.columns]
+            if "player_id" in avail_ml:
+                cols_to_drop = [c for c in avail_ml if c in df.columns and c != "player_id"]
+                if cols_to_drop:
+                    df = df.drop(columns=cols_to_drop)
+                df = pd.merge(df, preds[avail_ml], on="player_id", how="left")
+        except Exception:
+            pass
+
+    return df
 
 
 @st.cache_data(ttl=600)
@@ -959,17 +980,24 @@ with col_roster:
 
     c1, c2 = st.columns(2, gap="small")
     with c1: selected_team = st.selectbox("Club Serie A", squadre_list, index=0)
-    with c2: selected_sort = st.selectbox("Ordinamento", ["👑 Indice Ranking", "⭐ Fantamedia", "🔤 Nome (A-Z)", "💰 Quotazione"], index=0)
+    with c2: selected_sort = st.selectbox(
+        "Ordinamento",
+        ["🤖 Stima Prezzo ML", "👑 Indice Ranking", "⭐ Fantamedia", "💰 Quotazione Listino", "🔤 Nome (A-Z)"],
+        index=0
+    )
 
-    # 4. Solo titolari & Partite minime
-    f1, f2 = st.columns([1.1, 1.9], gap="small")
-    with f1:
+    # 4. Budget Asta & Solo titolari
+    b1, b2 = st.columns([1.1, 1.9], gap="small")
+    with b1:
+        budget_mode = st.selectbox("Budget Lega", ["1000 FM", "500 FM"], index=0)
+        is_1000 = (budget_mode == "1000 FM")
+    with b2:
         only_titolari = st.checkbox("Solo titolari", value=False)
-    with f2:
         min_partite = st.slider("Partite minime", 0, 38, 0, step=1)
 
     # ── APPLICA FILTRI ──────────────────────────────
     quot_view = summary_df.copy()
+    stima_col = "stima_prezzo_1000" if is_1000 else "stima_prezzo_500"
 
     if selected_role != "Tutti" and "ruolo" in quot_view.columns:
         quot_view = quot_view[quot_view["ruolo"].astype(str).str.upper().str.strip() == selected_role]
@@ -985,14 +1013,16 @@ with col_roster:
     if min_partite > 0 and "presenze_totali" in quot_view.columns:
         quot_view = quot_view[quot_view["presenze_totali"] >= min_partite]
 
-    if selected_sort == "👑 Indice Ranking":
+    if selected_sort == "🤖 Stima Prezzo ML" and stima_col in quot_view.columns:
+        quot_view = quot_view.sort_values([stima_col, "fvm", "nome"], ascending=[False, False, True], na_position="last")
+    elif selected_sort == "👑 Indice Ranking":
         quot_view = quot_view.sort_values(["indice_finale", "quotazione_attuale", "nome"], ascending=[False, False, True], na_position="last")
     elif selected_sort == "⭐ Fantamedia":
         quot_view = quot_view.sort_values(["fantamedia", "presenze_totali", "nome"], ascending=[False, False, True], na_position="last")
+    elif selected_sort == "💰 Quotazione Listino":
+        quot_view = quot_view.sort_values(["quotazione_attuale", "fvm", "nome"], ascending=[False, False, True], na_position="last")
     elif selected_sort == "🔤 Nome (A-Z)":
         quot_view = quot_view.sort_values(["nome"], ascending=True, na_position="last")
-    elif selected_sort == "💰 Quotazione":
-        quot_view = quot_view.sort_values(["quotazione_attuale", "fvm", "nome"], ascending=[False, False, True], na_position="last")
 
     if quot_view.empty:
         st.info("Nessun giocatore trovato con questi filtri.")
@@ -1019,19 +1049,20 @@ with col_roster:
             _pres  = int(getattr(_row, "presenze_totali", 0) or 0)
             _q_att = getattr(_row, "quotazione_attuale", None)
             _mv    = getattr(_row, "media_voto", None)
+            _stima = getattr(_row, stima_col, None)
 
             # Score principale con corona
             _score_str = f"👑 {float(_ind):.1f}" if pd.notna(_ind) else (f"⭐ {float(_fm):.1f}" if pd.notna(_fm) else "—")
             _fh  = f"{float(_mv):.2f}" if pd.notna(_mv) else "—"
             _pg  = str(_pres)
             _q   = str(int(_q_att)) if pd.notna(_q_att) else "—"
-            _fvm_s = str(int(_fvm)) if pd.notna(_fvm) else "—"
+            _stima_s = f"{int(_stima)} FM" if pd.notna(_stima) else f"{int(_fvm)} FM"
 
             _badge = _ROLE_BADGES.get(_r, f"[{_r}]")
 
-            # Etichetta esattamente su 2 righe (senza puntini, ranking a destra con corona):
+            # Etichetta su 2 righe con evidenza stima ML
             _line1 = f"{_badge}  {_n} - {_s}    {_score_str}"
-            _line2 = f"FM: {_fh}          PG: {_pg}          Q: {_q}          FVM: {_fvm_s}"
+            _line2 = f"FM: {_fh}   PG: {_pg}   🤖 ML: {_stima_s}   List: {_q}"
 
             _lbl = f"{_line1}\n{_line2}"
 
@@ -1096,13 +1127,26 @@ with col_dossier:
         if desc_infortunio and desc_infortunio.lower() not in ["nan", "none", ""]:
             desc_html = f'<div style="font-size: 0.8rem; color: #FCA5A5; margin-top: 8px; font-weight: 600; background: rgba(239, 68, 68, 0.1); padding: 6px 12px; border-radius: 6px; display: inline-block;">⚠️ {desc_infortunio}</div>'
 
-        # --- METRICHE E ASTA ---
+        # --- METRICHE E ASTA (INTEGRAZIONE MODELLO ML) ---
         rk_ruolo = int(player_row.get("rank_ruolo")) if pd.notna(player_row.get("rank_ruolo")) else 1
         tot_ruolo = int(player_row.get("totale_ruolo")) if pd.notna(player_row.get("totale_ruolo")) else 68
         quota_val = int(player_row.get("quotazione_attuale", 38)) if pd.notna(player_row.get("quotazione_attuale")) else 38
         fvm_val = int(player_row.get("fvm", 320)) if pd.notna(player_row.get("fvm")) else 320
-        target_min = int(max(1, round(fvm_val * 0.90)))
-        target_max = int(max(1, round(fvm_val * 1.10)))
+
+        # Valori Stima ML e Range basato su RMSE
+        stima_ml_raw = player_row.get("stima_prezzo_1000" if is_1000 else "stima_prezzo_500")
+        if pd.notna(stima_ml_raw):
+            stima_val = float(stima_ml_raw)
+            range_min = float(player_row.get("range_min_1000" if is_1000 else "range_min_500", max(1, stima_val - 20)))
+            range_max = float(player_row.get("range_max_1000" if is_1000 else "range_max_500", stima_val + 20))
+        else:
+            scale_f = 1.0 if is_1000 else 0.5
+            stima_val = float(fvm_val * scale_f)
+            range_min = max(1.0, round(stima_val * 0.85))
+            range_max = round(stima_val * 1.15)
+
+        rmse_val = float(player_row.get("rmse_modello_1000", 46.5)) / (1.0 if is_1000 else 2.0)
+        r2_val = float(player_row.get("r2_modello", 0.47))
 
         slot_badge, slot_color, slot_bg = get_slot_asta(ruolo, rk_ruolo)
 
@@ -1132,13 +1176,21 @@ with col_dossier:
                         </div>
                     </div>
                 </div>
-                <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px; padding: 14px 20px; text-align: right;">
-                    <div style="font-size: 0.68rem; color: #34D399; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;">Valutazione Asta Recommended</div>
-                    <div style="font-size: 1.6rem; font-weight: 800; color: #F8FAFC; margin: 2px 0;">{fvm_val} <span style="font-size: 0.85rem; color: #94A3B8;">FM</span></div>
-                    <div style="display: flex; gap: 10px; justify-content: flex-end; align-items: center; margin-top: 4px;">
-                        <span style="font-size: 0.72rem; color: #94A3B8;">Target: <b style="color: #38BDF8;">{target_min} - {target_max} FM</b></span>
-                        <span style="font-size: 0.72rem; color: #64748B;">•</span>
-                        <span style="font-size: 0.72rem; color: #94A3B8;">Listino: <b style="color: #F8FAFC;">{quota_val} FM</b></span>
+                <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 12px; padding: 12px 18px; text-align: right; min-width: 255px;">
+                    <div style="display: flex; align-items: center; justify-content: flex-end; gap: 6px; font-size: 0.68rem; color: #34D399; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;">
+                        <span>🤖 Stima Modello ML</span>
+                        <span style="background: rgba(16, 185, 129, 0.2); padding: 1px 6px; border-radius: 4px; font-size: 0.62rem; color: #6EE7B7;">R² {r2_val:.2f}</span>
+                    </div>
+                    <div style="font-size: 1.75rem; font-weight: 800; color: #F8FAFC; margin: 2px 0;">
+                        {stima_val:.0f} <span style="font-size: 0.85rem; color: #94A3B8;">FM</span>
+                    </div>
+                    <div style="font-size: 0.74rem; color: #38BDF8; font-weight: 700; margin-bottom: 4px;">
+                        🎯 Range Asta (±{rmse_val:.0f}): <b>{range_min:.0f} - {range_max:.0f} FM</b>
+                    </div>
+                    <div style="display: flex; gap: 8px; justify-content: flex-end; align-items: center; font-size: 0.68rem; color: #94A3B8; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 4px; margin-top: 3px;">
+                        <span>FVM: <b style="color: #F8FAFC;">{fvm_val} FM</b></span>
+                        <span style="color: #64748B;">•</span>
+                        <span>Listino: <b style="color: #F8FAFC;">{quota_val} FM</b></span>
                     </div>
                 </div>
             </div>

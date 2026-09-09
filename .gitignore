@@ -11,3 +11,4 @@ Thumbs.db
 _staging_downloads/
 env.txt
 data/
+*.parquet

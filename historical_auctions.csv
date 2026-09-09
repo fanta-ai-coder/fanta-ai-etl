@@ -1,0 +1,638 @@
+calciatore,ruolo,squadra,fantasquadra,costo,budget_lega,costo_pct,costo_normalizzato_1000,anno_asta,stagione_asta,prev_season
+Handanovic,P,Int,A Riprovamoce Fc,20.0,250.0,8.0,80.0,2021,2021-22,2020-21
+Berisha,P,Tor,A Riprovamoce Fc,0.0,250.0,0.0,0.0,2021,2021-22,2020-21
+Radu I.,P,Int,A Riprovamoce Fc,0.0,250.0,0.0,0.0,2021,2021-22,2020-21
+Cordaz,P,Int,A Riprovamoce Fc,0.0,250.0,0.0,0.0,2021,2021-22,2020-21
+Milinkovic-Savic V.,P,Tor,A Riprovamoce Fc,1.0,250.0,0.4,4.0,2021,2021-22,2020-21
+Berardi A.,P,Ver,A Riprovamoce Fc,0.0,250.0,0.0,0.0,2021,2021-22,2020-21
+Gemello,P,Tor,A Riprovamoce Fc,0.0,250.0,0.0,0.0,2021,2021-22,2020-21
+Montipo',P,Ver,A Riprovamoce Fc,1.0,250.0,0.4,4.0,2021,2021-22,2020-21
+Pandur,P,Ver,A Riprovamoce Fc,0.0,250.0,0.0,0.0,2021,2021-22,2020-21
+Mario Rui,D,Nap,A Riprovamoce Fc,1.0,250.0,0.4,4.0,2021,2021-22,2020-21
+Alex Sandro,D,Juv,A Riprovamoce Fc,4.0,250.0,1.6,16.0,2021,2021-22,2020-21
+Ferrari G.,D,Sas,A Riprovamoce Fc,1.0,250.0,0.4,4.0,2021,2021-22,2020-21
+Mancini,D,Rom,A Riprovamoce Fc,12.0,250.0,4.8,48.0,2021,2021-22,2020-21
+Stryger Larsen,D,Udi,A Riprovamoce Fc,1.0,250.0,0.4,4.0,2021,2021-22,2020-21
+Nastasic,D,Fio,A Riprovamoce Fc,1.0,250.0,0.4,4.0,2021,2021-22,2020-21
+Hernandez T.,D,Mil,A Riprovamoce Fc,30.0,250.0,12.0,120.0,2021,2021-22,2020-21
+Dumfries,D,Int,A Riprovamoce Fc,3.0,250.0,1.2,12.0,2021,2021-22,2020-21
+Perisic,C,Int,A Riprovamoce Fc,3.0,250.0,1.2,12.0,2021,2021-22,2020-21
+Chiesa,C,Juv,A Riprovamoce Fc,50.0,250.0,20.0,200.0,2021,2021-22,2020-21
+Veretout,C,Rom,A Riprovamoce Fc,38.0,250.0,15.2,152.0,2021,2021-22,2020-21
+Hernani,C,Gen,A Riprovamoce Fc,1.0,250.0,0.4,4.0,2021,2021-22,2020-21
+Saelemaekers,C,Mil,A Riprovamoce Fc,1.0,250.0,0.4,4.0,2021,2021-22,2020-21
+Damsgaard,C,Sam,A Riprovamoce Fc,2.0,250.0,0.8,8.0,2021,2021-22,2020-21
+Miranchuk,C,Ata,A Riprovamoce Fc,1.0,250.0,0.4,4.0,2021,2021-22,2020-21
+Ilic,C,Ver,A Riprovamoce Fc,3.0,250.0,1.2,12.0,2021,2021-22,2020-21
+Dybala,A,Juv,A Riprovamoce Fc,36.0,250.0,14.4,144.0,2021,2021-22,2020-21
+Insigne,A,Nap,A Riprovamoce Fc,32.0,250.0,12.8,128.0,2021,2021-22,2020-21
+Cutrone,A,Emp,A Riprovamoce Fc,1.0,250.0,0.4,4.0,2021,2021-22,2020-21
+Pedro,A,Laz,A Riprovamoce Fc,1.0,250.0,0.4,4.0,2021,2021-22,2020-21
+Barrow,A,Bol,A Riprovamoce Fc,1.0,250.0,0.4,4.0,2021,2021-22,2020-21
+Raspadori,A,Sas,A Riprovamoce Fc,1.0,250.0,0.4,4.0,2021,2021-22,2020-21
+Sportiello,P,Ata,LEICESTA FC,0.0,250.0,0.0,0.0,2021,2021-22,2020-21
+Marchetti,P,Gen,LEICESTA FC,0.0,250.0,0.0,0.0,2021,2021-22,2020-21
+Sirigu,P,Gen,LEICESTA FC,1.0,250.0,0.4,4.0,2021,2021-22,2020-21
+Rossi F.,P,Ata,LEICESTA FC,0.0,250.0,0.0,0.0,2021,2021-22,2020-21
+Fuzato,P,Rom,LEICESTA FC,0.0,250.0,0.0,0.0,2021,2021-22,2020-21
+Musso,P,Ata,LEICESTA FC,13.0,250.0,5.2,52.0,2021,2021-22,2020-21
+Semper,P,Gen,LEICESTA FC,0.0,250.0,0.0,0.0,2021,2021-22,2020-21
+Rui Patricio,P,Rom,LEICESTA FC,11.0,250.0,4.4,44.0,2021,2021-22,2020-21
+Andrenacci,P,Gen,LEICESTA FC,0.0,250.0,0.0,0.0,2021,2021-22,2020-21
+Boer,P,Rom,LEICESTA FC,0.0,250.0,0.0,0.0,2021,2021-22,2020-21
+De Vrij,D,Int,LEICESTA FC,9.0,250.0,3.6,36.0,2021,2021-22,2020-21
+Florenzi,D,Mil,LEICESTA FC,2.0,250.0,0.8,8.0,2021,2021-22,2020-21
+Acerbi,D,Laz,LEICESTA FC,6.0,250.0,2.4,24.0,2021,2021-22,2020-21
+Zappacosta,D,Ata,LEICESTA FC,3.0,250.0,1.2,12.0,2021,2021-22,2020-21
+Spinazzola,D,Rom,LEICESTA FC,6.0,250.0,2.4,24.0,2021,2021-22,2020-21
+Criscito,D,Gen,LEICESTA FC,8.0,250.0,3.2,32.0,2021,2021-22,2020-21
+Maehle,D,Ata,LEICESTA FC,8.0,250.0,3.2,32.0,2021,2021-22,2020-21
+Vina,D,Rom,LEICESTA FC,3.0,250.0,1.2,12.0,2021,2021-22,2020-21
+Zielinski,C,Nap,LEICESTA FC,19.0,250.0,7.6,76.0,2021,2021-22,2020-21
+Pereyra,C,Udi,LEICESTA FC,14.0,250.0,5.6,56.0,2021,2021-22,2020-21
+Bonaventura,C,Fio,LEICESTA FC,2.0,250.0,0.8,8.0,2021,2021-22,2020-21
+Zaccagni,C,Laz,LEICESTA FC,9.0,250.0,3.6,36.0,2021,2021-22,2020-21
+Freuler,C,Ata,LEICESTA FC,1.0,250.0,0.4,4.0,2021,2021-22,2020-21
+Kessie',C,Mil,LEICESTA FC,22.0,250.0,8.8,88.0,2021,2021-22,2020-21
+Djuricic,C,Sas,LEICESTA FC,10.0,250.0,4.0,40.0,2021,2021-22,2020-21
+Mckennie,C,Juv,LEICESTA FC,1.0,250.0,0.4,4.0,2021,2021-22,2020-21
+Mertens,A,Nap,LEICESTA FC,5.0,250.0,2.0,20.0,2021,2021-22,2020-21
+Muriel,A,Ata,LEICESTA FC,34.0,250.0,13.6,136.0,2021,2021-22,2020-21
+Abraham,A,Rom,LEICESTA FC,23.0,250.0,9.2,92.0,2021,2021-22,2020-21
+Giroud,A,Mil,LEICESTA FC,13.0,250.0,5.2,52.0,2021,2021-22,2020-21
+Osimhen,A,Nap,LEICESTA FC,25.0,250.0,10.0,100.0,2021,2021-22,2020-21
+Shomurodov,A,Rom,LEICESTA FC,1.0,250.0,0.4,4.0,2021,2021-22,2020-21
+Ujkani,P,Emp,polyflex,0.0,250.0,0.0,0.0,2021,2021-22,2020-21
+Reina,P,Laz,polyflex,16.0,250.0,6.4,64.0,2021,2021-22,2020-21
+Padelli,P,Udi,polyflex,0.0,250.0,0.0,0.0,2021,2021-22,2020-21
+Strakosha,P,Laz,polyflex,0.0,250.0,0.0,0.0,2021,2021-22,2020-21
+Silvestri,P,Udi,polyflex,4.0,250.0,1.6,16.0,2021,2021-22,2020-21
+Vicario,P,Emp,polyflex,1.0,250.0,0.4,4.0,2021,2021-22,2020-21
+Furlan,P,Emp,polyflex,0.0,250.0,0.0,0.0,2021,2021-22,2020-21
+Adamonis,P,Laz,polyflex,0.0,250.0,0.0,0.0,2021,2021-22,2020-21
+Piana,P,Udi,polyflex,0.0,250.0,0.0,0.0,2021,2021-22,2020-21
+Luperto,D,Emp,polyflex,1.0,250.0,0.4,4.0,2021,2021-22,2020-21
+Skriniar,D,Int,polyflex,12.0,250.0,4.8,48.0,2021,2021-22,2020-21
+Karsdorp,D,Rom,polyflex,4.0,250.0,1.6,16.0,2021,2021-22,2020-21
+Darmian,D,Int,polyflex,4.0,250.0,1.6,16.0,2021,2021-22,2020-21
+Kjaer,D,Mil,polyflex,5.0,250.0,2.0,20.0,2021,2021-22,2020-21
+Di Lorenzo,D,Nap,polyflex,4.0,250.0,1.6,16.0,2021,2021-22,2020-21
+De Ligt,D,Juv,polyflex,11.0,250.0,4.4,44.0,2021,2021-22,2020-21
+Erlic,D,Spe,polyflex,1.0,250.0,0.4,4.0,2021,2021-22,2020-21
+Obi,C,Sal,polyflex,1.0,250.0,0.4,4.0,2021,2021-22,2020-21
+Milinkovic-Savic,C,Laz,polyflex,33.0,250.0,13.2,132.0,2021,2021-22,2020-21
+Rabiot,C,Juv,polyflex,2.0,250.0,0.8,8.0,2021,2021-22,2020-21
+Mkhitaryan,C,Rom,polyflex,46.0,250.0,18.4,184.0,2021,2021-22,2020-21
+Ruiz,C,Nap,polyflex,1.0,250.0,0.4,4.0,2021,2021-22,2020-21
+Diaz B.,C,Mil,polyflex,14.0,250.0,5.6,56.0,2021,2021-22,2020-21
+Marin,C,Cag,polyflex,3.0,250.0,1.2,12.0,2021,2021-22,2020-21
+Ricci S.,C,Emp,polyflex,1.0,250.0,0.4,4.0,2021,2021-22,2020-21
+Politano,A,Nap,polyflex,1.0,250.0,0.4,4.0,2021,2021-22,2020-21
+Dzeko,A,Int,polyflex,18.0,250.0,7.2,72.0,2021,2021-22,2020-21
+Joao Pedro,A,Cag,polyflex,21.0,250.0,8.4,84.0,2021,2021-22,2020-21
+Ibrahimovic,A,Mil,polyflex,21.0,250.0,8.4,84.0,2021,2021-22,2020-21
+Arnautovic,A,Bol,polyflex,11.0,250.0,4.4,44.0,2021,2021-22,2020-21
+Mancuso,A,Emp,polyflex,5.0,250.0,2.0,20.0,2021,2021-22,2020-21
+Tatarusanu,P,Mil,AC Trullo,0.0,250.0,0.0,0.0,2021,2021-22,2020-21
+Meret,P,Nap,AC Trullo,16.0,250.0,6.4,64.0,2021,2021-22,2020-21
+Plizzari,P,Mil,AC Trullo,0.0,250.0,0.0,0.0,2021,2021-22,2020-21
+Ospina,P,Nap,AC Trullo,0.0,250.0,0.0,0.0,2021,2021-22,2020-21
+Provedel,P,Spe,AC Trullo,1.0,250.0,0.4,4.0,2021,2021-22,2020-21
+Maignan,P,Mil,AC Trullo,13.0,250.0,5.2,52.0,2021,2021-22,2020-21
+Zoet,P,Spe,AC Trullo,0.0,250.0,0.0,0.0,2021,2021-22,2020-21
+Marfella,P,Nap,AC Trullo,0.0,250.0,0.0,0.0,2021,2021-22,2020-21
+Zovko,P,Spe,AC Trullo,0.0,250.0,0.0,0.0,2021,2021-22,2020-21
+Calabria,D,Mil,AC Trullo,2.0,250.0,0.8,8.0,2021,2021-22,2020-21
+Koulibaly,D,Nap,AC Trullo,5.0,250.0,2.0,20.0,2021,2021-22,2020-21
+Faraoni,D,Ver,AC Trullo,4.0,250.0,1.6,16.0,2021,2021-22,2020-21
+Bastoni,D,Int,AC Trullo,4.0,250.0,1.6,16.0,2021,2021-22,2020-21
+Gosens,D,Ata,AC Trullo,22.0,250.0,8.8,88.0,2021,2021-22,2020-21
+Milenkovic,D,Fio,AC Trullo,5.0,250.0,2.0,20.0,2021,2021-22,2020-21
+Augello,D,Sam,AC Trullo,1.0,250.0,0.4,4.0,2021,2021-22,2020-21
+Bastoni S.,D,Spe,AC Trullo,1.0,250.0,0.4,4.0,2021,2021-22,2020-21
+Candreva,C,Sam,AC Trullo,4.0,250.0,1.6,16.0,2021,2021-22,2020-21
+Luis Alberto,C,Laz,AC Trullo,45.0,250.0,18.0,180.0,2021,2021-22,2020-21
+Calhanoglu,C,Int,AC Trullo,37.0,250.0,14.8,148.0,2021,2021-22,2020-21
+Soriano,C,Bol,AC Trullo,8.0,250.0,3.2,32.0,2021,2021-22,2020-21
+Malinovskyi,C,Ata,AC Trullo,34.0,250.0,13.6,136.0,2021,2021-22,2020-21
+Messias,C,Mil,AC Trullo,4.0,250.0,1.6,16.0,2021,2021-22,2020-21
+Maggiore,C,Spe,AC Trullo,2.0,250.0,0.8,8.0,2021,2021-22,2020-21
+Bajrami,C,Emp,AC Trullo,3.0,250.0,1.2,12.0,2021,2021-22,2020-21
+Ilicic,A,Ata,AC Trullo,4.0,250.0,1.6,16.0,2021,2021-22,2020-21
+Verde,A,Spe,AC Trullo,1.0,250.0,0.4,4.0,2021,2021-22,2020-21
+Berardi,A,Sas,AC Trullo,11.0,250.0,4.4,44.0,2021,2021-22,2020-21
+Quagliarella,A,Sam,AC Trullo,3.0,250.0,1.2,12.0,2021,2021-22,2020-21
+Kean,A,Juv,AC Trullo,1.0,250.0,0.4,4.0,2021,2021-22,2020-21
+Lozano,A,Nap,AC Trullo,5.0,250.0,2.0,20.0,2021,2021-22,2020-21
+Radunovic,P,Cag,AS Trazeneca,0.0,250.0,0.0,0.0,2021,2021-22,2020-21
+Consigli,P,Sas,AS Trazeneca,3.0,250.0,1.2,12.0,2021,2021-22,2020-21
+Pegolo,P,Sas,AS Trazeneca,0.0,250.0,0.0,0.0,2021,2021-22,2020-21
+Audero,P,Sam,AS Trazeneca,4.0,250.0,1.6,16.0,2021,2021-22,2020-21
+Aresti,P,Cag,AS Trazeneca,0.0,250.0,0.0,0.0,2021,2021-22,2020-21
+Satalino,P,Sas,AS Trazeneca,0.0,250.0,0.0,0.0,2021,2021-22,2020-21
+Falcone,P,Sam,AS Trazeneca,0.0,250.0,0.0,0.0,2021,2021-22,2020-21
+Cragno,P,Cag,AS Trazeneca,3.0,250.0,1.2,12.0,2021,2021-22,2020-21
+Ravaglia,P,Sam,AS Trazeneca,0.0,250.0,0.0,0.0,2021,2021-22,2020-21
+Biraghi,D,Fio,AS Trazeneca,2.0,250.0,0.8,8.0,2021,2021-22,2020-21
+Bonucci,D,Juv,AS Trazeneca,5.0,250.0,2.0,20.0,2021,2021-22,2020-21
+Djimsiti,D,Ata,AS Trazeneca,1.0,250.0,0.4,4.0,2021,2021-22,2020-21
+Lazzari,D,Laz,AS Trazeneca,9.0,250.0,3.6,36.0,2021,2021-22,2020-21
+Bremer,D,Tor,AS Trazeneca,1.0,250.0,0.4,4.0,2021,2021-22,2020-21
+Yoshida,D,Sam,AS Trazeneca,3.0,250.0,1.2,12.0,2021,2021-22,2020-21
+Singo,D,Tor,AS Trazeneca,3.0,250.0,1.2,12.0,2021,2021-22,2020-21
+Molina N.,D,Udi,AS Trazeneca,10.0,250.0,4.0,40.0,2021,2021-22,2020-21
+Felipe Anderson,C,Laz,AS Trazeneca,33.0,250.0,13.2,132.0,2021,2021-22,2020-21
+Verdi,C,Tor,AS Trazeneca,1.0,250.0,0.4,4.0,2021,2021-22,2020-21
+Pellegrini Lo.,C,Rom,AS Trazeneca,31.0,250.0,12.4,124.0,2021,2021-22,2020-21
+Pasalic,C,Ata,AS Trazeneca,11.0,250.0,4.4,44.0,2021,2021-22,2020-21
+Barak,C,Ver,AS Trazeneca,5.0,250.0,2.0,20.0,2021,2021-22,2020-21
+Traore' Hj.,C,Sas,AS Trazeneca,1.0,250.0,0.4,4.0,2021,2021-22,2020-21
+Lobotka,C,Nap,AS Trazeneca,1.0,250.0,0.4,4.0,2021,2021-22,2020-21
+Elmas,C,Nap,AS Trazeneca,1.0,250.0,0.4,4.0,2021,2021-22,2020-21
+Rebic,A,Mil,AS Trazeneca,1.0,250.0,0.4,4.0,2021,2021-22,2020-21
+Immobile,A,Laz,AS Trazeneca,70.0,250.0,28.0,280.0,2021,2021-22,2020-21
+Simy,A,Sal,AS Trazeneca,2.0,250.0,0.8,8.0,2021,2021-22,2020-21
+Caicedo,A,Gen,AS Trazeneca,1.0,250.0,0.4,4.0,2021,2021-22,2020-21
+Martinez L.,A,Int,AS Trazeneca,41.0,250.0,16.4,164.0,2021,2021-22,2020-21
+Caputo,A,Sam,AS Trazeneca,6.0,250.0,2.4,24.0,2021,2021-22,2020-21
+Perin,P,Juv,SALAMI FC,0.0,250.0,0.0,0.0,2021,2021-22,2020-21
+Szczesny,P,Juv,SALAMI FC,21.0,250.0,8.4,84.0,2021,2021-22,2020-21
+Belec,P,Sal,SALAMI FC,1.0,250.0,0.4,4.0,2021,2021-22,2020-21
+Dragowski,P,Fio,SALAMI FC,3.0,250.0,1.2,12.0,2021,2021-22,2020-21
+Pinsoglio,P,Juv,SALAMI FC,0.0,250.0,0.0,0.0,2021,2021-22,2020-21
+Fiorillo,P,Sal,SALAMI FC,0.0,250.0,0.0,0.0,2021,2021-22,2020-21
+Rosati,P,Fio,SALAMI FC,0.0,250.0,0.0,0.0,2021,2021-22,2020-21
+Terracciano,P,Fio,SALAMI FC,0.0,250.0,0.0,0.0,2021,2021-22,2020-21
+Russo,P,Sal,SALAMI FC,0.0,250.0,0.0,0.0,2021,2021-22,2020-21
+Hysaj,D,Laz,SALAMI FC,8.0,250.0,3.2,32.0,2021,2021-22,2020-21
+Dimarco,D,Int,SALAMI FC,2.0,250.0,0.8,8.0,2021,2021-22,2020-21
+Manolas,D,Nap,SALAMI FC,1.0,250.0,0.4,4.0,2021,2021-22,2020-21
+Cuadrado,D,Juv,SALAMI FC,24.0,250.0,9.6,96.0,2021,2021-22,2020-21
+Hateboer,D,Ata,SALAMI FC,1.0,250.0,0.4,4.0,2021,2021-22,2020-21
+Danilo,D,Juv,SALAMI FC,3.0,250.0,1.2,12.0,2021,2021-22,2020-21
+Demiral,D,Ata,SALAMI FC,3.0,250.0,1.2,12.0,2021,2021-22,2020-21
+Tomori,D,Mil,SALAMI FC,2.0,250.0,0.8,8.0,2021,2021-22,2020-21
+Brozovic,C,Int,SALAMI FC,5.0,250.0,2.0,20.0,2021,2021-22,2020-21
+Locatelli,C,Juv,SALAMI FC,6.0,250.0,2.4,24.0,2021,2021-22,2020-21
+Barella,C,Int,SALAMI FC,20.0,250.0,8.0,80.0,2021,2021-22,2020-21
+Orsolini,C,Bol,SALAMI FC,4.0,250.0,1.6,16.0,2021,2021-22,2020-21
+Pessina,C,Ata,SALAMI FC,7.0,250.0,2.8,28.0,2021,2021-22,2020-21
+Zaniolo,C,Rom,SALAMI FC,29.0,250.0,11.6,116.0,2021,2021-22,2020-21
+Kulusevski,C,Juv,SALAMI FC,5.0,250.0,2.0,20.0,2021,2021-22,2020-21
+Castrovilli,C,Fio,SALAMI FC,1.0,250.0,0.4,4.0,2021,2021-22,2020-21
+Morata,A,Juv,SALAMI FC,12.0,250.0,4.8,48.0,2021,2021-22,2020-21
+Belotti,A,Tor,SALAMI FC,7.0,250.0,2.8,28.0,2021,2021-22,2020-21
+Correa,A,Int,SALAMI FC,13.0,250.0,5.2,52.0,2021,2021-22,2020-21
+Zapata D.,A,Ata,SALAMI FC,25.0,250.0,10.0,100.0,2021,2021-22,2020-21
+Vlahovic,A,Fio,SALAMI FC,40.0,250.0,16.0,160.0,2021,2021-22,2020-21
+Gonzalez N.,A,Fio,SALAMI FC,4.0,250.0,1.6,16.0,2021,2021-22,2020-21
+Tatarusanu,P,Mil,MexicoCity,1.0,1000.0,0.1,1.0,2022,2022-23,2021-22
+Silvestri,P,Udi,MexicoCity,11.0,1000.0,1.1,11.0,2022,2022-23,2021-22
+Maignan,P,Mil,MexicoCity,36.0,1000.0,3.6,36.0,2022,2022-23,2021-22
+Biraghi,D,Fio,MexicoCity,22.0,1000.0,2.2,22.0,2022,2022-23,2021-22
+Skriniar,D,Int,MexicoCity,26.0,1000.0,2.6,26.0,2022,2022-23,2021-22
+Spinazzola,D,Rom,MexicoCity,13.0,1000.0,1.3,13.0,2022,2022-23,2021-22
+Bastoni,D,Int,MexicoCity,20.0,1000.0,2.0,20.0,2022,2022-23,2021-22
+Karsdorp,D,Rom,MexicoCity,22.0,1000.0,2.2,22.0,2022,2022-23,2021-22
+Odriozola,D,Fio,MexicoCity,6.0,1000.0,0.6,6.0,2022,2022-23,2021-22
+Di Lorenzo,D,Nap,MexicoCity,25.0,1000.0,2.5,25.0,2022,2022-23,2021-22
+Augello,D,Sam,MexicoCity,11.0,1000.0,1.1,11.0,2022,2022-23,2021-22
+Callejon,C,Fio,MexicoCity,7.0,1000.0,0.7,7.0,2022,2022-23,2021-22
+Zaniolo,C,Rom,MexicoCity,57.0,1000.0,5.7,57.0,2022,2022-23,2021-22
+Ruiz,C,Nap,MexicoCity,50.0,1000.0,5.0,50.0,2022,2022-23,2021-22
+Sottil,C,Fio,MexicoCity,11.0,1000.0,1.1,11.0,2022,2022-23,2021-22
+Frattesi,C,Sas,MexicoCity,8.0,1000.0,0.8,8.0,2022,2022-23,2021-22
+Zambo Anguissa,C,Nap,MexicoCity,26.0,1000.0,2.6,26.0,2022,2022-23,2021-22
+Damsgaard,C,Sam,MexicoCity,16.0,1000.0,1.6,16.0,2022,2022-23,2021-22
+Ricci S.,C,Emp,MexicoCity,9.0,1000.0,0.9,9.0,2022,2022-23,2021-22
+Quagliarella,A,Sam,MexicoCity,59.0,1000.0,5.9,59.0,2022,2022-23,2021-22
+Zapata D.,A,Ata,MexicoCity,291.0,1000.0,29.1,291.0,2022,2022-23,2021-22
+Ibrahimovic,A,Mil,MexicoCity,30.0,1000.0,3.0,30.0,2022,2022-23,2021-22
+Raspadori,A,Sas,MexicoCity,20.0,1000.0,2.0,20.0,2022,2022-23,2021-22
+Rafael Leao,A,Mil,MexicoCity,46.0,1000.0,4.6,46.0,2022,2022-23,2021-22
+Osimhen,A,Nap,MexicoCity,177.0,1000.0,17.7,177.0,2022,2022-23,2021-22
+Skorupski,P,Bol,Prickadvisors,7.0,1000.0,0.7,7.0,2022,2022-23,2021-22
+Handanovic,P,Int,Prickadvisors,21.0,1000.0,2.1,21.0,2022,2022-23,2021-22
+Rui Patricio,P,Rom,Prickadvisors,27.0,1000.0,2.7,27.0,2022,2022-23,2021-22
+Gagliolo,D,Sal,Prickadvisors,6.0,1000.0,0.6,6.0,2022,2022-23,2021-22
+Calabria,D,Mil,Prickadvisors,27.0,1000.0,2.7,27.0,2022,2022-23,2021-22
+De Silvestri,D,Bol,Prickadvisors,15.0,1000.0,1.5,15.0,2022,2022-23,2021-22
+Marusic,D,Laz,Prickadvisors,5.0,1000.0,0.5,5.0,2022,2022-23,2021-22
+Kjaer,D,Mil,Prickadvisors,16.0,1000.0,1.6,16.0,2022,2022-23,2021-22
+Rrahmani,D,Nap,Prickadvisors,14.0,1000.0,1.4,14.0,2022,2022-23,2021-22
+Tomori,D,Mil,Prickadvisors,33.0,1000.0,3.3,33.0,2022,2022-23,2021-22
+Casale,D,Ver,Prickadvisors,9.0,1000.0,0.9,9.0,2022,2022-23,2021-22
+Pellegrini Lo.,C,Rom,Prickadvisors,67.0,1000.0,6.7,67.0,2022,2022-23,2021-22
+Perisic,C,Int,Prickadvisors,31.0,1000.0,3.1,31.0,2022,2022-23,2021-22
+Deiola,C,Cag,Prickadvisors,8.0,1000.0,0.8,8.0,2022,2022-23,2021-22
+Aramu,C,Ven,Prickadvisors,14.0,1000.0,1.4,14.0,2022,2022-23,2021-22
+Coulibaly M.,C,Sal,Prickadvisors,13.0,1000.0,1.3,13.0,2022,2022-23,2021-22
+Calhanoglu,C,Int,Prickadvisors,35.0,1000.0,3.5,35.0,2022,2022-23,2021-22
+Saelemaekers,C,Mil,Prickadvisors,26.0,1000.0,2.6,26.0,2022,2022-23,2021-22
+Pobega,C,Tor,Prickadvisors,11.0,1000.0,1.1,11.0,2022,2022-23,2021-22
+Rebic,A,Mil,Prickadvisors,95.0,1000.0,9.5,95.0,2022,2022-23,2021-22
+Dybala,A,Juv,Prickadvisors,105.0,1000.0,10.5,105.0,2022,2022-23,2021-22
+Muriel,A,Ata,Prickadvisors,155.0,1000.0,15.5,155.0,2022,2022-23,2021-22
+Caputo,A,Sam,Prickadvisors,78.0,1000.0,7.8,78.0,2022,2022-23,2021-22
+Arnautovic,A,Bol,Prickadvisors,35.0,1000.0,3.5,35.0,2022,2022-23,2021-22
+Shomurodov,A,Rom,Prickadvisors,14.0,1000.0,1.4,14.0,2022,2022-23,2021-22
+Reina,P,Laz,FC PREDIALE,16.0,1000.0,1.6,16.0,2022,2022-23,2021-22
+Musso,P,Ata,FC PREDIALE,30.0,1000.0,3.0,30.0,2022,2022-23,2021-22
+Montipo',P,Ver,FC PREDIALE,7.0,1000.0,0.7,7.0,2022,2022-23,2021-22
+Bonucci,D,Juv,FC PREDIALE,27.0,1000.0,2.7,27.0,2022,2022-23,2021-22
+Chiellini,D,Juv,FC PREDIALE,13.0,1000.0,1.3,13.0,2022,2022-23,2021-22
+Zappacosta,D,Ata,FC PREDIALE,25.0,1000.0,2.5,25.0,2022,2022-23,2021-22
+Fares,D,Gen,FC PREDIALE,9.0,1000.0,0.9,9.0,2022,2022-23,2021-22
+Cuadrado,D,Juv,FC PREDIALE,30.0,1000.0,3.0,30.0,2022,2022-23,2021-22
+Singo,D,Tor,FC PREDIALE,16.0,1000.0,1.6,16.0,2022,2022-23,2021-22
+Kalulu,D,Mil,FC PREDIALE,6.0,1000.0,0.6,6.0,2022,2022-23,2021-22
+Theate,D,Bol,FC PREDIALE,10.0,1000.0,1.0,10.0,2022,2022-23,2021-22
+Brozovic,C,Int,FC PREDIALE,17.0,1000.0,1.7,17.0,2022,2022-23,2021-22
+Bonaventura,C,Fio,FC PREDIALE,35.0,1000.0,3.5,35.0,2022,2022-23,2021-22
+Chiesa,C,Juv,FC PREDIALE,130.0,1000.0,13.0,130.0,2022,2022-23,2021-22
+Luis Alberto,C,Laz,FC PREDIALE,43.0,1000.0,4.3,43.0,2022,2022-23,2021-22
+Orsolini,C,Bol,FC PREDIALE,16.0,1000.0,1.6,16.0,2022,2022-23,2021-22
+Barak,C,Ver,FC PREDIALE,24.0,1000.0,2.4,24.0,2022,2022-23,2021-22
+Bennacer,C,Mil,FC PREDIALE,10.0,1000.0,1.0,10.0,2022,2022-23,2021-22
+Marin,C,Cag,FC PREDIALE,13.0,1000.0,1.3,13.0,2022,2022-23,2021-22
+Ilicic,A,Ata,FC PREDIALE,50.0,1000.0,5.0,50.0,2022,2022-23,2021-22
+Keita B.,A,Cag,FC PREDIALE,14.0,1000.0,1.4,14.0,2022,2022-23,2021-22
+Insigne,A,Nap,FC PREDIALE,141.0,1000.0,14.1,141.0,2022,2022-23,2021-22
+Pjaca,A,Tor,FC PREDIALE,8.0,1000.0,0.8,8.0,2022,2022-23,2021-22
+Martinez L.,A,Int,FC PREDIALE,263.0,1000.0,26.3,263.0,2022,2022-23,2021-22
+Giroud,A,Mil,FC PREDIALE,38.0,1000.0,3.8,38.0,2022,2022-23,2021-22
+Perin,P,Juv,Bomber89,1.0,1000.0,0.1,1.0,2022,2022-23,2021-22
+Szczesny,P,Juv,Bomber89,41.0,1000.0,4.1,41.0,2022,2022-23,2021-22
+Pinsoglio,P,Juv,Bomber89,1.0,1000.0,0.1,1.0,2022,2022-23,2021-22
+Dimarco,D,Int,Bomber89,22.0,1000.0,2.2,22.0,2022,2022-23,2021-22
+Koulibaly,D,Nap,Bomber89,30.0,1000.0,3.0,30.0,2022,2022-23,2021-22
+Manolas,D,Nap,Bomber89,7.0,1000.0,0.7,7.0,2022,2022-23,2021-22
+Florenzi,D,Mil,Bomber89,7.0,1000.0,0.7,7.0,2022,2022-23,2021-22
+Alex Sandro,D,Juv,Bomber89,25.0,1000.0,2.5,25.0,2022,2022-23,2021-22
+Luiz Felipe,D,Laz,Bomber89,5.0,1000.0,0.5,5.0,2022,2022-23,2021-22
+Danilo,D,Juv,Bomber89,19.0,1000.0,1.9,19.0,2022,2022-23,2021-22
+Hernandez T.,D,Mil,Bomber89,57.0,1000.0,5.7,57.0,2022,2022-23,2021-22
+Pereyra,C,Udi,Bomber89,26.0,1000.0,2.6,26.0,2022,2022-23,2021-22
+Milinkovic-Savic,C,Laz,Bomber89,61.0,1000.0,6.1,61.0,2022,2022-23,2021-22
+Locatelli,C,Juv,Bomber89,37.0,1000.0,3.7,37.0,2022,2022-23,2021-22
+Barella,C,Int,Bomber89,67.0,1000.0,6.7,67.0,2022,2022-23,2021-22
+Rabiot,C,Juv,Bomber89,7.0,1000.0,0.7,7.0,2022,2022-23,2021-22
+Vidal,C,Int,Bomber89,10.0,1000.0,1.0,10.0,2022,2022-23,2021-22
+Castrovilli,C,Fio,Bomber89,11.0,1000.0,1.1,11.0,2022,2022-23,2021-22
+Diaz B.,C,Mil,Bomber89,62.0,1000.0,6.2,62.0,2022,2022-23,2021-22
+Destro,A,Gen,Bomber89,24.0,1000.0,2.4,24.0,2022,2022-23,2021-22
+Correa,A,Int,Bomber89,31.0,1000.0,3.1,31.0,2022,2022-23,2021-22
+Abraham,A,Rom,Bomber89,231.0,1000.0,23.1,231.0,2022,2022-23,2021-22
+Vlahovic,A,Fio,Bomber89,189.0,1000.0,18.9,189.0,2022,2022-23,2021-22
+Gonzalez N.,A,Fio,Bomber89,21.0,1000.0,2.1,21.0,2022,2022-23,2021-22
+La Mantia,A,Emp,Bomber89,5.0,1000.0,0.5,5.0,2022,2022-23,2021-22
+Meret,P,Nap,Democrazia Cristiana,33.0,1000.0,3.3,33.0,2022,2022-23,2021-22
+Audero,P,Sam,Democrazia Cristiana,13.0,1000.0,1.3,13.0,2022,2022-23,2021-22
+Cragno,P,Cag,Democrazia Cristiana,8.0,1000.0,0.8,8.0,2022,2022-23,2021-22
+De Vrij,D,Int,Democrazia Cristiana,16.0,1000.0,1.6,16.0,2022,2022-23,2021-22
+Djimsiti,D,Ata,Democrazia Cristiana,10.0,1000.0,1.0,10.0,2022,2022-23,2021-22
+Hateboer,D,Ata,Democrazia Cristiana,21.0,1000.0,2.1,21.0,2022,2022-23,2021-22
+Gosens,D,Ata,Democrazia Cristiana,41.0,1000.0,4.1,41.0,2022,2022-23,2021-22
+Lazzari,D,Laz,Democrazia Cristiana,26.0,1000.0,2.6,26.0,2022,2022-23,2021-22
+Criscito,D,Gen,Democrazia Cristiana,21.0,1000.0,2.1,21.0,2022,2022-23,2021-22
+Colley,D,Sam,Democrazia Cristiana,9.0,1000.0,0.9,9.0,2022,2022-23,2021-22
+De Ligt,D,Juv,Democrazia Cristiana,26.0,1000.0,2.6,26.0,2022,2022-23,2021-22
+Zielinski,C,Nap,Democrazia Cristiana,51.0,1000.0,5.1,51.0,2022,2022-23,2021-22
+Freuler,C,Ata,Democrazia Cristiana,11.0,1000.0,1.1,11.0,2022,2022-23,2021-22
+Kessie',C,Mil,Democrazia Cristiana,24.0,1000.0,2.4,24.0,2022,2022-23,2021-22
+Bentancur,C,Juv,Democrazia Cristiana,8.0,1000.0,0.8,8.0,2022,2022-23,2021-22
+Mkhitaryan,C,Rom,Democrazia Cristiana,67.0,1000.0,6.7,67.0,2022,2022-23,2021-22
+Kulusevski,C,Juv,Democrazia Cristiana,18.0,1000.0,1.8,18.0,2022,2022-23,2021-22
+Thorsby,C,Sam,Democrazia Cristiana,7.0,1000.0,0.7,7.0,2022,2022-23,2021-22
+Malinovskyi,C,Ata,Democrazia Cristiana,80.0,1000.0,8.0,80.0,2022,2022-23,2021-22
+Morata,A,Juv,Democrazia Cristiana,80.0,1000.0,8.0,80.0,2022,2022-23,2021-22
+Joao Pedro,A,Cag,Democrazia Cristiana,61.0,1000.0,6.1,61.0,2022,2022-23,2021-22
+Kean,A,Juv,Democrazia Cristiana,20.0,1000.0,2.0,20.0,2022,2022-23,2021-22
+Pedro,A,Laz,Democrazia Cristiana,60.0,1000.0,6.0,60.0,2022,2022-23,2021-22
+Boga,A,Sas,Democrazia Cristiana,17.0,1000.0,1.7,17.0,2022,2022-23,2021-22
+Lozano,A,Nap,Democrazia Cristiana,111.0,1000.0,11.1,111.0,2022,2022-23,2021-22
+Berisha,P,Tor,El Tri,1.0,1000.0,0.1,1.0,2022,2022-23,2021-22
+Consigli,P,Sas,El Tri,13.0,1000.0,1.3,13.0,2022,2022-23,2021-22
+Milinkovic-Savic V.,P,Tor,El Tri,13.0,1000.0,1.3,13.0,2022,2022-23,2021-22
+Faraoni,D,Ver,El Tri,25.0,1000.0,2.5,25.0,2022,2022-23,2021-22
+Ansaldi,D,Tor,El Tri,19.0,1000.0,1.9,19.0,2022,2022-23,2021-22
+Milenkovic,D,Fio,El Tri,26.0,1000.0,2.6,26.0,2022,2022-23,2021-22
+Mancini,D,Rom,El Tri,13.0,1000.0,1.3,13.0,2022,2022-23,2021-22
+Bremer,D,Tor,El Tri,20.0,1000.0,2.0,20.0,2022,2022-23,2021-22
+Yoshida,D,Sam,El Tri,16.0,1000.0,1.6,16.0,2022,2022-23,2021-22
+Maehle,D,Ata,El Tri,17.0,1000.0,1.7,17.0,2022,2022-23,2021-22
+Dumfries,D,Int,El Tri,21.0,1000.0,2.1,21.0,2022,2022-23,2021-22
+Candreva,C,Sam,El Tri,31.0,1000.0,3.1,31.0,2022,2022-23,2021-22
+Felipe Anderson,C,Laz,El Tri,63.0,1000.0,6.3,63.0,2022,2022-23,2021-22
+Djuricic,C,Sas,El Tri,27.0,1000.0,2.7,27.0,2022,2022-23,2021-22
+Pasalic,C,Ata,El Tri,41.0,1000.0,4.1,41.0,2022,2022-23,2021-22
+Veretout,C,Rom,El Tri,71.0,1000.0,7.1,71.0,2022,2022-23,2021-22
+Tonali,C,Mil,El Tri,39.0,1000.0,3.9,39.0,2022,2022-23,2021-22
+Elmas,C,Nap,El Tri,11.0,1000.0,1.1,11.0,2022,2022-23,2021-22
+Ilic,C,Ver,El Tri,28.0,1000.0,2.8,28.0,2022,2022-23,2021-22
+Verde,A,Spe,El Tri,19.0,1000.0,1.9,19.0,2022,2022-23,2021-22
+Berardi,A,Sas,El Tri,79.0,1000.0,7.9,79.0,2022,2022-23,2021-22
+Dzeko,A,Int,El Tri,116.0,1000.0,11.6,116.0,2022,2022-23,2021-22
+Immobile,A,Laz,El Tri,241.0,1000.0,24.1,241.0,2022,2022-23,2021-22
+Caprari,A,Ver,El Tri,14.0,1000.0,1.4,14.0,2022,2022-23,2021-22
+Simeone,A,Ver,El Tri,15.0,1000.0,1.5,15.0,2022,2022-23,2021-22
+Gollini,P,Fio,Sambuca Juniors,19.0,1000.0,1.9,19.0,2023,2023-24,2022-23
+Radu I.,P,Cre,Sambuca Juniors,5.0,1000.0,0.5,5.0,2023,2023-24,2022-23
+Terracciano,P,Fio,Sambuca Juniors,1.0,1000.0,0.1,1.0,2023,2023-24,2022-23
+Dimarco,D,Int,Sambuca Juniors,13.0,1000.0,1.3,13.0,2023,2023-24,2022-23
+Bastoni,D,Int,Sambuca Juniors,20.0,1000.0,2.0,20.0,2023,2023-24,2022-23
+Milenkovic,D,Fio,Sambuca Juniors,11.0,1000.0,1.1,11.0,2023,2023-24,2022-23
+Kjaer,D,Mil,Sambuca Juniors,4.0,1000.0,0.4,4.0,2023,2023-24,2022-23
+Hernandez T.,D,Mil,Sambuca Juniors,50.0,1000.0,5.0,50.0,2023,2023-24,2022-23
+Kyriakopoulos,D,Sas,Sambuca Juniors,6.0,1000.0,0.6,6.0,2023,2023-24,2022-23
+Tomori,D,Mil,Sambuca Juniors,14.0,1000.0,1.4,14.0,2023,2023-24,2022-23
+Kalulu,D,Mil,Sambuca Juniors,29.0,1000.0,2.9,29.0,2023,2023-24,2022-23
+Milinkovic-Savic,C,Laz,Sambuca Juniors,56.0,1000.0,5.6,56.0,2023,2023-24,2022-23
+Locatelli,C,Juv,Sambuca Juniors,14.0,1000.0,1.4,14.0,2023,2023-24,2022-23
+Lukic,C,Tor,Sambuca Juniors,12.0,1000.0,1.2,12.0,2023,2023-24,2022-23
+Rabiot,C,Juv,Sambuca Juniors,7.0,1000.0,0.7,7.0,2023,2023-24,2022-23
+Malinovskyi,C,Ata,Sambuca Juniors,23.0,1000.0,2.3,23.0,2023,2023-24,2022-23
+Radonjic,C,Tor,Sambuca Juniors,8.0,1000.0,0.8,8.0,2023,2023-24,2022-23
+Makengo,C,Udi,Sambuca Juniors,8.0,1000.0,0.8,8.0,2023,2023-24,2022-23
+Vlasic,C,Tor,Sambuca Juniors,15.0,1000.0,1.5,15.0,2023,2023-24,2022-23
+Jovic,A,Fio,Sambuca Juniors,40.0,1000.0,4.0,40.0,2023,2023-24,2022-23
+Kouame',A,Fio,Sambuca Juniors,12.0,1000.0,1.2,12.0,2023,2023-24,2022-23
+Arnautovic,A,Bol,Sambuca Juniors,41.0,1000.0,4.1,41.0,2023,2023-24,2022-23
+Osimhen,A,Nap,Sambuca Juniors,318.0,1000.0,31.8,318.0,2023,2023-24,2022-23
+Nzola,A,Spe,Sambuca Juniors,15.0,1000.0,1.5,15.0,2023,2023-24,2022-23
+Beto,A,Udi,Sambuca Juniors,28.0,1000.0,2.8,28.0,2023,2023-24,2022-23
+Meret,P,Nap,AC Picchia,16.0,1000.0,1.6,16.0,2023,2023-24,2022-23
+Sirigu,P,Nap,AC Picchia,1.0,1000.0,0.1,1.0,2023,2023-24,2022-23
+Marfella,P,Nap,AC Picchia,1.0,1000.0,0.1,1.0,2023,2023-24,2022-23
+Biraghi,D,Fio,AC Picchia,18.0,1000.0,1.8,18.0,2023,2023-24,2022-23
+De Vrij,D,Int,AC Picchia,10.0,1000.0,1.0,10.0,2023,2023-24,2022-23
+Djimsiti,D,Ata,AC Picchia,7.0,1000.0,0.7,7.0,2023,2023-24,2022-23
+Bremer,D,Juv,AC Picchia,25.0,1000.0,2.5,25.0,2023,2023-24,2022-23
+Demiral,D,Ata,AC Picchia,13.0,1000.0,1.3,13.0,2023,2023-24,2022-23
+Lazaro,D,Tor,AC Picchia,6.0,1000.0,0.6,6.0,2023,2023-24,2022-23
+Cambiaso,D,Bol,AC Picchia,12.0,1000.0,1.2,12.0,2023,2023-24,2022-23
+Kim,D,Nap,AC Picchia,17.0,1000.0,1.7,17.0,2023,2023-24,2022-23
+Brozovic,C,Int,AC Picchia,14.0,1000.0,1.4,14.0,2023,2023-24,2022-23
+Cristante,C,Rom,AC Picchia,10.0,1000.0,1.0,10.0,2023,2023-24,2022-23
+El Shaarawy,C,Rom,AC Picchia,13.0,1000.0,1.3,13.0,2023,2023-24,2022-23
+Pessina,C,Mon,AC Picchia,12.0,1000.0,1.2,12.0,2023,2023-24,2022-23
+Bennacer,C,Mil,AC Picchia,12.0,1000.0,1.2,12.0,2023,2023-24,2022-23
+Lobotka,C,Nap,AC Picchia,20.0,1000.0,2.0,20.0,2023,2023-24,2022-23
+Kvaratskhelia,C,Nap,AC Picchia,61.0,1000.0,6.1,61.0,2023,2023-24,2022-23
+De Ketelaere,C,Mil,AC Picchia,33.0,1000.0,3.3,33.0,2023,2023-24,2022-23
+Lasagna,A,Ver,AC Picchia,14.0,1000.0,1.4,14.0,2023,2023-24,2022-23
+Bonazzoli,A,Sal,AC Picchia,14.0,1000.0,1.4,14.0,2023,2023-24,2022-23
+Immobile,A,Laz,AC Picchia,400.0,1000.0,40.0,400.0,2023,2023-24,2022-23
+Abraham,A,Rom,AC Picchia,166.0,1000.0,16.6,166.0,2023,2023-24,2022-23
+Giroud,A,Mil,AC Picchia,74.0,1000.0,7.4,74.0,2023,2023-24,2022-23
+Lookman,A,Ata,AC Picchia,14.0,1000.0,1.4,14.0,2023,2023-24,2022-23
+Szczesny,P,Juv,Imperia,29.0,1000.0,2.9,29.0,2023,2023-24,2022-23
+Milinkovic-Savic V.,P,Tor,Imperia,8.0,1000.0,0.8,8.0,2023,2023-24,2022-23
+Musso,P,Ata,Imperia,15.0,1000.0,1.5,15.0,2023,2023-24,2022-23
+Faraoni,D,Ver,Imperia,16.0,1000.0,1.6,16.0,2023,2023-24,2022-23
+Toloi,D,Ata,Imperia,10.0,1000.0,1.0,10.0,2023,2023-24,2022-23
+Spinazzola,D,Rom,Imperia,12.0,1000.0,1.2,12.0,2023,2023-24,2022-23
+Karsdorp,D,Rom,Imperia,15.0,1000.0,1.5,15.0,2023,2023-24,2022-23
+Marusic,D,Laz,Imperia,8.0,1000.0,0.8,8.0,2023,2023-24,2022-23
+Mancini,D,Rom,Imperia,12.0,1000.0,1.2,12.0,2023,2023-24,2022-23
+Udogie,D,Udi,Imperia,23.0,1000.0,2.3,23.0,2023,2023-24,2022-23
+Parisi,D,Emp,Imperia,12.0,1000.0,1.2,12.0,2023,2023-24,2022-23
+Zielinski,C,Nap,Imperia,27.0,1000.0,2.7,27.0,2023,2023-24,2022-23
+Felipe Anderson,C,Laz,Imperia,26.0,1000.0,2.6,26.0,2023,2023-24,2022-23
+Politano,C,Nap,Imperia,16.0,1000.0,1.6,16.0,2023,2023-24,2022-23
+Zaccagni,C,Laz,Imperia,21.0,1000.0,2.1,21.0,2023,2023-24,2022-23
+Luis Alberto,C,Laz,Imperia,19.0,1000.0,1.9,19.0,2023,2023-24,2022-23
+Zaniolo,C,Rom,Imperia,18.0,1000.0,1.8,18.0,2023,2023-24,2022-23
+Sottil,C,Fio,Imperia,9.0,1000.0,0.9,9.0,2023,2023-24,2022-23
+Zambo Anguissa,C,Nap,Imperia,15.0,1000.0,1.5,15.0,2023,2023-24,2022-23
+Belotti,A,Rom,Imperia,1.0,1000.0,0.1,1.0,2023,2023-24,2022-23
+Sanabria,A,Tor,Imperia,80.0,1000.0,8.0,80.0,2023,2023-24,2022-23
+Pinamonti,A,Sas,Imperia,26.0,1000.0,2.6,26.0,2023,2023-24,2022-23
+Simeone,A,Nap,Imperia,24.0,1000.0,2.4,24.0,2023,2023-24,2022-23
+Vlahovic,A,Juv,Imperia,300.0,1000.0,30.0,300.0,2023,2023-24,2022-23
+Henry,A,Ver,Imperia,20.0,1000.0,2.0,20.0,2023,2023-24,2022-23
+Tatarusanu,P,Mil,House of black and white,1.0,1000.0,0.1,1.0,2023,2023-24,2022-23
+Provedel,P,Laz,House of black and white,10.0,1000.0,1.0,10.0,2023,2023-24,2022-23
+Maignan,P,Mil,House of black and white,30.0,1000.0,3.0,30.0,2023,2023-24,2022-23
+Mario Rui,D,Nap,House of black and white,9.0,1000.0,0.9,9.0,2023,2023-24,2022-23
+Bonucci,D,Juv,House of black and white,19.0,1000.0,1.9,19.0,2023,2023-24,2022-23
+Calabria,D,Mil,House of black and white,15.0,1000.0,1.5,15.0,2023,2023-24,2022-23
+Lazzari,D,Laz,House of black and white,23.0,1000.0,2.3,23.0,2023,2023-24,2022-23
+Aina,D,Tor,House of black and white,6.0,1000.0,0.6,6.0,2023,2023-24,2022-23
+Ibanez,D,Rom,House of black and white,12.0,1000.0,1.2,12.0,2023,2023-24,2022-23
+Rodrigo Becao,D,Udi,House of black and white,12.0,1000.0,1.2,12.0,2023,2023-24,2022-23
+Martinez Quarta,D,Fio,House of black and white,4.0,1000.0,0.4,4.0,2023,2023-24,2022-23
+Pellegrini Lo.,C,Rom,House of black and white,63.0,1000.0,6.3,63.0,2023,2023-24,2022-23
+Cuadrado,C,Juv,House of black and white,21.0,1000.0,2.1,21.0,2023,2023-24,2022-23
+Barella,C,Int,House of black and white,31.0,1000.0,3.1,31.0,2023,2023-24,2022-23
+Chiesa,C,Juv,House of black and white,34.0,1000.0,3.4,34.0,2023,2023-24,2022-23
+Frattesi,C,Sas,House of black and white,27.0,1000.0,2.7,27.0,2023,2023-24,2022-23
+Tonali,C,Mil,House of black and white,15.0,1000.0,1.5,15.0,2023,2023-24,2022-23
+Ederson D.s.,C,Ata,House of black and white,15.0,1000.0,1.5,15.0,2023,2023-24,2022-23
+Miretti,C,Juv,House of black and white,3.0,1000.0,0.3,3.0,2023,2023-24,2022-23
+Rebic,A,Mil,House of black and white,15.0,1000.0,1.5,15.0,2023,2023-24,2022-23
+Muriel,A,Ata,House of black and white,27.0,1000.0,2.7,27.0,2023,2023-24,2022-23
+Caputo,A,Sam,House of black and white,21.0,1000.0,2.1,21.0,2023,2023-24,2022-23
+Rafael Leao,A,Mil,House of black and white,300.0,1000.0,30.0,300.0,2023,2023-24,2022-23
+Lozano,A,Nap,House of black and white,26.0,1000.0,2.6,26.0,2023,2023-24,2022-23
+Cabral,A,Fio,House of black and white,18.0,1000.0,1.8,18.0,2023,2023-24,2022-23
+Rui Patricio,P,Rom,Democrazia Creed Stance,22.0,1000.0,2.2,22.0,2023,2023-24,2022-23
+Boer,P,Rom,Democrazia Creed Stance,1.0,1000.0,0.1,1.0,2023,2023-24,2022-23
+Svilar,P,Rom,Democrazia Creed Stance,1.0,1000.0,0.1,1.0,2023,2023-24,2022-23
+Skriniar,D,Int,Democrazia Creed Stance,19.0,1000.0,1.9,19.0,2023,2023-24,2022-23
+Gosens,D,Int,Democrazia Creed Stance,25.0,1000.0,2.5,25.0,2023,2023-24,2022-23
+Darmian,D,Int,Democrazia Creed Stance,10.0,1000.0,1.0,10.0,2023,2023-24,2022-23
+Danilo,D,Juv,Democrazia Creed Stance,12.0,1000.0,1.2,12.0,2023,2023-24,2022-23
+Smalling,D,Rom,Democrazia Creed Stance,15.0,1000.0,1.5,15.0,2023,2023-24,2022-23
+Bastoni S.,D,Spe,Democrazia Creed Stance,14.0,1000.0,1.4,14.0,2023,2023-24,2022-23
+Maehle,D,Ata,Democrazia Creed Stance,13.0,1000.0,1.3,13.0,2023,2023-24,2022-23
+Mazzocchi,D,Sal,Democrazia Creed Stance,11.0,1000.0,1.1,11.0,2023,2023-24,2022-23
+Lazovic,C,Ver,Democrazia Creed Stance,13.0,1000.0,1.3,13.0,2023,2023-24,2022-23
+Bonaventura,C,Fio,Democrazia Creed Stance,15.0,1000.0,1.5,15.0,2023,2023-24,2022-23
+Paredes,C,Juv,Democrazia Creed Stance,12.0,1000.0,1.2,12.0,2023,2023-24,2022-23
+Barak,C,Fio,Democrazia Creed Stance,23.0,1000.0,2.3,23.0,2023,2023-24,2022-23
+Mkhitaryan,C,Int,Democrazia Creed Stance,14.0,1000.0,1.4,14.0,2023,2023-24,2022-23
+Elmas,C,Nap,Democrazia Creed Stance,12.0,1000.0,1.2,12.0,2023,2023-24,2022-23
+Kostic,C,Juv,Democrazia Creed Stance,15.0,1000.0,1.5,15.0,2023,2023-24,2022-23
+Bajrami,C,Emp,Democrazia Creed Stance,17.0,1000.0,1.7,17.0,2023,2023-24,2022-23
+Dybala,A,Rom,Democrazia Creed Stance,40.0,1000.0,4.0,40.0,2023,2023-24,2022-23
+Berardi,A,Sas,Democrazia Creed Stance,50.0,1000.0,5.0,50.0,2023,2023-24,2022-23
+Deulofeu,A,Udi,Democrazia Creed Stance,24.0,1000.0,2.4,24.0,2023,2023-24,2022-23
+Di Maria,A,Juv,Democrazia Creed Stance,37.0,1000.0,3.7,37.0,2023,2023-24,2022-23
+Pedro,A,Laz,Democrazia Creed Stance,50.0,1000.0,5.0,50.0,2023,2023-24,2022-23
+Martinez L.,A,Int,Democrazia Creed Stance,395.0,1000.0,39.5,395.0,2023,2023-24,2022-23
+Perin,P,Juv,Pro Secco,8.0,1000.0,0.8,8.0,2023,2023-24,2022-23
+Handanovic,P,Int,Pro Secco,27.0,1000.0,2.7,27.0,2023,2023-24,2022-23
+Silvestri,P,Udi,Pro Secco,13.0,1000.0,1.3,13.0,2023,2023-24,2022-23
+Ghiglione,D,Cre,Pro Secco,7.0,1000.0,0.7,7.0,2023,2023-24,2022-23
+Romagnoli,D,Laz,Pro Secco,11.0,1000.0,1.1,11.0,2023,2023-24,2022-23
+Di Lorenzo,D,Nap,Pro Secco,20.0,1000.0,2.0,20.0,2023,2023-24,2022-23
+Rrahmani,D,Nap,Pro Secco,15.0,1000.0,1.5,15.0,2023,2023-24,2022-23
+Singo,D,Tor,Pro Secco,14.0,1000.0,1.4,14.0,2023,2023-24,2022-23
+Vojvoda,D,Tor,Pro Secco,11.0,1000.0,1.1,11.0,2023,2023-24,2022-23
+Dumfries,D,Int,Pro Secco,28.0,1000.0,2.8,28.0,2023,2023-24,2022-23
+Doig,D,Ver,Pro Secco,9.0,1000.0,0.9,9.0,2023,2023-24,2022-23
+Pereyra,C,Udi,Pro Secco,25.0,1000.0,2.5,25.0,2023,2023-24,2022-23
+Candreva,C,Sal,Pro Secco,17.0,1000.0,1.7,17.0,2023,2023-24,2022-23
+Pasalic,C,Ata,Pro Secco,33.0,1000.0,3.3,33.0,2023,2023-24,2022-23
+Calhanoglu,C,Int,Pro Secco,41.0,1000.0,4.1,41.0,2023,2023-24,2022-23
+Lopez M.,C,Sas,Pro Secco,12.0,1000.0,1.2,12.0,2023,2023-24,2022-23
+Diaz B.,C,Mil,Pro Secco,12.0,1000.0,1.2,12.0,2023,2023-24,2022-23
+Samardzic,C,Udi,Pro Secco,10.0,1000.0,1.0,10.0,2023,2023-24,2022-23
+Koopmeiners,C,Ata,Pro Secco,28.0,1000.0,2.8,28.0,2023,2023-24,2022-23
+Correa,A,Int,Pro Secco,16.0,1000.0,1.6,16.0,2023,2023-24,2022-23
+Zapata D.,A,Ata,Pro Secco,296.0,1000.0,29.6,296.0,2023,2023-24,2022-23
+Milik,A,Juv,Pro Secco,21.0,1000.0,2.1,21.0,2023,2023-24,2022-23
+Lukaku,A,Int,Pro Secco,408.0,1000.0,40.8,408.0,2023,2023-24,2022-23
+Okereke,A,Cre,Pro Secco,14.0,1000.0,1.4,14.0,2023,2023-24,2022-23
+Dia,A,Sal,Pro Secco,20.0,1000.0,2.0,20.0,2023,2023-24,2022-23
+Consigli,P,Sas,Dragon Ballotta,5.0,1000.0,0.5,5.0,2024,2024-25,2023-24
+Falcone,P,Lec,Dragon Ballotta,9.0,1000.0,0.9,9.0,2024,2024-25,2023-24
+Di Gregorio,P,Mon,Dragon Ballotta,12.0,1000.0,1.2,12.0,2024,2024-25,2023-24
+Mario Rui,D,Nap,Dragon Ballotta,12.0,1000.0,1.2,12.0,2024,2024-25,2023-24
+Rrahmani,D,Nap,Dragon Ballotta,16.0,1000.0,1.6,16.0,2024,2024-25,2023-24
+Gallo,D,Lec,Dragon Ballotta,6.0,1000.0,0.6,6.0,2024,2024-25,2023-24
+Tomori,D,Mil,Dragon Ballotta,15.0,1000.0,1.5,15.0,2024,2024-25,2023-24
+Dragusin,D,Gen,Dragon Ballotta,6.0,1000.0,0.6,6.0,2024,2024-25,2023-24
+Ebuehi,D,Emp,Dragon Ballotta,10.0,1000.0,1.0,10.0,2024,2024-25,2023-24
+Olivera,D,Nap,Dragon Ballotta,11.0,1000.0,1.1,11.0,2024,2024-25,2023-24
+Thiaw,D,Mil,Dragon Ballotta,14.0,1000.0,1.4,14.0,2024,2024-25,2023-24
+Bonaventura,C,Fio,Dragon Ballotta,20.0,1000.0,2.0,20.0,2024,2024-25,2023-24
+Pellegrini Lo.,C,Rom,Dragon Ballotta,30.0,1000.0,3.0,30.0,2024,2024-25,2023-24
+Mandragora,C,Fio,Dragon Ballotta,12.0,1000.0,1.2,12.0,2024,2024-25,2023-24
+Pulisic,C,Mil,Dragon Ballotta,80.0,1000.0,8.0,80.0,2024,2024-25,2023-24
+Loftus-Cheek,C,Mil,Dragon Ballotta,22.0,1000.0,2.2,22.0,2024,2024-25,2023-24
+Malinovskyi,C,Gen,Dragon Ballotta,16.0,1000.0,1.6,16.0,2024,2024-25,2023-24
+Ndoye,C,Bol,Dragon Ballotta,12.0,1000.0,1.2,12.0,2024,2024-25,2023-24
+Gudmundsson A.,C,Gen,Dragon Ballotta,17.0,1000.0,1.7,17.0,2024,2024-25,2023-24
+Zapata D.,A,Tor,Dragon Ballotta,150.0,1000.0,15.0,150.0,2024,2024-25,2023-24
+Simeone,A,Nap,Dragon Ballotta,12.0,1000.0,1.2,12.0,2024,2024-25,2023-24
+Raspadori,A,Nap,Dragon Ballotta,9.0,1000.0,0.9,9.0,2024,2024-25,2023-24
+Osimhen,A,Nap,Dragon Ballotta,435.0,1000.0,43.5,435.0,2024,2024-25,2023-24
+Zirkzee,A,Bol,Dragon Ballotta,11.0,1000.0,1.1,11.0,2024,2024-25,2023-24
+Retegui,A,Gen,Dragon Ballotta,27.0,1000.0,2.7,27.0,2024,2024-25,2023-24
+Silvestri,P,Udi,Diomadonna,8.0,1000.0,0.8,8.0,2024,2024-25,2023-24
+Provedel,P,Laz,Diomadonna,15.0,1000.0,1.5,15.0,2024,2024-25,2023-24
+Ochoa,P,Sal,Diomadonna,9.0,1000.0,0.9,9.0,2024,2024-25,2023-24
+Dimarco,D,Int,Diomadonna,31.0,1000.0,3.1,31.0,2024,2024-25,2023-24
+Calabria,D,Mil,Diomadonna,16.0,1000.0,1.6,16.0,2024,2024-25,2023-24
+Zappacosta,D,Ata,Diomadonna,15.0,1000.0,1.5,15.0,2024,2024-25,2023-24
+Spinazzola,D,Rom,Diomadonna,11.0,1000.0,1.1,11.0,2024,2024-25,2023-24
+Djidji,D,Tor,Diomadonna,6.0,1000.0,0.6,6.0,2024,2024-25,2023-24
+Cambiaso,D,Juv,Diomadonna,23.0,1000.0,2.3,23.0,2024,2024-25,2023-24
+Baschirotto,D,Lec,Diomadonna,11.0,1000.0,1.1,11.0,2024,2024-25,2023-24
+Schuurs,D,Tor,Diomadonna,15.0,1000.0,1.5,15.0,2024,2024-25,2023-24
+Zielinski,C,Nap,Diomadonna,22.0,1000.0,2.2,22.0,2024,2024-25,2023-24
+Candreva,C,Sal,Diomadonna,23.0,1000.0,2.3,23.0,2024,2024-25,2023-24
+Frattesi,C,Int,Diomadonna,39.0,1000.0,3.9,39.0,2024,2024-25,2023-24
+Fagioli,C,Juv,Diomadonna,13.0,1000.0,1.3,13.0,2024,2024-25,2023-24
+Radonjic,C,Tor,Diomadonna,11.0,1000.0,1.1,11.0,2024,2024-25,2023-24
+Koopmeiners,C,Ata,Diomadonna,45.0,1000.0,4.5,45.0,2024,2024-25,2023-24
+Vlasic,C,Tor,Diomadonna,17.0,1000.0,1.7,17.0,2024,2024-25,2023-24
+Ciurria,C,Mon,Diomadonna,21.0,1000.0,2.1,21.0,2024,2024-25,2023-24
+Pinamonti,A,Sas,Diomadonna,35.0,1000.0,3.5,35.0,2024,2024-25,2023-24
+Rafael Leao,A,Mil,Diomadonna,350.0,1000.0,35.0,350.0,2024,2024-25,2023-24
+Kaio Jorge,A,Fro,Diomadonna,1.0,1000.0,0.1,1.0,2024,2024-25,2023-24
+Dia,A,Sal,Diomadonna,41.0,1000.0,4.1,41.0,2024,2024-25,2023-24
+Kvaratskhelia,A,Nap,Diomadonna,190.0,1000.0,19.0,190.0,2024,2024-25,2023-24
+Almqvist,A,Lec,Diomadonna,12.0,1000.0,1.2,12.0,2024,2024-25,2023-24
+Sportiello,P,Mil,LaHaine,1.0,1000.0,0.1,1.0,2024,2024-25,2023-24
+Mirante,P,Mil,LaHaine,1.0,1000.0,0.1,1.0,2024,2024-25,2023-24
+Maignan,P,Mil,LaHaine,31.0,1000.0,3.1,31.0,2024,2024-25,2023-24
+De Vrij,D,Int,LaHaine,7.0,1000.0,0.7,7.0,2024,2024-25,2023-24
+Bastoni,D,Int,LaHaine,21.0,1000.0,2.1,21.0,2024,2024-25,2023-24
+Smalling,D,Rom,LaHaine,14.0,1000.0,1.4,14.0,2024,2024-25,2023-24
+Mazzocchi,D,Sal,LaHaine,12.0,1000.0,1.2,12.0,2024,2024-25,2023-24
+Scalvini,D,Ata,LaHaine,9.0,1000.0,0.9,9.0,2024,2024-25,2023-24
+Gatti,D,Juv,LaHaine,6.0,1000.0,0.6,6.0,2024,2024-25,2023-24
+Doig,D,Ver,LaHaine,16.0,1000.0,1.6,16.0,2024,2024-25,2023-24
+Carlos Augusto,D,Int,LaHaine,17.0,1000.0,1.7,17.0,2024,2024-25,2023-24
+Cristante,C,Rom,LaHaine,14.0,1000.0,1.4,14.0,2024,2024-25,2023-24
+Locatelli,C,Juv,LaHaine,18.0,1000.0,1.8,18.0,2024,2024-25,2023-24
+Calhanoglu,C,Int,LaHaine,31.0,1000.0,3.1,31.0,2024,2024-25,2023-24
+Aouar,C,Rom,LaHaine,21.0,1000.0,2.1,21.0,2024,2024-25,2023-24
+Zambo Anguissa,C,Nap,LaHaine,16.0,1000.0,1.6,16.0,2024,2024-25,2023-24
+Lindstrom,C,Nap,LaHaine,15.0,1000.0,1.5,15.0,2024,2024-25,2023-24
+De Ketelaere,C,Ata,LaHaine,12.0,1000.0,1.2,12.0,2024,2024-25,2023-24
+Reijnders,C,Mil,LaHaine,13.0,1000.0,1.3,13.0,2024,2024-25,2023-24
+Chiesa,A,Juv,LaHaine,86.0,1000.0,8.6,86.0,2024,2024-25,2023-24
+Jovic,A,Mil,LaHaine,13.0,1000.0,1.3,13.0,2024,2024-25,2023-24
+Martinez L.,A,Int,LaHaine,400.0,1000.0,40.0,400.0,2024,2024-25,2023-24
+Thuram,A,Int,LaHaine,120.0,1000.0,12.0,120.0,2024,2024-25,2023-24
+Ngonge,A,Ver,LaHaine,14.0,1000.0,1.4,14.0,2024,2024-25,2023-24
+Okafor,A,Mil,LaHaine,11.0,1000.0,1.1,11.0,2024,2024-25,2023-24
+Audero,P,Int,AC Picchia,1.0,1000.0,0.1,1.0,2024,2024-25,2023-24
+Di Gennaro,P,Int,AC Picchia,1.0,1000.0,0.1,1.0,2024,2024-25,2023-24
+Sommer,P,Int,AC Picchia,16.0,1000.0,1.6,16.0,2024,2024-25,2023-24
+Biraghi,D,Fio,AC Picchia,16.0,1000.0,1.6,16.0,2024,2024-25,2023-24
+D'ambrosio,D,Mon,AC Picchia,7.0,1000.0,0.7,7.0,2024,2024-25,2023-24
+Romagnoli,D,Laz,AC Picchia,12.0,1000.0,1.2,12.0,2024,2024-25,2023-24
+Acerbi,D,Int,AC Picchia,10.0,1000.0,1.0,10.0,2024,2024-25,2023-24
+Milenkovic,D,Fio,AC Picchia,12.0,1000.0,1.2,12.0,2024,2024-25,2023-24
+Darmian,D,Int,AC Picchia,16.0,1000.0,1.6,16.0,2024,2024-25,2023-24
+Pavard,D,Int,AC Picchia,14.0,1000.0,1.4,14.0,2024,2024-25,2023-24
+Dumfries,D,Int,AC Picchia,19.0,1000.0,1.9,19.0,2024,2024-25,2023-24
+El Shaarawy,C,Rom,AC Picchia,25.0,1000.0,2.5,25.0,2024,2024-25,2023-24
+Mkhitaryan,C,Int,AC Picchia,13.0,1000.0,1.3,13.0,2024,2024-25,2023-24
+Pessina,C,Mon,AC Picchia,16.0,1000.0,1.6,16.0,2024,2024-25,2023-24
+Guendouzi,C,Laz,AC Picchia,13.0,1000.0,1.3,13.0,2024,2024-25,2023-24
+Strefezza,C,Lec,AC Picchia,40.0,1000.0,4.0,40.0,2024,2024-25,2023-24
+Weah,C,Juv,AC Picchia,10.0,1000.0,1.0,10.0,2024,2024-25,2023-24
+Harroui,C,Fro,AC Picchia,8.0,1000.0,0.8,8.0,2024,2024-25,2023-24
+Kamada,C,Laz,AC Picchia,15.0,1000.0,1.5,15.0,2024,2024-25,2023-24
+Immobile,A,Laz,AC Picchia,304.0,1000.0,30.4,304.0,2024,2024-25,2023-24
+Giroud,A,Mil,AC Picchia,119.0,1000.0,11.9,119.0,2024,2024-25,2023-24
+Lookman,A,Ata,AC Picchia,91.0,1000.0,9.1,91.0,2024,2024-25,2023-24
+Nzola,A,Fio,AC Picchia,52.0,1000.0,5.2,52.0,2024,2024-25,2023-24
+Lauriente',A,Sas,AC Picchia,45.0,1000.0,4.5,45.0,2024,2024-25,2023-24
+Krstovic,A,Lec,AC Picchia,13.0,1000.0,1.3,13.0,2024,2024-25,2023-24
+Meret,P,Nap,Pro Secco,29.0,1000.0,2.9,29.0,2024,2024-25,2023-24
+Gollini,P,Nap,Pro Secco,1.0,1000.0,0.1,1.0,2024,2024-25,2023-24
+Terracciano,P,Fio,Pro Secco,10.0,1000.0,1.0,10.0,2024,2024-25,2023-24
+Marchizza,D,Fro,Pro Secco,6.0,1000.0,0.6,6.0,2024,2024-25,2023-24
+Bremer,D,Juv,Pro Secco,21.0,1000.0,2.1,21.0,2024,2024-25,2023-24
+Di Lorenzo,D,Nap,Pro Secco,29.0,1000.0,2.9,29.0,2024,2024-25,2023-24
+Hernandez T.,D,Mil,Pro Secco,60.0,1000.0,6.0,60.0,2024,2024-25,2023-24
+Zappa,D,Cag,Pro Secco,6.0,1000.0,0.6,6.0,2024,2024-25,2023-24
+Monterisi,D,Fro,Pro Secco,4.0,1000.0,0.4,4.0,2024,2024-25,2023-24
+Caldirola,D,Mon,Pro Secco,7.0,1000.0,0.7,7.0,2024,2024-25,2023-24
+Posch,D,Bol,Pro Secco,17.0,1000.0,1.7,17.0,2024,2024-25,2023-24
+Felipe Anderson,C,Laz,Pro Secco,49.0,1000.0,4.9,49.0,2024,2024-25,2023-24
+Barella,C,Int,Pro Secco,45.0,1000.0,4.5,45.0,2024,2024-25,2023-24
+Pasalic,C,Ata,Pro Secco,13.0,1000.0,1.3,13.0,2024,2024-25,2023-24
+Orsolini,C,Bol,Pro Secco,47.0,1000.0,4.7,47.0,2024,2024-25,2023-24
+Samardzic,C,Udi,Pro Secco,17.0,1000.0,1.7,17.0,2024,2024-25,2023-24
+Ederson D.s.,C,Ata,Pro Secco,12.0,1000.0,1.2,12.0,2024,2024-25,2023-24
+Lovric,C,Udi,Pro Secco,15.0,1000.0,1.5,15.0,2024,2024-25,2023-24
+Ferguson,C,Bol,Pro Secco,27.0,1000.0,2.7,27.0,2024,2024-25,2023-24
+Dybala,A,Rom,Pro Secco,76.0,1000.0,7.6,76.0,2024,2024-25,2023-24
+Sanabria,A,Tor,Pro Secco,23.0,1000.0,2.3,23.0,2024,2024-25,2023-24
+Berardi,A,Sas,Pro Secco,74.0,1000.0,7.4,74.0,2024,2024-25,2023-24
+Caprari,A,Mon,Pro Secco,42.0,1000.0,4.2,42.0,2024,2024-25,2023-24
+Milik,A,Juv,Pro Secco,50.0,1000.0,5.0,50.0,2024,2024-25,2023-24
+Vlahovic,A,Juv,Pro Secco,310.0,1000.0,31.0,310.0,2024,2024-25,2023-24
+Szczesny,P,Juv,Best Brau Imperia,21.0,1000.0,2.1,21.0,2024,2024-25,2023-24
+Milinkovic-Savic V.,P,Tor,Best Brau Imperia,14.0,1000.0,1.4,14.0,2024,2024-25,2023-24
+Musso,P,Ata,Best Brau Imperia,4.0,1000.0,0.4,4.0,2024,2024-25,2023-24
+Faraoni,D,Ver,Best Brau Imperia,9.0,1000.0,0.9,9.0,2024,2024-25,2023-24
+Cuadrado,D,Int,Best Brau Imperia,17.0,1000.0,1.7,17.0,2024,2024-25,2023-24
+Mancini,D,Rom,Best Brau Imperia,11.0,1000.0,1.1,11.0,2024,2024-25,2023-24
+Danilo,D,Juv,Best Brau Imperia,20.0,1000.0,2.0,20.0,2024,2024-25,2023-24
+Vojvoda,D,Tor,Best Brau Imperia,6.0,1000.0,0.6,6.0,2024,2024-25,2023-24
+Ruggeri,D,Ata,Best Brau Imperia,4.0,1000.0,0.4,4.0,2024,2024-25,2023-24
+Parisi,D,Fio,Best Brau Imperia,8.0,1000.0,0.8,8.0,2024,2024-25,2023-24
+Dodo',D,Fio,Best Brau Imperia,8.0,1000.0,0.8,8.0,2024,2024-25,2023-24
+Politano,C,Nap,Best Brau Imperia,15.0,1000.0,1.5,15.0,2024,2024-25,2023-24
+Zaccagni,C,Laz,Best Brau Imperia,78.0,1000.0,7.8,78.0,2024,2024-25,2023-24
+Luis Alberto,C,Laz,Best Brau Imperia,53.0,1000.0,5.3,53.0,2024,2024-25,2023-24
+Rabiot,C,Juv,Best Brau Imperia,41.0,1000.0,4.1,41.0,2024,2024-25,2023-24
+Kostic,C,Juv,Best Brau Imperia,14.0,1000.0,1.4,14.0,2024,2024-25,2023-24
+Chukwueze,C,Mil,Best Brau Imperia,24.0,1000.0,2.4,24.0,2024,2024-25,2023-24
+Ilic,C,Tor,Best Brau Imperia,13.0,1000.0,1.3,13.0,2024,2024-25,2023-24
+Baldanzi,C,Emp,Best Brau Imperia,16.0,1000.0,1.6,16.0,2024,2024-25,2023-24
+Belotti,A,Rom,Best Brau Imperia,12.0,1000.0,1.2,12.0,2024,2024-25,2023-24
+Scamacca,A,Ata,Best Brau Imperia,39.0,1000.0,3.9,39.0,2024,2024-25,2023-24
+Lukaku,A,Rom,Best Brau Imperia,200.0,1000.0,20.0,200.0,2024,2024-25,2023-24
+Gonzalez N.,A,Fio,Best Brau Imperia,60.0,1000.0,6.0,60.0,2024,2024-25,2023-24
+Arnautovic,A,Int,Best Brau Imperia,40.0,1000.0,4.0,40.0,2024,2024-25,2023-24
+Beltran L.,A,Fio,Best Brau Imperia,15.0,1000.0,1.5,15.0,2024,2024-25,2023-24
