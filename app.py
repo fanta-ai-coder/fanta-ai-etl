@@ -51,21 +51,22 @@ section.main, [data-testid="stMainBlockContainer"], [data-testid="stAppViewBlock
     border: 1px solid rgba(255, 255, 255, 0.12) !important;
     border-radius: 6px !important;
     color: #F9FAFB !important;
-    font-size: 0.80rem !important;
-    min-height: 34px !important;
-    height: 34px !important;
+    font-size: 0.78rem !important;
+    min-height: 32px !important;
+    height: 32px !important;
 }
 
 div[data-testid="stSelectbox"] div[data-baseweb="select"] > div {
-    min-height: 34px !important;
-    height: 34px !important;
+    min-height: 32px !important;
+    height: 32px !important;
     padding-top: 0 !important;
     padding-bottom: 0 !important;
+    font-size: 0.78rem !important;
 }
 
 /* TIGHTEN VERTICAL GAP IN LEFT COLUMN */
 div[data-testid="column"]:first-child [data-testid="stVerticalBlock"] {
-    gap: 6px !important;
+    gap: 4px !important;
 }
 
 /* HIDE ALL DEFAULT RADIO DOTS / BULLETS COMPLETELY */
@@ -83,81 +84,45 @@ div[data-testid="stRadio"] svg {
 }
 
 /* ─────────────────────────────────────────────────────────────
-   1. FILTRO RUOLO TATTICO (Orizzontale - 5 Box Compatti)
+   1. ROLE BUTTONS (5 PULSANTI COMPATTI)
 ───────────────────────────────────────────────────────────── */
-div[data-testid="column"]:first-child div[data-testid="stRadio"]:first-of-type div[role="radiogroup"],
-div[data-testid="stRadio"]:has(div[role="radiogroup"][aria-orientation="horizontal"]) div[role="radiogroup"] {
-    display: flex !important;
-    flex-direction: row !important;
-    gap: 4px !important;
-    flex-wrap: nowrap !important;
-    background: transparent !important;
-    border: none !important;
-    padding: 0 !important;
-    margin: 2px 0 6px 0 !important;
-    overflow: visible !important;
-}
-
-div[data-testid="column"]:first-child div[data-testid="stRadio"]:first-of-type label,
-div[data-testid="stRadio"]:has(div[role="radiogroup"][aria-orientation="horizontal"]) label {
-    background: #1E293B !important;
-    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+div[data-testid="column"]:first-child .stButton button {
+    min-height: 28px !important;
+    height: 28px !important;
+    padding: 2px 0px !important;
+    font-size: 0.75rem !important;
+    font-weight: 800 !important;
     border-radius: 6px !important;
-    padding: 5px 8px !important;
-    cursor: pointer !important;
-    flex: 1 1 0 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    transition: all 0.15s ease !important;
-    min-width: 0 !important;
-    margin: 0 !important;
-    height: 30px !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    background-color: #1E293B !important;
+    color: #FFFFFF !important;
+    white-space: nowrap !important;
+    width: 100% !important;
 }
 
-div[data-testid="column"]:first-child div[data-testid="stRadio"]:first-of-type label:hover,
-div[data-testid="stRadio"]:has(div[role="radiogroup"][aria-orientation="horizontal"]) label:hover {
-    background: #334155 !important;
+div[data-testid="column"]:first-child .stButton button:hover {
+    background-color: #334155 !important;
     border-color: rgba(255, 255, 255, 0.3) !important;
 }
 
-div[data-testid="column"]:first-child div[data-testid="stRadio"]:first-of-type label:has(input:checked),
-div[data-testid="stRadio"]:has(div[role="radiogroup"][aria-orientation="horizontal"]) label:has(input:checked) {
-    background: rgba(16, 185, 129, 0.22) !important;
+/* Active Button State (primary) */
+div[data-testid="column"]:first-child .stButton button[kind="primary"],
+div[data-testid="column"]:first-child .stButton button[data-testid="baseButton-primary"] {
+    background-color: rgba(16, 185, 129, 0.25) !important;
     border: 1.5px solid #10B981 !important;
 }
-
-div[data-testid="column"]:first-child div[data-testid="stRadio"]:first-of-type label p,
-div[data-testid="stRadio"]:has(div[role="radiogroup"][aria-orientation="horizontal"]) label p {
-    text-align: center !important;
-    font-size: 0.76rem !important;
-    font-weight: 800 !important;
-    margin: 0 !important;
-    letter-spacing: 0.05em !important;
-}
-
-/* Colori lettere ruoli */
-div[data-testid="column"]:first-child div[data-testid="stRadio"]:first-of-type label:nth-child(1) p { color: #FFFFFF !important; } /* TUTTI */
-div[data-testid="column"]:first-child div[data-testid="stRadio"]:first-of-type label:nth-child(2) p { color: #F59E0B !important; } /* P */
-div[data-testid="column"]:first-child div[data-testid="stRadio"]:first-of-type label:nth-child(3) p { color: #3B82F6 !important; } /* D */
-div[data-testid="column"]:first-child div[data-testid="stRadio"]:first-of-type label:nth-child(4) p { color: #10B981 !important; } /* C */
-div[data-testid="column"]:first-child div[data-testid="stRadio"]:first-of-type label:nth-child(5) p { color: #EF4444 !important; } /* A */
 
 /* ─────────────────────────────────────────────────────────────
    2. ROSTER LISTA GIOCATORI (Card Verticali a 2 Righe)
 ───────────────────────────────────────────────────────────── */
-div[data-testid="column"]:first-child div[data-testid="stRadio"]:nth-of-type(2) div[role="radiogroup"],
-div[data-testid="column"]:first-child div[data-testid="stRadio"]:last-of-type div[role="radiogroup"],
-div[data-testid="stRadio"]:has(div[role="radiogroup"][aria-orientation="vertical"]) div[role="radiogroup"] {
+div[data-testid="stRadio"] div[role="radiogroup"] {
     display: flex !important;
     flex-direction: column !important;
     gap: 6px !important;
     padding-right: 4px !important;
 }
 
-div[data-testid="column"]:first-child div[data-testid="stRadio"]:nth-of-type(2) label,
-div[data-testid="column"]:first-child div[data-testid="stRadio"]:last-of-type label,
-div[data-testid="stRadio"]:has(div[role="radiogroup"][aria-orientation="vertical"]) label {
+div[data-testid="stRadio"] label {
     display: flex !important;
     flex-direction: column !important;
     align-items: stretch !important;
@@ -172,24 +137,18 @@ div[data-testid="stRadio"]:has(div[role="radiogroup"][aria-orientation="vertical
     width: 100% !important;
 }
 
-div[data-testid="column"]:first-child div[data-testid="stRadio"]:nth-of-type(2) label:hover,
-div[data-testid="column"]:first-child div[data-testid="stRadio"]:last-of-type label:hover,
-div[data-testid="stRadio"]:has(div[role="radiogroup"][aria-orientation="vertical"]) label:hover {
+div[data-testid="stRadio"] label:hover {
     background: #1E293B !important;
     border-color: rgba(16, 185, 129, 0.4) !important;
 }
 
-div[data-testid="column"]:first-child div[data-testid="stRadio"]:nth-of-type(2) label:has(input:checked),
-div[data-testid="column"]:first-child div[data-testid="stRadio"]:last-of-type label:has(input:checked),
-div[data-testid="stRadio"]:has(div[role="radiogroup"][aria-orientation="vertical"]) label:has(input:checked) {
+div[data-testid="stRadio"] label:has(input:checked) {
     background: rgba(16, 185, 129, 0.14) !important;
     border: 1.5px solid #10B981 !important;
 }
 
-div[data-testid="column"]:first-child div[data-testid="stRadio"]:nth-of-type(2) label p,
-div[data-testid="column"]:first-child div[data-testid="stRadio"]:last-of-type label p,
-div[data-testid="column"]:first-child div[data-testid="stRadio"] label div[data-testid="stMarkdownContainer"] p,
-div[data-testid="stRadio"]:has(div[role="radiogroup"][aria-orientation="vertical"]) label p {
+div[data-testid="stRadio"] label p,
+div[data-testid="stRadio"] label div[data-testid="stMarkdownContainer"] p {
     color: #FFFFFF !important;
     white-space: pre-line !important;
     line-height: 1.45 !important;
@@ -212,7 +171,7 @@ div[data-testid="stSlider"] label,
 .stTextInput label {
     color: #FFFFFF !important;
     font-weight: 700 !important;
-    font-size: 0.78rem !important;
+    font-size: 0.75rem !important;
     margin-bottom: 2px !important;
 }
 
@@ -800,59 +759,53 @@ col_roster, col_dossier = st.columns([0.28, 0.72], gap="small")
 # ------------------------------------------
 with col_roster:
 
-    total_n = len(summary_df)
-
-    # Header compatto con counter totale
-    st.markdown(f"""
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-    <div style="font-size:0.88rem;font-weight:800;color:#FFFFFF;letter-spacing:-0.02em;">
-        ⚡ Roster & Filtri
-    </div>
-    <div style="font-size:0.72rem;color:#10B981;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);padding:2px 8px;border-radius:99px;font-weight:700;">
-        {total_n}
-    </div>
-</div>
-""", unsafe_allow_html=True)
-
-    # Barra di ricerca
+    # 1. Barra di ricerca
     search_query = st.text_input("Ricerca", placeholder="Cerca giocatore o squadra...", label_visibility="collapsed")
 
-    # FILTRO RUOLO TATTICO
-    st.markdown("<div style='font-size:0.72rem;color:#FFFFFF;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin:4px 0 2px;'>Filtro Ruolo</div>", unsafe_allow_html=True)
+    # 2. Pulsanti Ruolo Compatti (5 pulsanti)
+    if "role_filter" not in st.session_state:
+        st.session_state["role_filter"] = "ALL"
 
-    role_label_opts = ["TUTTI", "P", "D", "C", "A"]
-    _role_key_map = {"TUTTI": "Tutti", "P": "P", "D": "D", "C": "C", "A": "A"}
+    cur_role = st.session_state["role_filter"]
 
-    # Se il valore in session_state non è più valido, reset
-    if st.session_state.get("role_filter_btn") not in role_label_opts:
-        st.session_state["role_filter_btn"] = role_label_opts[0]
+    b_all, b_p, b_d, b_c, b_a = st.columns(5, gap="small")
+    with b_all:
+        if st.button("ALL", key="btn_role_all", use_container_width=True, type="primary" if cur_role == "ALL" else "secondary"):
+            st.session_state["role_filter"] = "ALL"
+            st.rerun()
+    with b_p:
+        if st.button("P", key="btn_role_p", use_container_width=True, type="primary" if cur_role == "P" else "secondary"):
+            st.session_state["role_filter"] = "P"
+            st.rerun()
+    with b_d:
+        if st.button("D", key="btn_role_d", use_container_width=True, type="primary" if cur_role == "D" else "secondary"):
+            st.session_state["role_filter"] = "D"
+            st.rerun()
+    with b_c:
+        if st.button("C", key="btn_role_c", use_container_width=True, type="primary" if cur_role == "C" else "secondary"):
+            st.session_state["role_filter"] = "C"
+            st.rerun()
+    with b_a:
+        if st.button("A", key="btn_role_a", use_container_width=True, type="primary" if cur_role == "A" else "secondary"):
+            st.session_state["role_filter"] = "A"
+            st.rerun()
 
-    # Anchor CSS per targetare SOLO questo radio
-    st.markdown('<div id="role-filter-anchor"></div>', unsafe_allow_html=True)
-    selected_role_lbl = st.radio(
-        "Ruolo",
-        role_label_opts,
-        horizontal=True,
-        key="role_filter_btn",
-        label_visibility="collapsed"
-    )
-    selected_role = _role_key_map.get(selected_role_lbl, "Tutti")
+    selected_role = "Tutti" if cur_role == "ALL" else cur_role
 
-    # Club + Ordinamento
+    # 3. Club + Ordinamento
     squadre_raw = current_quot["squadra"].dropna().astype(str).str.strip().unique() if "squadra" in current_quot.columns else []
     squadre_list = ["Tutte"] + sorted(list(squadre_raw))
 
-    c1, c2 = st.columns(2)
+    c1, c2 = st.columns(2, gap="small")
     with c1: selected_team = st.selectbox("Club Serie A", squadre_list, index=0)
     with c2: selected_sort = st.selectbox("Ordinamento", ["👑 Indice Ranking", "⭐ Fantamedia", "🔤 Nome (A-Z)", "💰 Quotazione"], index=0)
 
-    f1, f2 = st.columns([1.3, 1.7])
-    with f1: only_titolari = st.checkbox("Solo titolari", value=False)
+    # 4. Solo titolari & Partite minime
+    f1, f2 = st.columns([1.1, 1.9], gap="small")
+    with f1:
+        only_titolari = st.checkbox("Solo titolari", value=False)
     with f2:
-        st.markdown("<div style='font-size:0.75rem;color:#FFFFFF;font-weight:700;margin-bottom:2px;'>Partite minime</div>", unsafe_allow_html=True)
-        min_partite = st.slider("PG min", 0, 38, 0, step=1, label_visibility="collapsed")
-
-    st.markdown("<hr style='border-color:rgba(255,255,255,0.08);margin:10px 0;'>", unsafe_allow_html=True)
+        min_partite = st.slider("Partite minime", 0, 38, 0, step=1)
 
     # ── APPLICA FILTRI ──────────────────────────────
     quot_view = summary_df.copy()
@@ -879,13 +832,6 @@ with col_roster:
         quot_view = quot_view.sort_values(["nome"], ascending=True, na_position="last")
     elif selected_sort == "💰 Quotazione":
         quot_view = quot_view.sort_values(["quotazione_attuale", "fvm", "nome"], ascending=[False, False, True], na_position="last")
-
-    n_filtered = len(quot_view)
-    st.markdown(
-        f"<div style='font-size:0.75rem;color:#FFFFFF;font-weight:700;margin-bottom:8px;'>"
-        f"ROSTER SELEZIONATO ({n_filtered})</div>",
-        unsafe_allow_html=True
-    )
 
     if quot_view.empty:
         st.info("Nessun giocatore trovato con questi filtri.")
@@ -956,12 +902,9 @@ with col_roster:
                 default_idx = ids.index(st.session_state["active_player_id"])
             st.session_state[radio_key] = labels[default_idx]
 
-        # Anchor CSS per roster
-        st.markdown('<div id="roster-anchor"></div>', unsafe_allow_html=True)
-
         with st.container(height=720, border=False):
             selected_label = st.radio(
-                "Giocatori",
+                "Roster",
                 options=labels,
                 key=radio_key,
                 label_visibility="collapsed"
