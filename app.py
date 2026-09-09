@@ -84,17 +84,16 @@ section.main, [data-testid="stMainBlockContainer"], [data-testid="stAppViewBlock
     color: #EF4444 !important;
     font-weight: 700 !important;
 }
-/* --------------------------------------------
-   2. ROSTER LIST – SCROLL VERTICALE
-   Applicato SOLO al radio che segue #roster-anchor
--------------------------------------------- */
+# --------------------------------------------
+#   2. ROSTER LIST – SCROLL VERTICALE E CARD SEPARATE
+# --------------------------------------------
 #roster-anchor ~ div[data-testid="stRadio"] div[role="radiogroup"] {
     display: flex !important;
     flex-direction: column !important;
-    gap: 6px !important;
+    gap: 10px !important;
     max-height: 720px !important;
     overflow-y: auto !important;
-    padding-right: 4px !important;
+    padding-right: 6px !important;
 }
 
 #roster-anchor ~ div[data-testid="stRadio"] label > div:first-child,
@@ -107,9 +106,9 @@ section.main, [data-testid="stMainBlockContainer"], [data-testid="stAppViewBlock
     align-items: center !important;
     justify-content: space-between !important;
     background: #111827 !important;
-    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
     border-radius: 10px !important;
-    padding: 10px 14px !important;
+    padding: 12px 16px !important;
     margin: 0 !important;
     cursor: pointer !important;
     transition: all 0.2s ease !important;
@@ -117,18 +116,23 @@ section.main, [data-testid="stMainBlockContainer"], [data-testid="stAppViewBlock
 
 #roster-anchor ~ div[data-testid="stRadio"] label:hover {
     background: #1E293B !important;
-    border-color: rgba(16, 185, 129, 0.3) !important;
+    border-color: rgba(16, 185, 129, 0.4) !important;
 }
 
 #roster-anchor ~ div[data-testid="stRadio"] label:has(input:checked) {
-    background: rgba(16, 185, 129, 0.12) !important;
+    background: rgba(16, 185, 129, 0.15) !important;
     border: 1px solid #10B981 !important;
 }
 
 #roster-anchor ~ div[data-testid="stRadio"] label p {
-    color: #F1F5F9 !important;
-    font-size: 0.88rem !important;
+    color: #FFFFFF !important;
+    font-size: 0.95rem !important;
     font-weight: 600 !important;
+}
+
+#roster-anchor ~ div[data-testid="stRadio"] label:has(input:checked) p {
+    color: #34D399 !important;
+    font-weight: 700 !important;
 }
 
 /* --------------------------------------------
