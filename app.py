@@ -77,7 +77,9 @@ section.main, [data-testid="stMainBlockContainer"], [data-testid="stAppViewBlock
     box-shadow: 0 0 12px rgba(16, 185, 129, 0.2);
 }
 </style>
-""", unsafe_allow_html=True)
+"""
+
+st.markdown(_CUSTOM_CSS, unsafe_allow_html=True)
 
 
 # ==========================================
@@ -484,11 +486,9 @@ with col_roster:
         role_colors = {"P": "#F59E0B", "D": "#3B82F6", "C": "#10B981", "A": "#EF4444"}
         role_names = {"P": "PORTIERI", "D": "DIFENSORI", "C": "CENTROCAMPO", "A": "ATTACCANTI"}
 
-        # Gestione selezione corrente
         if "active_player_id" not in st.session_state:
             st.session_state["active_player_id"] = int(options_df.iloc[0]["player_id"])
 
-        # Lista di elementi scrollabili con pulsanti
         with st.container(height=650):
             for row in options_df.itertuples():
                 pid = int(getattr(row, "player_id"))
@@ -583,7 +583,6 @@ with col_dossier:
         ranking_row = get_player_ranking(ranking_df, player_id)
         titolare_info = titolari_df[(titolari_df["nome_giocatore"] == nome_upper) & (titolari_df["squadra"] == squadra_upper)]
 
-        # --- GESTIONE TAG TITOLARITA E INFORTUNIO ---
         titolarita_val, infortunato_val, desc_infortunio = "", "", ""
         if not titolare_info.empty:
             t_row = titolare_info.iloc[0]
@@ -604,13 +603,11 @@ with col_dossier:
         if desc_infortunio and desc_infortunio.lower() != "nan":
             desc_html = f'<div style="font-size: 0.8rem; color: #FCA5A5; margin-top: 8px; font-weight: 600; background: rgba(239, 68, 68, 0.1); padding: 6px 12px; border-radius: 6px; display: inline-block;">⚠️ {desc_infortunio}</div>'
 
-        # --- METRICHE E ASTA ---
         rk_ruolo = int(ranking_row.get("rank_ruolo")) if ranking_row is not None and pd.notna(ranking_row.get("rank_ruolo")) else 1
         tot_ruolo = int(ranking_row.get("totale_ruolo")) if ranking_row is not None and pd.notna(ranking_row.get("totale_ruolo")) else 68
         quota_val = current_quote.get("quotazione_attuale", 38) if current_quote is not None else 38
         fvm_val = current_quote.get("fvm", 320) if current_quote is not None else 320
 
-        # Rendering corretto e strutturato dell'Header Dettagli
         header_html = f"""
         <div class="glass-panel">
             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
