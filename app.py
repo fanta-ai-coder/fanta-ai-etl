@@ -168,13 +168,13 @@ section.main, [data-testid="stMainBlockContainer"], [data-testid="stAppViewBlock
 }
 
 /* ────────────────────────────────────────
-   ROLE FILTER: compact tab-pills
+   ROLE FILTER: compact tab-pills (anchor-based, no :first-of-type)
 ──────────────────────────────────────── */
-div[data-testid="stRadio"]:first-of-type label > div:first-child,
-div[data-testid="stRadio"]:first-of-type input[type="radio"] {
+#role-filter-anchor + div[data-testid="stRadio"] label > div:first-child,
+#role-filter-anchor + div[data-testid="stRadio"] input[type="radio"] {
     display: none !important;
 }
-div[data-testid="stRadio"]:first-of-type div[role="radiogroup"] {
+#role-filter-anchor + div[data-testid="stRadio"] div[role="radiogroup"] {
     display: flex !important;
     flex-direction: row !important;
     gap: 4px !important;
@@ -184,52 +184,63 @@ div[data-testid="stRadio"]:first-of-type div[role="radiogroup"] {
     padding: 0 !important;
     max-height: none !important;
     overflow: visible !important;
+    width: auto !important;
 }
-div[data-testid="stRadio"]:first-of-type label {
+#role-filter-anchor + div[data-testid="stRadio"] label {
     background: #1E293B !important;
     border: 1px solid rgba(255,255,255,0.07) !important;
     border-radius: 8px !important;
-    padding: 5px 8px !important;
+    padding: 5px 10px !important;
     cursor: pointer !important;
-    flex: 1 !important;
+    flex: 0 0 auto !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     transition: background 0.15s !important;
-    min-width: 0 !important;
+    min-width: 46px !important;
+    margin: 0 !important;
 }
-div[data-testid="stRadio"]:first-of-type label:hover {
+#role-filter-anchor + div[data-testid="stRadio"] label:hover {
     background: #273449 !important;
     border-color: rgba(16,185,129,0.3) !important;
 }
-div[data-testid="stRadio"]:first-of-type label:has(input:checked) {
+#role-filter-anchor + div[data-testid="stRadio"] label:has(input:checked) {
     background: rgba(16,185,129,0.15) !important;
     border-color: #10B981 !important;
 }
-div[data-testid="stRadio"]:first-of-type label p {
+#role-filter-anchor + div[data-testid="stRadio"] label p {
     white-space: pre-line !important;
     text-align: center !important;
-    font-size: 0.7rem !important;
-    line-height: 1.3 !important;
+    font-size: 0.68rem !important;
+    line-height: 1.25 !important;
     margin: 0 !important;
     font-weight: 700 !important;
 }
-div[data-testid="stRadio"]:first-of-type label:nth-child(1) p { color: #94A3B8 !important; }
-div[data-testid="stRadio"]:first-of-type label:nth-child(2) p { color: #F59E0B !important; }
-div[data-testid="stRadio"]:first-of-type label:nth-child(3) p { color: #3B82F6 !important; }
-div[data-testid="stRadio"]:first-of-type label:nth-child(4) p { color: #10B981 !important; }
-div[data-testid="stRadio"]:first-of-type label:nth-child(5) p { color: #EF4444 !important; }
+#role-filter-anchor + div[data-testid="stRadio"] label:nth-child(1) p { color: #94A3B8 !important; }
+#role-filter-anchor + div[data-testid="stRadio"] label:nth-child(2) p { color: #F59E0B !important; }
+#role-filter-anchor + div[data-testid="stRadio"] label:nth-child(3) p { color: #3B82F6 !important; }
+#role-filter-anchor + div[data-testid="stRadio"] label:nth-child(4) p { color: #10B981 !important; }
+#role-filter-anchor + div[data-testid="stRadio"] label:nth-child(5) p { color: #EF4444 !important; }
 
 /* ────────────────────────────────────────
-   PLAYER CARDS: compact multi-line cards
+   PLAYER CARDS: compact multi-line, VERTICAL list
 ──────────────────────────────────────── */
+#roster-anchor ~ div[data-testid="stRadio"] div[role="radiogroup"] {
+    flex-direction: column !important;
+    max-height: 680px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+}
 #roster-anchor ~ div[data-testid="stRadio"] label p {
     white-space: pre-line !important;
-    line-height: 1.55 !important;
+    line-height: 1.5 !important;
     font-size: 0.78rem !important;
+    color: #F1F5F9 !important;
+    font-weight: 600 !important;
 }
 #roster-anchor ~ div[data-testid="stRadio"] label {
     padding: 8px 12px !important;
+    align-items: flex-start !important;
 }
 </style>
 """
@@ -790,6 +801,8 @@ with col_roster:
     if st.session_state.get("role_filter_btn") not in role_label_opts:
         st.session_state["role_filter_btn"] = role_label_opts[0]
 
+    # Anchor CSS: il CSS usa #role-filter-anchor + div per targetare SOLO questo radio
+    st.markdown('<div id="role-filter-anchor"></div>', unsafe_allow_html=True)
     selected_role_lbl = st.radio(
         "Ruolo",
         role_label_opts,
