@@ -70,38 +70,6 @@ div[data-testid="column"]:first-child [data-testid="stVerticalBlock"] {
     gap: 4px !important;
 }
 
-/* HIDE ALL DEFAULT RADIO DOTS / BULLETS COMPLETELY */
-div[data-testid="stRadio"] input[type="radio"],
-div[data-testid="stRadio"] label > div:first-child,
-div[data-testid="stRadio"] label > div:first-child *,
-div[data-testid="stRadio"] label > span:first-child,
-div[data-testid="stRadio"] label > span:first-child *,
-div[data-testid="stRadio"] label > div:not([data-testid="stMarkdownContainer"]),
-div[data-testid="stRadio"] label > div:not([data-testid="stMarkdownContainer"]) *,
-div[data-testid="stRadio"] label > span:not([data-testid="stMarkdownContainer"]),
-div[data-testid="stRadio"] label > span:not([data-testid="stMarkdownContainer"]) *,
-div[data-testid="stRadio"] [data-testid="stWidgetSelectionIndicator"],
-div[data-testid="stRadio"] [data-baseweb="radio"] > div:first-child:not([data-testid="stMarkdownContainer"]),
-div[data-testid="stRadio"] [data-baseweb="radio"] > span:first-child:not([data-testid="stMarkdownContainer"]),
-div[data-testid="stRadio"] span[data-baseweb="radio-bullet"],
-div[data-testid="stRadio"] svg {
-    display: none !important;
-    width: 0px !important;
-    height: 0px !important;
-    max-width: 0px !important;
-    max-height: 0px !important;
-    min-width: 0px !important;
-    min-height: 0px !important;
-    opacity: 0 !important;
-    visibility: hidden !important;
-    margin: 0px !important;
-    padding: 0px !important;
-    border: none !important;
-    background: transparent !important;
-    pointer-events: none !important;
-    position: absolute !important;
-}
-
 
 /* ─────────────────────────────────────────────────────────────
    1. ROLE BUTTONS (Colore per ruolo + bordo attivo)
@@ -182,36 +150,72 @@ div[data-testid="column"]:first-child .stButton button {
 /* ─────────────────────────────────────────────────────────────
    2. ROSTER LISTA GIOCATORI (Card a Larghezza Intera 100%)
 ───────────────────────────────────────────────────────────── */
+
+/* 2.1 Nascondi solo i pallini / cerchi radio nativi e BaseWeb */
+div[data-testid="stRadio"] input[type="radio"],
+div[data-testid="stRadio"] [data-testid="stWidgetSelectionIndicator"],
+div[data-testid="stRadio"] [data-baseweb="radio"] [aria-hidden="true"],
+div[data-testid="stRadio"] label [aria-hidden="true"],
+div[data-testid="stRadio"] [data-baseweb="radio"] svg,
+div[data-testid="stRadio"] label svg {
+    display: none !important;
+    width: 0px !important;
+    height: 0px !important;
+    max-width: 0px !important;
+    max-height: 0px !important;
+    min-width: 0px !important;
+    min-height: 0px !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    position: absolute !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* 2.2 Forzatura larghezza 100% dal container fino a ogni singola card */
+div[data-testid="column"]:first-child,
+div[data-testid="column"]:first-child > div,
 div[data-testid="column"]:first-child div[data-testid="stVerticalBlockBorderWrapper"],
 div[data-testid="column"]:first-child div[data-testid="stVerticalBlockBorderWrapper"] > div,
 div[data-testid="stRadio"],
 div[data-testid="stRadio"] > div,
-div[data-testid="stRadio"] div[role="radiogroup"],
-div[data-testid="stRadio"] div[role="radiogroup"] > div,
-div[data-testid="stRadio"] [data-baseweb="radio"] {
-    display: flex !important;
-    flex-direction: column !important;
+div[data-testid="stRadio"] div[role="radiogroup"] {
     width: 100% !important;
     min-width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
-    align-self: stretch !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+}
+
+div[data-testid="stRadio"] div[role="radiogroup"] {
     gap: 8px !important;
 }
 
+div[data-testid="stRadio"] div[role="radiogroup"] > div,
+div[data-testid="stRadio"] [data-baseweb="radio"],
+div[data-testid="stRadio"] label[data-baseweb="radio"],
 div[data-testid="stRadio"] label {
-    display: block !important;
-    background: #111827 !important;
-    border: 1px solid rgba(255, 255, 255, 0.12) !important;
-    border-radius: 8px !important;
-    padding: 10px 14px !important;
-    margin: 0 !important;
-    cursor: pointer !important;
-    transition: all 0.15s ease !important;
     width: 100% !important;
     min-width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-self: stretch !important;
+    flex: 1 1 100% !important;
+}
+
+div[data-testid="stRadio"] label {
+    background: #111827 !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 8px !important;
+    padding: 10px 16px !important;
+    margin: 0 !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
 }
 
 div[data-testid="stRadio"] label:hover {
@@ -224,18 +228,29 @@ div[data-testid="stRadio"] label:has(input:checked) {
     border: 1.5px solid #10B981 !important;
 }
 
-div[data-testid="stRadio"] label [data-testid="stMarkdownContainer"] {
+/* 2.3 Contenuto e testo sempre visibili e a tutta larghezza */
+div[data-testid="stRadio"] [data-testid="stRadioOptionLabel"],
+div[data-testid="stRadio"] [data-testid="stMarkdownContainer"] {
     width: 100% !important;
+    min-width: 100% !important;
     max-width: 100% !important;
-    display: block !important;
     box-sizing: border-box !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
 }
 
-div[data-testid="stRadio"] label [data-testid="stMarkdownContainer"] p {
+div[data-testid="stRadio"] [data-testid="stRadioOptionLabel"] *,
+div[data-testid="stRadio"] [data-testid="stMarkdownContainer"] * {
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+div[data-testid="stRadio"] [data-testid="stMarkdownContainer"] p {
     color: #FFFFFF !important;
     white-space: pre-line !important;
     line-height: 1.6 !important;
-    font-size: 0.84rem !important;
+    font-size: 0.85rem !important;
     font-weight: 600 !important;
     margin: 0 !important;
     width: 100% !important;
@@ -1089,8 +1104,8 @@ with col_roster:
 
             # Riga 1: Solo ruolo, nome e squadra (rimosse stelle e corone)
             _line1 = f"{_badge}  {_n} - {_s}"
-            # Riga 2: Distinzione chiara FM (FantaMedia) e FMV (Fantamilioni Asta)
-            _line2 = f"FM: {_fm_val}          PG: {_pg}          Q: {_q}          FMV: {_fmv_num}"
+            # Riga 2: Distinzione chiara FM (FantaMedia) e FMV (Fantamilioni Asta) con spazi preservati
+            _line2 = f"FM: {_fm_val}\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0PG: {_pg}\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0Q: {_q}\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0FMV: {_fmv_num}"
 
             _lbl = f"{_line1}\n{_line2}"
 
