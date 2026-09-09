@@ -169,13 +169,19 @@ div[data-testid="column"]:first-child .stButton button {
 }
 
 /* ─────────────────────────────────────────────────────────────
-   2. ROSTER LISTA GIOCATORI (Card Verticali a 2 Righe)
+   2. ROSTER LISTA GIOCATORI (Card a Larghezza Intera)
 ───────────────────────────────────────────────────────────── */
+div[data-testid="column"]:first-child,
+div[data-testid="column"]:first-child [data-testid="stVerticalBlock"],
+div[data-testid="column"]:first-child div[data-testid="stRadio"],
+div[data-testid="column"]:first-child div[role="radiogroup"],
 div[data-testid="stRadio"] div[role="radiogroup"] {
     display: flex !important;
     flex-direction: column !important;
     gap: 6px !important;
-    padding-right: 4px !important;
+    width: 100% !important;
+    min-width: 100% !important;
+    box-sizing: border-box !important;
 }
 
 div[data-testid="stRadio"] label {
@@ -184,13 +190,15 @@ div[data-testid="stRadio"] label {
     align-items: stretch !important;
     justify-content: center !important;
     background: #111827 !important;
-    border: 1px solid rgba(255, 255, 255, 0.10) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
     border-radius: 8px !important;
-    padding: 8px 12px !important;
+    padding: 10px 14px !important;
     margin: 0 !important;
     cursor: pointer !important;
     transition: all 0.15s ease !important;
     width: 100% !important;
+    min-width: 100% !important;
+    box-sizing: border-box !important;
 }
 
 div[data-testid="stRadio"] label:hover {
@@ -203,15 +211,26 @@ div[data-testid="stRadio"] label:has(input:checked) {
     border: 1.5px solid #10B981 !important;
 }
 
-div[data-testid="stRadio"] label p,
+div[data-testid="stRadio"] label > div:first-child:not([data-testid="stMarkdownContainer"]),
+div[data-testid="stRadio"] label div[class*="st-emotion-cache"]:first-child {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    position: absolute !important;
+}
+
+div[data-testid="stRadio"] label div[data-testid="stMarkdownContainer"],
 div[data-testid="stRadio"] label div[data-testid="stMarkdownContainer"] p {
     color: #FFFFFF !important;
     white-space: pre-line !important;
-    line-height: 1.45 !important;
-    font-size: 0.78rem !important;
+    line-height: 1.55 !important;
+    font-size: 0.80rem !important;
     font-weight: 600 !important;
     margin: 0 !important;
     width: 100% !important;
+    display: block !important;
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -808,7 +827,7 @@ summary_df = compute_player_summaries(df, current_quot, ranking_df, titolari_df)
 # 6. MAIN MASTER-DETAIL LAYOUT
 # ==========================================
 
-col_roster, col_dossier = st.columns([0.28, 0.72], gap="small")
+col_roster, col_dossier = st.columns([0.33, 0.67], gap="medium")
 
 # ------------------------------------------
 # COLONNA SINISTRA: ROSTER & FILTRI COMPATTI
@@ -924,9 +943,9 @@ with col_roster:
 
             _badge = _ROLE_BADGES.get(_r, f"[{_r}]")
 
-            # Etichetta esattamente su 2 righe come da schema (senza rigori/punizioni e con distanze pulite):
+            # Etichetta esattamente su 2 righe a tutta larghezza e ben distanziata:
             _line1 = f"{_badge}  {_n} - {_s}    {_score}"
-            _line2 = f"      FM: {_fh}    •    PG: {_pg}    •    Q: {_q}    •    FVM: {_fvm_s}"
+            _line2 = f"FM: {_fh}        •        PG: {_pg}        •        Q: {_q}        •        FVM: {_fvm_s}"
 
             _lbl = f"{_line1}\n{_line2}"
 
