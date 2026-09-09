@@ -939,17 +939,12 @@ st.markdown("""
             ⚡
         </div>
         <div>
-            <div style="font-weight: 800; font-size: 1.1rem; color: #F8FAFC; letter-spacing: -0.02em;">
+            <div style="font-weight: 800; font-size: 1.15rem; color: #F8FAFC; letter-spacing: -0.02em;">
                 FantaAI <span style="color: #34D399;">Analytics Pro</span>
             </div>
-            <div style="font-size: 0.72rem; color: #94A3B8;">SERIE A 2024/25 — ASTA LIVE READY</div>
         </div>
     </div>
     <div style="display: flex; align-items: center; gap: 16px;">
-        <div style="background: rgba(255,255,255,0.05); padding: 6px 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); text-align: right;">
-            <div style="font-size: 0.65rem; color: #64748B;">BUDGET FANTAMILIONI</div>
-            <div style="font-size: 0.85rem; font-weight: 700; color: #F8FAFC;">342 / 500 FMV</div>
-        </div>
         <div style="background: rgba(16, 185, 129, 0.1); padding: 6px 12px; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.2); color: #34D399; font-size: 0.75rem; font-weight: 600;">
             ● Supabase Live
         </div>
@@ -1324,16 +1319,6 @@ with col_dossier:
         dna_values = [score_bonus, score_titolare, score_regolarita, score_affidabilita, score_disciplina]
 
         # Classificazioni metriche secondarie
-        gap_val = fvm_val - quota_val
-        if gap_val > 15:
-            gap_desc = "Sottovalutato a listino"
-            gap_color = "#34D399"
-        elif gap_val >= 0:
-            gap_desc = "Prezzo allineato"
-            gap_color = "#94A3B8"
-        else:
-            gap_desc = "Sopravvalutato a listino"
-            gap_color = "#F87171"
 
         if varianza_v is not None and pd.notna(varianza_v):
             v_num = float(varianza_v)
@@ -1376,18 +1361,32 @@ with col_dossier:
                 </div>
                 """, unsafe_allow_html=True)
             with m2:
-                st.markdown(f"""
-                <div class="sub-card" style="margin-bottom: 10px;">
-                    <div class="sub-label">Value Gap (FVM vs Listino)</div>
-                    <div class="sub-value" style="color: {gap_color};">{gap_val:+d} FMV</div>
-                    <div class="sub-desc">{gap_desc}</div>
-                </div>
-                <div class="sub-card">
-                    <div class="sub-label">Affidabilità Asta</div>
-                    <div class="sub-value" style="color: #38BDF8;">{score_affidabilita:.0f}%</div>
-                    <div class="sub-desc">{aff_desc}</div>
-                </div>
-                """, unsafe_allow_html=True)
+                if is_goalkeeper:
+                    st.markdown(f"""
+                    <div class="sub-card" style="margin-bottom: 10px;">
+                        <div class="sub-label">Rendimento Portiere</div>
+                        <div class="sub-value" style="color: #38BDF8;">{gs_stagione:.1f} <span style="font-size: 0.8rem; color: #94A3B8;">GS</span> | {rigori_parati:.1f} <span style="font-size: 0.8rem; color: #94A3B8;">RP</span></div>
+                        <div class="sub-desc">Gol subiti e rigori parati medi</div>
+                    </div>
+                    <div class="sub-card">
+                        <div class="sub-label">Affidabilità Asta</div>
+                        <div class="sub-value" style="color: #38BDF8;">{score_affidabilita:.0f}%</div>
+                        <div class="sub-desc">{aff_desc}</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                else:
+                    st.markdown(f"""
+                    <div class="sub-card" style="margin-bottom: 10px;">
+                        <div class="sub-label">Gol & Assist Medi</div>
+                        <div class="sub-value" style="color: #34D399;">{gol_stagione:.1f} <span style="font-size: 0.8rem; color: #94A3B8;">Gol</span> | {assist_stagione:.1f} <span style="font-size: 0.8rem; color: #94A3B8;">Assist</span></div>
+                        <div class="sub-desc">Bonus medi a stagione</div>
+                    </div>
+                    <div class="sub-card">
+                        <div class="sub-label">Affidabilità Asta</div>
+                        <div class="sub-value" style="color: #38BDF8;">{score_affidabilita:.0f}%</div>
+                        <div class="sub-desc">{aff_desc}</div>
+                    </div>
+                    """, unsafe_allow_html=True)
 
         with sec_col_right:
             st.markdown("""
