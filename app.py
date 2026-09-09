@@ -304,6 +304,8 @@ st.markdown(_CUSTOM_CSS, unsafe_allow_html=True)
 # 2. SUPABASE & DATA FETCHING
 # ==========================================
 
+import env_loader
+
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
@@ -320,90 +322,46 @@ def init_supabase():
 supabase = init_supabase()
 
 
-def fetch_all_rows(table_name, page_size=1000):
-    rows = []
-    start = 0
-    while True:
-        end = start + page_size - 1
-        response = (
-            supabase.table(table_name)
-            .select("*")
-            .range(start, end)
-            .execute()
-        )
-        page = response.data or []
-        if not page:
-            break
-        rows.extend(page)
-        if len(page) < page_size:
-            break
-        start += page_size
-    return rows
-
-
-@st.cache_data(ttl=600)
-def load_stats():
-    return pd.DataFrame(fetch_all_rows("player_stats_history"))
-
-
-@st.cache_data(ttl=600)
-def load_quotazioni():
-    return pd.DataFrame(fetch_all_rows("giocatori_quotazioni"))
-
-
-@st.cache_data(ttl=600)
-def load_ranking():
+@st.cache_data(ttl=300)
+def load_kpi_summary():
+    """Carica la tabella precalcolata player_kpi_summary (o fallback locale)."""
     try:
-        return pd.DataFrame(fetch_all_rows("player_ranking"))
+        if supabase:
+            res = supabase.table("player_kpi_summary").select("*").execute()
+            if res.data and len(res.data) > 0:
+                return pd.DataFrame(res.data)
+    except Exception:
+        pass
+
+    # Fallback locale
+    local_csv = Path(__file__).resolve().parent / "player_kpi_summary.csv"
+    if local_csv.exists():
+        return pd.read_csv(local_csv)
+
+    # Fallback remoto GitHub
+    url = "https://raw.githubusercontent.com/fanta-ai-coder/fanta-ai-etl/refs/heads/main/player_kpi_summary.csv"
+    try:
+        return pd.read_csv(url)
     except Exception:
         return pd.DataFrame()
 
 
 @st.cache_data(ttl=600)
-def load_rigoristi():
-    url = "https://raw.githubusercontent.com/fanta-ai-coder/fanta-ai-etl/refs/heads/main/rigoristi.csv"
+def fetch_player_matches(player_id):
+    """Carica lo storico partite on-demand solo per il singolo giocatore selezionato."""
     try:
-        df = pd.read_csv(url)
-        df["giocatore"] = df["giocatore"].astype(str).str.upper().str.strip()
-        df["squadra"] = df["squadra"].astype(str).str.upper().str.strip()
-        return df
+        if supabase:
+            res = (
+                supabase.table("player_stats_history")
+                .select("*")
+                .eq("player_id", int(player_id))
+                .execute()
+            )
+            if res.data:
+                return pd.DataFrame(res.data)
     except Exception:
-        return pd.DataFrame(columns=["giocatore", "squadra", "posizione"])
-
-
-@st.cache_data(ttl=600)
-def load_punizioni():
-    url = "https://raw.githubusercontent.com/fanta-ai-coder/fanta-ai-etl/refs/heads/main/punizioni.csv"
-    try:
-        df = pd.read_csv(url)
-        df["giocatore"] = df["giocatore"].astype(str).str.upper().str.strip()
-        df["squadra"] = df["squadra"].astype(str).str.upper().str.strip()
-        return df
-    except Exception:
-        return pd.DataFrame(columns=["giocatore", "squadra", "posizione"])
-
-
-@st.cache_data(ttl=300)
-def load_titolari_infortuni():
-    url = "https://raw.githubusercontent.com/fanta-ai-coder/fanta-ai-etl/refs/heads/main/titolari_infortuni"
-    try:
-        df = pd.read_csv(url)
-        df["nome_giocatore"] = df["nome_giocatore"].astype(str).str.upper().str.strip()
-        df["squadra"] = df["squadra"].astype(str).str.upper().str.strip()
-        df["titolarita"] = df["titolarita"].astype(str).str.lower().str.strip()
-        df["squalificato"] = df["squalificato"].astype(str).str.lower().str.strip()
-        df["infortunato"] = df["infortunato"].astype(str).str.lower().str.strip()
-        df["desc_infortunio"] = df["desc_infortunio"].fillna("").astype(str).str.strip()
-        return df
-    except Exception:
-        return pd.DataFrame(
-            columns=["nome_giocatore", "squadra", "titolarita", "squalificato", "infortunato", "desc_infortunio"]
-        )
-
-
-rigoristi_df = load_rigoristi()
-punizioni_df = load_punizioni()
-titolari_df = load_titolari_infortuni()
+        pass
+    return pd.DataFrame()
 
 
 # ==========================================
@@ -781,27 +739,13 @@ st.markdown("""
 # 5. DATA LOADING & FILTER PREPARATION
 # ==========================================
 
-try:
-    df = load_stats()
-    quot = load_quotazioni()
-    ranking_df = load_ranking()
-except Exception as e:
-    st.error(f"❌ Errore nel caricamento dei dati: {e}")
+summary_df = load_kpi_summary()
+
+if summary_df.empty:
+    st.warning("⚠️ Dati KPI non disponibili. Esegui 'python main.py' per precalcolare la tabella.")
     st.stop()
 
-if df.empty or quot.empty:
-    st.warning("⚠️ Tabelle statistiche o quotazioni vuote.")
-    st.stop()
-
-df = normalize_dataframe(df)
-quot = normalize_dataframe(quot)
-ranking_df = normalize_dataframe(ranking_df)
-df = remove_starred_vote_rows(df)
-
-latest_s = get_latest_season(quot)
-current_quot = quot[quot["stagione"].astype(str).str.strip() == str(latest_s).strip()].copy() if latest_s else quot.copy()
-
-summary_df = compute_player_summaries(df, current_quot, ranking_df, titolari_df)
+summary_df = normalize_dataframe(summary_df)
 
 
 # ==========================================
@@ -849,7 +793,7 @@ with col_roster:
     selected_role = "Tutti" if cur_role == "ALL" else cur_role
 
     # 3. Club + Ordinamento
-    squadre_raw = current_quot["squadra"].dropna().astype(str).str.strip().unique() if "squadra" in current_quot.columns else []
+    squadre_raw = summary_df["squadra"].dropna().astype(str).str.strip().unique() if "squadra" in summary_df.columns else []
     squadre_list = ["Tutte"] + sorted(list(squadre_raw))
 
     c1, c2 = st.columns(2, gap="small")
@@ -964,52 +908,41 @@ with col_dossier:
         st.info("👈 Seleziona un giocatore dalla lista a sinistra per aprire la scheda analitica.")
     else:
         player_id = int(float(selected_id))
-        p_quotes = quot[quot["player_id"] == player_id].copy()
-        current_quote = get_latest_quote_row(p_quotes)
-        p_stats = df[df["player_id"] == player_id].copy()
+        p_match = summary_df[summary_df["player_id"] == player_id]
+        if p_match.empty:
+            st.info("Dati non disponibili per questo calciatore.")
+            st.stop()
+        player_row = p_match.iloc[0]
 
-        if current_quote is not None:
-            nome = current_quote.get("nome", "Giocatore")
-            ruolo = str(current_quote.get("ruolo", "-")).upper().strip()
-            squadra = current_quote.get("squadra", "-")
-        elif not p_stats.empty:
-            nome = p_stats.iloc[-1].get("nome", "Giocatore")
-            ruolo = str(p_stats.iloc[-1].get("ruolo", "-")).upper().strip()
-            squadra = p_stats.iloc[-1].get("squadra", "-")
-        else:
-            nome, ruolo, squadra = "Giocatore", "-", "-"
+        nome = player_row.get("nome", "Giocatore")
+        ruolo = str(player_row.get("ruolo", "-")).upper().strip()
+        squadra = player_row.get("squadra", "-")
 
-        nome_upper, squadra_upper = str(nome).upper().strip(), str(squadra).upper().strip()
-        ranking_row = get_player_ranking(ranking_df, player_id)
-        rigor_info = rigoristi_df[(rigoristi_df["giocatore"] == nome_upper) & (rigoristi_df["squadra"] == squadra_upper)]
-        titolare_info = titolari_df[(titolari_df["nome_giocatore"] == nome_upper) & (titolari_df["squadra"] == squadra_upper)]
-
-        # --- GESTIONE TAG TITOLARITA E INFORTUNIO ---
-        titolarita_val, infortunato_val, desc_infortunio = "", "", ""
-        if not titolare_info.empty:
-            t_row = titolare_info.iloc[0]
-            titolarita_val = str(t_row.get("titolarita", "")).lower().strip()
-            infortunato_val = str(t_row.get("infortunato", "")).lower().strip()
-            desc_infortunio = str(t_row.get("desc_infortunio", "")).strip()
+        titolarita_val = str(player_row.get("titolarita", "")).lower().strip()
+        infortunato_val = str(player_row.get("infortunato", "")).lower().strip()
+        desc_infortunio = str(player_row.get("desc_infortunio", "")).strip()
 
         tags_html = ""
-        if "titolare" in titolarita_val:
+        if "titolare" in titolarita_val or bool(player_row.get("is_titolare", False)):
             tags_html += '<span style="background: rgba(16, 185, 129, 0.15); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.3); padding: 4px 10px; border-radius: 9999px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase;">🟢 Titolare</span> '
         elif "panchina" in titolarita_val or "riserva" in titolarita_val:
             tags_html += '<span style="background: rgba(245, 158, 11, 0.15); color: #FBBF24; border: 1px solid rgba(245, 158, 11, 0.3); padding: 4px 10px; border-radius: 9999px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase;">🟠 Panchina</span> '
         
-        if infortunato_val in ["sì", "si", "true", "1", "yes"]:
+        if infortunato_val in ["sì", "si", "true", "1", "yes"] or bool(player_row.get("infortunato", False)):
             tags_html += '<span style="background: rgba(239, 68, 68, 0.15); color: #F87171; border: 1px solid rgba(239, 68, 68, 0.3); padding: 4px 10px; border-radius: 9999px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase;">🚑 Infortunato</span> '
 
         desc_html = ""
-        if desc_infortunio and desc_infortunio.lower() != "nan":
+        if desc_infortunio and desc_infortunio.lower() not in ["nan", "none", ""]:
             desc_html = f'<div style="font-size: 0.8rem; color: #FCA5A5; margin-top: 8px; font-weight: 600; background: rgba(239, 68, 68, 0.1); padding: 6px 12px; border-radius: 6px; display: inline-block;">⚠️ {desc_infortunio}</div>'
 
         # --- METRICHE E ASTA ---
-        rk_ruolo = int(ranking_row.get("rank_ruolo")) if ranking_row is not None and pd.notna(ranking_row.get("rank_ruolo")) else 1
-        tot_ruolo = int(ranking_row.get("totale_ruolo")) if ranking_row is not None and pd.notna(ranking_row.get("totale_ruolo")) else 68
-        quota_val = current_quote.get("quotazione_attuale", 38) if current_quote is not None else 38
-        fvm_val = current_quote.get("fvm", 320) if current_quote is not None else 320
+        rk_ruolo = int(player_row.get("rank_ruolo")) if pd.notna(player_row.get("rank_ruolo")) else 1
+        tot_ruolo = int(player_row.get("totale_ruolo")) if pd.notna(player_row.get("totale_ruolo")) else 68
+        quota_val = int(player_row.get("quotazione_attuale", 38)) if pd.notna(player_row.get("quotazione_attuale")) else 38
+        fvm_val = int(player_row.get("fvm", 320)) if pd.notna(player_row.get("fvm")) else 320
+
+        rigor_pos = player_row.get("rigorista_pos")
+        rigor_str = f"Sì (#{int(rigor_pos)})" if pd.notna(rigor_pos) and int(rigor_pos) > 0 else "No"
 
         st.markdown(f"""
         <div class="glass-panel" style="margin-bottom: 20px;">
@@ -1029,7 +962,7 @@ with col_dossier:
                         </div>{desc_html}
                         <div style="font-size: 0.8rem; color: #94A3B8; display: flex; gap: 12px; margin-top: 6px;">
                             <span>🏆 Rank Ruolo: <b>#{rk_ruolo} / {tot_ruolo}</b></span>
-                            <span>🎯 Rigorista: <b>{'Sì (#' + str(int(rigor_info['posizione'].values[0])) + ')' if not rigor_info.empty else 'No'}</b></span>
+                            <span>🎯 Rigorista: <b>{rigor_str}</b></span>
                         </div>
                     </div>
                 </div>
@@ -1042,79 +975,86 @@ with col_dossier:
         </div>
         """, unsafe_allow_html=True)
 
-        if "stagione" in p_stats.columns: p_stats["stagione"] = p_stats["stagione"].astype(str).str.strip()
-        if "giornata" in p_stats.columns: p_stats["giornata"] = pd.to_numeric(p_stats["giornata"], errors="coerce")
-        p_stats = remove_starred_vote_rows(p_stats)
+        is_goalkeeper = (ruolo == "P")
+        fantamedia = float(player_row.get("fantamedia", 0.0)) if pd.notna(player_row.get("fantamedia")) else 0.0
+        media_voto = float(player_row.get("media_voto", 0.0)) if pd.notna(player_row.get("media_voto")) else 0.0
+        presenza_pct = float(player_row.get("presenza_pct", 0.0)) if pd.notna(player_row.get("presenza_pct")) else 0.0
+        presenze_medie = float(player_row.get("presenze_medie", 0.0)) if pd.notna(player_row.get("presenze_medie")) else 0.0
 
-        if not p_stats.empty:
-            p_stats = calculate_bonus_malus(p_stats)
-            is_goalkeeper = (ruolo == "P")
-            p_stats_hist = p_stats[p_stats["stagione"].astype(str).str.strip() != "2026-27"].copy() if "stagione" in p_stats.columns else p_stats.copy()
-            if p_stats_hist.empty: p_stats_hist = p_stats.copy()
+        gs_stagione = float(player_row.get("gs_stagione", 0.0)) if pd.notna(player_row.get("gs_stagione")) else 0.0
+        rigori_parati = float(player_row.get("rigori_parati", 0.0)) if pd.notna(player_row.get("rigori_parati")) else 0.0
+        gol_stagione = float(player_row.get("gol_stagione", 0.0)) if pd.notna(player_row.get("gol_stagione")) else 0.0
+        assist_stagione = float(player_row.get("assist_stagione", 0.0)) if pd.notna(player_row.get("assist_stagione")) else 0.0
 
-            rel = calculate_relative_metrics(p_stats_hist, is_goalkeeper=is_goalkeeper)
-            media_voto = safe_mean(p_stats_hist, "voto")
-            fantamedia = safe_mean(p_stats_hist, "fanta_voto_calcolato")
-            varianza_bin = varianza_gol_binaria(p_stats_hist)
-            varianza_v = safe_variance(p_stats_hist, "voto")
+        varianza_v = player_row.get("varianza_voto")
+        varianza_bin = player_row.get("varianza_gol")
+        ammonizioni = float(player_row.get("ammonizioni", 0.0)) if pd.notna(player_row.get("ammonizioni")) else 0.0
+        espulsioni = float(player_row.get("espulsioni", 0.0)) if pd.notna(player_row.get("espulsioni")) else 0.0
 
-            # --- MATRICE KPI ---
-            k1, k2, k3, k4 = st.columns(4)
-            with k1:
-                st.markdown(f"""
-                <div class="kpi-card">
-                    <div class="kpi-label">Fantamedia Pesata</div>
-                    <div class="kpi-value" style="color: #34D399;">{fantamedia:.2f}</div>
-                    <div class="kpi-sub">Bonus/Malus Inclusi</div>
-                </div>
-                """, unsafe_allow_html=True)
-            with k2:
-                st.markdown(f"""
-                <div class="kpi-card">
-                    <div class="kpi-label">Media Voto Pura</div>
-                    <div class="kpi-value">{media_voto:.2f}</div>
-                    <div class="kpi-sub">Stabilità Redazionale</div>
-                </div>
-                """, unsafe_allow_html=True)
-            with k3:
-                st.markdown(f"""
-                <div class="kpi-card">
-                    <div class="kpi-label">% Presenze Medie</div>
-                    <div class="kpi-value">{rel['presenza_pct']:.1f}%</div>
-                    <div class="kpi-sub">{rel['presenze_medie']:.1f} P/Stagione</div>
-                </div>
-                """, unsafe_allow_html=True)
-            with k4:
-                val_label = "GS | RIG. PARATI MEDI" if is_goalkeeper else "GOL | ASSIST MEDI"
-                val_num_1 = f"{rel['gs_stagione']:.1f}" if is_goalkeeper else f"{rel['gol_stagione']:.1f}"
-                val_num_2 = f"{rel['rigori_parati']:.1f}" if is_goalkeeper else f"{rel['assist_stagione']:.1f}"
-                
-                st.markdown(f"""
-                <div class="kpi-card">
-                    <div class="kpi-label">{val_label}</div>
-                    <div class="kpi-value" style="color: #60A5FA;">{val_num_1} <span style="font-size: 1.15rem; color: #94A3B8; font-weight: 600;">| {val_num_2}</span></div>
-                    <div class="kpi-sub">Media per stagione</div>
-                </div>
-                """, unsafe_allow_html=True)
-
-            st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
-
-            # --- SEZIONE CONTINUITÀ E RISCHIO ---
-            r1, r2, r3, r4 = st.columns(4)
-            with r1: st.metric("Varianza Voto", format_number(varianza_v), help="Valore < 0.5 indica altissima regolarità")
-            with r2: st.metric("Varianza Gol", format_number(varianza_bin), help="Frequenza di bonus distribuiti")
-            with r3: st.metric("Ammonizioni / Anno", f"{rel['ammonizioni']:.1f}")
-            with r4: st.metric("Espulsioni / Anno", f"{rel['espulsioni']:.1f}")
-
-            st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
-
-            # --- GRAFICO TREND (ALTEZZA AUMENTATA E RANGE DINAMICO) ---
-            st.markdown("""
-            <div style="font-weight: 700; font-size: 1rem; color: #F8FAFC; margin-bottom: 8px;">
-                📈 Trend di Forma (Rolling 5 Giornate)
+        # --- MATRICE KPI ---
+        k1, k2, k3, k4 = st.columns(4)
+        with k1:
+            st.markdown(f"""
+            <div class="kpi-card">
+                <div class="kpi-label">Fantamedia Pesata</div>
+                <div class="kpi-value" style="color: #34D399;">{fantamedia:.2f}</div>
+                <div class="kpi-sub">Bonus/Malus Inclusi</div>
+            </div>
+            """, unsafe_allow_html=True)
+        with k2:
+            st.markdown(f"""
+            <div class="kpi-card">
+                <div class="kpi-label">Media Voto Pura</div>
+                <div class="kpi-value">{media_voto:.2f}</div>
+                <div class="kpi-sub">Stabilità Redazionale</div>
+            </div>
+            """, unsafe_allow_html=True)
+        with k3:
+            st.markdown(f"""
+            <div class="kpi-card">
+                <div class="kpi-label">% Presenze Medie</div>
+                <div class="kpi-value">{presenza_pct:.1f}%</div>
+                <div class="kpi-sub">{presenze_medie:.1f} P/Stagione</div>
+            </div>
+            """, unsafe_allow_html=True)
+        with k4:
+            val_label = "GS | RIG. PARATI MEDI" if is_goalkeeper else "GOL | ASSIST MEDI"
+            val_num_1 = f"{gs_stagione:.1f}" if is_goalkeeper else f"{gol_stagione:.1f}"
+            val_num_2 = f"{rigori_parati:.1f}" if is_goalkeeper else f"{assist_stagione:.1f}"
+            
+            st.markdown(f"""
+            <div class="kpi-card">
+                <div class="kpi-label">{val_label}</div>
+                <div class="kpi-value" style="color: #60A5FA;">{val_num_1} <span style="font-size: 1.15rem; color: #94A3B8; font-weight: 600;">| {val_num_2}</span></div>
+                <div class="kpi-sub">Media per stagione</div>
             </div>
             """, unsafe_allow_html=True)
 
+        st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
+
+        # --- SEZIONE CONTINUITÀ E RISCHIO ---
+        r1, r2, r3, r4 = st.columns(4)
+        with r1: st.metric("Varianza Voto", format_number(varianza_v), help="Valore < 0.5 indica altissima regolarità")
+        with r2: st.metric("Varianza Gol", format_number(varianza_bin), help="Frequenza di bonus distribuiti")
+        with r3: st.metric("Ammonizioni / Anno", f"{ammonizioni:.1f}")
+        with r4: st.metric("Espulsioni / Anno", f"{espulsioni:.1f}")
+
+        st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
+
+        # --- GRAFICO TREND (ALTEZZA AUMENTATA E RANGE DINAMICO) ---
+        st.markdown("""
+        <div style="font-weight: 700; font-size: 1rem; color: #F8FAFC; margin-bottom: 8px;">
+            📈 Trend di Forma (Rolling 5 Giornate)
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Carica partite on-demand solo per grafico e tabella storico
+        p_stats = fetch_player_matches(player_id)
+        if not p_stats.empty:
+            if "stagione" in p_stats.columns: p_stats["stagione"] = p_stats["stagione"].astype(str).str.strip()
+            if "giornata" in p_stats.columns: p_stats["giornata"] = pd.to_numeric(p_stats["giornata"], errors="coerce")
+            p_stats = remove_starred_vote_rows(p_stats)
+            p_stats = calculate_bonus_malus(p_stats)
             rolling_df = build_rolling_data(p_stats, window=5)
             if not rolling_df.empty:
                 fig = go.Figure()

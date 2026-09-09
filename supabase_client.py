@@ -1,4 +1,5 @@
 import os
+import env_loader
 
 from supabase import create_client
 

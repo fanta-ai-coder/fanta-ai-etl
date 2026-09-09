@@ -44,10 +44,17 @@ Variabili d'ambiente richieste (le stesse di fantacalcio_ingestion.py):
 from __future__ import annotations
 
 import argparse
+from pathlib import Path
 import re
 import sys
-from pathlib import Path
 
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+
+import env_loader
 from fantacalcio_parser import parse_excel
 
 

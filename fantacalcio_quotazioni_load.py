@@ -64,7 +64,15 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
+import sys
 
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+
+import env_loader
 import pandas as pd
 
 from fantacalcio_parser import clean_number, clean_text
