@@ -4,7 +4,6 @@ import streamlit as st
 import plotly.graph_objects as go
 from supabase import create_client
 
-
 # ==========================================
 # 1. PAGE CONFIG & DESIGN SYSTEM (M3 DARK)
 # ==========================================
@@ -48,62 +47,37 @@ section.main, [data-testid="stMainBlockContainer"], [data-testid="stAppViewBlock
     font-size: 0.85rem !important;
 }
 
-/* 1. FILTRO RUOLI COLORATO (ORIZZONTALE) */
+/* FILTRO RUOLI COLORATO (ORIZZONTALE) */
 #role-filter-anchor + div[data-testid="stRadio"] label:nth-child(1) p { color: #FFFFFF !important; font-weight: 700 !important; }
 #role-filter-anchor + div[data-testid="stRadio"] label:nth-child(2) p { color: #F59E0B !important; font-weight: 700 !important; }
 #role-filter-anchor + div[data-testid="stRadio"] label:nth-child(3) p { color: #3B82F6 !important; font-weight: 700 !important; }
 #role-filter-anchor + div[data-testid="stRadio"] label:nth-child(4) p { color: #10B981 !important; font-weight: 700 !important; }
 #role-filter-anchor + div[data-testid="stRadio"] label:nth-child(5) p { color: #EF4444 !important; font-weight: 700 !important; }
 
-/* 2. ROSTER LIST STILE CARD COME DA IMMAGINE */
-#roster-anchor + div[data-testid="stRadio"] div[role="radiogroup"] {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 12px !important;
-    max-height: 750px !important;
-    overflow-y: auto !important;
-    padding-right: 6px !important;
-}
-
-#roster-anchor + div[data-testid="stRadio"] label > div:first-child,
-#roster-anchor + div[data-testid="stRadio"] input[type="radio"] {
-    display: none !important;
-}
-
-#roster-anchor + div[data-testid="stRadio"] label {
-    display: block !important;
-    background: #111827 !important;
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    border-radius: 12px !important;
-    padding: 14px 16px !important;
-    margin: 0 !important;
-    cursor: pointer !important;
-    transition: all 0.2s ease-in-out !important;
-    width: 100% !important;
-}
-
-#roster-anchor + div[data-testid="stRadio"] label:hover {
-    background: #161F33 !important;
-    border-color: rgba(16, 185, 129, 0.4) !important;
-}
-
-#roster-anchor + div[data-testid="stRadio"] label:has(input:checked) {
-    background: #182238 !important;
-    border: 1.5px solid #10B981 !important;
-    box-shadow: 0 0 12px rgba(16, 185, 129, 0.2) !important;
-}
-
 /* CARDS & PANELS */
 .glass-panel { background: #111827; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 20px; }
-.kpi-card { background: #111827; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; }
-.kpi-card .kpi-label { color: #94A3B8; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
-.kpi-card .kpi-value { color: #F8FAFC; font-size: 1.6rem; font-weight: 800; margin: 4px 0; font-family: 'Inter', sans-serif; }
-.kpi-card .kpi-sub { color: #64748B; font-size: 0.75rem; }
-
 .top-header { background: #111827; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding: 12px 20px; border-radius: 12px; margin-bottom: 16px; }
+
+/* ROSTER ITEM CARD CONTAINER */
+.player-card {
+    background: #111827;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    transition: all 0.2s ease-in-out;
+}
+.player-card:hover {
+    background: #161F33;
+    border-color: rgba(16, 185, 129, 0.4);
+}
+.player-card.active {
+    background: #182238;
+    border: 1.5px solid #10B981;
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.2);
+}
 </style>
-"""
-st.markdown(_CUSTOM_CSS, unsafe_allow_html=True)
+""", unsafe_allow_html=True)
 
 
 # ==========================================
@@ -230,41 +204,6 @@ def normalize_dataframe(df):
     return result
 
 
-def numeric_series(df, column):
-    if column not in df.columns:
-        return pd.Series(float("nan"), index=df.index, dtype="float64")
-    return pd.to_numeric(df[column], errors="coerce")
-
-
-def safe_sum(df, column):
-    if column not in df.columns:
-        return 0.0
-    return float(numeric_series(df, column).fillna(0).sum())
-
-
-def safe_mean(df, column):
-    if column not in df.columns:
-        return 0.0
-    values = numeric_series(df, column).dropna()
-    return float(values.mean()) if not values.empty else 0.0
-
-
-def safe_variance(df, column):
-    if column not in df.columns:
-        return None
-    values = numeric_series(df, column).dropna()
-    if len(values) < 2:
-        return None
-    val = values.var(ddof=1)
-    return None if pd.isna(val) else float(val)
-
-
-def format_number(value, decimals=2):
-    if value is None or pd.isna(value):
-        return "N/D"
-    return f"{value:.{decimals}f}"
-
-
 def remove_starred_vote_rows(df):
     if df.empty or "voto" not in df.columns:
         return df.copy()
@@ -273,140 +212,11 @@ def remove_starred_vote_rows(df):
     return df.loc[~starred].copy() if starred.any() else df.copy()
 
 
-def calculate_fantavoto(df):
-    result = df.copy()
-    if "voto" not in result.columns:
-        result["fanta_voto_calcolato"] = float("nan")
-        return result
-
-    voto = numeric_series(result, "voto").fillna(0)
-    gf = numeric_series(result, "gf").fillna(0)
-    ass = numeric_series(result, "ass").fillna(0)
-    rf = numeric_series(result, "rf").fillna(0)
-    au = numeric_series(result, "au").fillna(0)
-    esp = numeric_series(result, "esp").fillna(0)
-    amm = numeric_series(result, "amm").fillna(0)
-
-    clean_sheet = pd.Series(0.0, index=result.index)
-    penalty_saved = pd.Series(0.0, index=result.index)
-    gol_subiti = pd.Series(0.0, index=result.index)
-
-    for c in ["pi", "porta_inviolata", "clean_sheet", "imbattuto"]:
-        if c in result.columns:
-            clean_sheet = numeric_series(result, c).fillna(0)
-            break
-
-    for c in ["rp", "rigori_parati", "rigore_parato"]:
-        if c in result.columns:
-            penalty_saved = numeric_series(result, c).fillna(0)
-            break
-
-    for c in ["gs", "gol_subiti"]:
-        if c in result.columns:
-            gol_subiti = numeric_series(result, c).fillna(0)
-            break
-
-    if "ruolo" in result.columns:
-        is_p = result["ruolo"].astype(str).str.strip().str.upper().eq("P")
-        clean_sheet = clean_sheet.where(is_p, 0)
-        gol_subiti = gol_subiti.where(is_p, 0)
-
-    result["fanta_voto_calcolato"] = (
-        voto + (gf * 3) + ass + (rf * 3) - (au * 2) - esp - (amm * 0.5) + clean_sheet + (penalty_saved * 3) - gol_subiti
-    )
-    result.loc[numeric_series(result, "voto").isna(), "fanta_voto_calcolato"] = float("nan")
-    return result
-
-
-def calculate_bonus_malus(df):
-    res = calculate_fantavoto(df)
-    res["bonus_malus"] = res["fanta_voto_calcolato"] - numeric_series(res, "voto")
-    return res
-
-
-def calculate_relative_metrics(p_stats, is_goalkeeper=False):
-    seasons = p_stats["stagione"].dropna().astype(str).str.strip().nunique() if "stagione" in p_stats.columns else 0
-    if seasons <= 0:
-        return {
-            "stagioni": 0, "presenze_medie": 0.0, "presenza_pct": 0.0,
-            "gol_stagione": 0.0, "assist_stagione": 0.0, "rigori_segnati": 0.0,
-            "rigori_sbagliati": 0.0, "ammonizioni": 0.0, "espulsioni": 0.0,
-            "gs_stagione": 0.0, "rigori_parati": 0.0
-        }
-
-    presenze_totali = numeric_series(p_stats, "voto").count()
-    presenze_medie = presenze_totali / seasons
-    presenza_pct = min(100.0, (presenze_medie / 38) * 100)
-
-    if is_goalkeeper:
-        gs_tot = safe_sum(p_stats, "gs")
-        rp_tot = safe_sum(p_stats, "rp")
-        gf_tot = 0
-        rf_tot = 0
-    else:
-        gf_tot = safe_sum(p_stats, "gf") + safe_sum(p_stats, "rf")
-        rf_tot = safe_sum(p_stats, "rf")
-        gs_tot = 0
-        rp_tot = 0
-
-    return {
-        "stagioni": seasons,
-        "presenze_medie": presenze_medie,
-        "presenza_pct": presenza_pct,
-        "assist_stagione": safe_sum(p_stats, "ass") / seasons,
-        "rigori_sbagliati": safe_sum(p_stats, "rs") / seasons,
-        "ammonizioni": safe_sum(p_stats, "amm") / seasons,
-        "espulsioni": safe_sum(p_stats, "esp") / seasons,
-        "gol_stagione": gf_tot / seasons,
-        "rigori_segnati": rf_tot / seasons,
-        "gs_stagione": gs_tot / seasons,
-        "rigori_parati": rp_tot / seasons,
-    }
-
-
-def varianza_gol_binaria(p_stats):
-    if p_stats.empty or "giornata" not in p_stats.columns:
-        return 0.0
-    gol_g = p_stats.groupby("giornata").apply(
-        lambda df: 1 if (safe_sum(df, "gf") + safe_sum(df, "rf")) > 0 else 0
-    )
-    return 0.0 if len(gol_g) <= 1 else float(gol_g.var(ddof=1))
-
-
 def season_sort_key(value):
     try:
         return int(str(value).strip().split("/")[0])
     except Exception:
         return -1
-
-
-def build_rolling_data(player_stats, window=5):
-    if player_stats.empty or any(c not in player_stats.columns for c in ["stagione", "giornata"]):
-        return pd.DataFrame()
-
-    res = player_stats.copy()
-    res["giornata"] = pd.to_numeric(res["giornata"], errors="coerce")
-    res = res[res["giornata"].notna()].copy()
-    if res.empty:
-        return pd.DataFrame()
-
-    res["giornata"] = res["giornata"].astype(int)
-    res["stagione"] = res["stagione"].astype(str).str.strip()
-    res["_season_sort"] = res["stagione"].apply(season_sort_key)
-    res = res.sort_values(["_season_sort", "giornata"]).reset_index(drop=True)
-    res = calculate_fantavoto(res)
-
-    if "voto" in res.columns:
-        res["voto"] = pd.to_numeric(res["voto"], errors="coerce")
-        res["media_mobile_voto"] = res.groupby("stagione", sort=False)["voto"].transform(
-            lambda x: x.rolling(window=window, min_periods=1).mean()
-        )
-
-    res["media_mobile_fanta"] = res.groupby("stagione", sort=False)["fanta_voto_calcolato"].transform(
-        lambda x: x.rolling(window=window, min_periods=1).mean()
-    )
-    res["periodo"] = res["stagione"] + " G" + res["giornata"].astype(str)
-    return res
 
 
 def get_latest_season(df):
@@ -503,39 +313,27 @@ def compute_player_summaries(stats_df, quot_df, ranking_df, titolari_df):
         sdf = stats_df.copy()
         sdf["player_id"] = normalize_player_id_series(sdf["player_id"])
 
-        if "stagione" in sdf.columns:
-            sdf_hist = sdf[sdf["stagione"].astype(str).str.strip() != "2026-27"].copy()
-            if sdf_hist.empty:
-                sdf_hist = sdf.copy()
-        else:
-            sdf_hist = sdf.copy()
+        voto = pd.to_numeric(sdf["voto"], errors="coerce")
+        gf = pd.to_numeric(sdf.get("gf", 0), errors="coerce").fillna(0)
+        rf = pd.to_numeric(sdf.get("rf", 0), errors="coerce").fillna(0)
+        ass = pd.to_numeric(sdf.get("ass", 0), errors="coerce").fillna(0)
+        au = pd.to_numeric(sdf.get("au", 0), errors="coerce").fillna(0)
+        esp = pd.to_numeric(sdf.get("esp", 0), errors="coerce").fillna(0)
+        amm = pd.to_numeric(sdf.get("amm", 0), errors="coerce").fillna(0)
+        gs = pd.to_numeric(sdf.get("gs", 0), errors="coerce").fillna(0)
+        rp = pd.to_numeric(sdf.get("rp", 0), errors="coerce").fillna(0)
 
-        voto = numeric_series(sdf_hist, "voto")
-        gf = numeric_series(sdf_hist, "gf").fillna(0)
-        rf = numeric_series(sdf_hist, "rf").fillna(0)
-        ass = numeric_series(sdf_hist, "ass").fillna(0)
-        au = numeric_series(sdf_hist, "au").fillna(0)
-        esp = numeric_series(sdf_hist, "esp").fillna(0)
-        amm = numeric_series(sdf_hist, "amm").fillna(0)
-        gs = numeric_series(sdf_hist, "gs").fillna(0)
-        rp = numeric_series(sdf_hist, "rp").fillna(0)
-
-        clean_sheet = pd.Series(0.0, index=sdf_hist.index)
+        clean_sheet = pd.Series(0.0, index=sdf.index)
         for c in ["pi", "porta_inviolata", "clean_sheet", "imbattuto"]:
-            if c in sdf_hist.columns:
-                clean_sheet = numeric_series(sdf_hist, c).fillna(0)
+            if c in sdf.columns:
+                clean_sheet = pd.to_numeric(sdf[c], errors="coerce").fillna(0)
                 break
 
-        if "ruolo" in sdf_hist.columns:
-            is_p = sdf_hist["ruolo"].astype(str).str.strip().str.upper().eq("P")
-            clean_sheet = clean_sheet.where(is_p, 0)
-            gs = gs.where(is_p, 0)
-
         fv = voto + (gf * 3) + ass + (rf * 3) - (au * 2) - esp - (amm * 0.5) + clean_sheet + (rp * 3) - gs
-        sdf_hist["_fanta_calc"] = fv
-        sdf_hist["_voto_num"] = voto
+        sdf["_fanta_calc"] = fv
+        sdf["_voto_num"] = voto
 
-        valid = sdf_hist[voto.notna()]
+        valid = sdf[voto.notna()]
         agg = valid.groupby("player_id").agg(
             presenze_totali=("_voto_num", "count"),
             fantamedia=("_fanta_calc", "mean"),
@@ -556,7 +354,6 @@ def compute_player_summaries(stats_df, quot_df, ranking_df, titolari_df):
 # 4. APP TOP BARS & HEADERS
 # ==========================================
 
-# Top Application Header
 st.markdown("""
 <div class="top-header" style="display: flex; align-items: center; justify-content: space-between;">
     <div style="display: flex; align-items: center; gap: 12px;">
@@ -614,7 +411,7 @@ summary_df = compute_player_summaries(df, current_quot, ranking_df, titolari_df)
 # 6. MAIN MASTER-DETAIL LAYOUT
 # ==========================================
 
-col_roster, col_dossier = st.columns([0.33, 0.67], gap="medium")
+col_roster, col_dossier = st.columns([0.35, 0.65], gap="medium")
 
 # ------------------------------------------
 # COLONNA SINISTRA: ROSTER & FILTRI
@@ -683,107 +480,80 @@ with col_roster:
         selected_id = None
     else:
         options_df = quot_view.drop_duplicates(subset="player_id").copy()
-        labels, ids = [], []
-        
-        # Mappatura colori del Badge del Ruolo
-        role_colors = {
-            "P": "#F59E0B",
-            "D": "#3B82F6",
-            "C": "#10B981",
-            "A": "#EF4444"
-        }
-        role_names = {
-            "P": "PORTIERI",
-            "D": "DIFENSORI",
-            "C": "CENTROCAMPO",
-            "A": "ATTACCANTI"
-        }
 
-        for row in options_df.itertuples():
-            n = getattr(row, "nome", "Giocatore")
-            s = getattr(row, "squadra", "-")
-            pid = getattr(row, "player_id")
-            r = str(getattr(row, "ruolo", "")).upper().strip()
-            ind = getattr(row, "indice_finale", None)
-            fm = getattr(row, "fantamedia", None)
-            pg = getattr(row, "presenze_totali", 0)
-            q_att = getattr(row, "quotazione_attuale", 0)
-            fvm = getattr(row, "fvm", 0)
-            rk_r = getattr(row, "rank_ruolo", None)
+        role_colors = {"P": "#F59E0B", "D": "#3B82F6", "C": "#10B981", "A": "#EF4444"}
+        role_names = {"P": "PORTIERI", "D": "DIFENSORI", "C": "CENTROCAMPO", "A": "ATTACCANTI"}
 
-            bg_role = role_colors.get(r, "#64748B")
-            r_full_name = role_names.get(r, "GIOCATORI")
-            ind_str = f"{float(ind):.1f}" if pd.notna(ind) else "N/D"
-            fm_str = f"{float(fm):.2f}" if pd.notna(fm) else "N/D"
-            rk_str = f"#{int(rk_r)} {r_full_name}" if pd.notna(rk_r) else ""
+        # Gestione selezione corrente
+        if "active_player_id" not in st.session_state:
+            st.session_state["active_player_id"] = int(options_df.iloc[0]["player_id"])
 
-            # Controllo status per badge inferiori (Rigorista, Punizioni, etc.)
-            n_norm, s_norm = str(n).upper().strip(), str(s).upper().strip()
-            is_rig = not rigoristi_df[(rigoristi_df["giocatore"] == n_norm) & (rigoristi_df["squadra"] == s_norm)].empty
-            is_pun = not punizioni_df[(punizioni_df["giocatore"] == n_norm) & (punizioni_df["squadra"] == s_norm)].empty
+        # Lista di elementi scrollabili con pulsanti
+        with st.container(height=650):
+            for row in options_df.itertuples():
+                pid = int(getattr(row, "player_id"))
+                n = getattr(row, "nome", "Giocatore")
+                s = getattr(row, "squadra", "-")
+                r = str(getattr(row, "ruolo", "")).upper().strip()
+                ind = getattr(row, "indice_finale", None)
+                fm = getattr(row, "fantamedia", None)
+                pg = getattr(row, "presenze_totali", 0)
+                q_att = getattr(row, "quotazione_attuale", 0)
+                fvm = getattr(row, "fvm", 0)
+                rk_r = getattr(row, "rank_ruolo", None)
 
-            badges_html = ""
-            if is_rig:
-                badges_html += '<span style="background: rgba(239, 68, 68, 0.2); color: #FCA5A5; padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: 700;">🎯 Rigorista</span> '
-            if is_pun:
-                badges_html += '<span style="background: rgba(245, 158, 11, 0.2); color: #FCD34D; padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: 700;">⚡ Punizioni</span> '
+                bg_role = role_colors.get(r, "#64748B")
+                r_full_name = role_names.get(r, "GIOCATORI")
+                ind_str = f"{float(ind):.1f}" if pd.notna(ind) else "N/D"
+                fm_str = f"{float(fm):.2f}" if pd.notna(fm) else "N/D"
+                rk_str = f"#{int(rk_r)} {r_full_name}" if pd.notna(rk_r) else ""
 
-            # Costruzione Card Grafica identica all'immagine
-            lbl = f"""
-            <div style="display: flex; flex-direction: column; width: 100%; gap: 6px;">
-                <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <div style="background: {bg_role}; color: #FFFFFF; font-weight: 800; border-radius: 6px; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;">
-                            {r}
+                n_norm, s_norm = str(n).upper().strip(), str(s).upper().strip()
+                is_rig = not rigoristi_df[(rigoristi_df["giocatore"] == n_norm) & (rigoristi_df["squadra"] == s_norm)].empty
+                is_pun = not punizioni_df[(punizioni_df["giocatore"] == n_norm) & (punizioni_df["squadra"] == s_norm)].empty
+
+                badges_html = ""
+                if is_rig:
+                    badges_html += '<span style="background: rgba(239, 68, 68, 0.2); color: #FCA5A5; padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: 700;">🎯 Rigorista</span> '
+                if is_pun:
+                    badges_html += '<span style="background: rgba(245, 158, 11, 0.2); color: #FCD34D; padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: 700;">⚡ Punizioni</span> '
+
+                is_active = (st.session_state["active_player_id"] == pid)
+                active_class = "active" if is_active else ""
+
+                card_html = f"""
+                <div class="player-card {active_class}">
+                    <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div style="background: {bg_role}; color: #FFFFFF; font-weight: 800; border-radius: 6px; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;">
+                                {r}
+                            </div>
+                            <div>
+                                <div style="font-weight: 800; font-size: 0.95rem; color: #FFFFFF; line-height: 1.1;">{n}</div>
+                                <div style="font-size: 0.7rem; color: #94A3B8; margin-top: 2px;">{s}</div>
+                            </div>
                         </div>
-                        <div>
-                            <div style="font-weight: 800; font-size: 0.95rem; color: #FFFFFF; line-height: 1.1;">{n}</div>
-                            <div style="font-size: 0.7rem; color: #94A3B8; margin-top: 2px;">{s}</div>
+                        <div style="text-align: right;">
+                            <div style="font-weight: 800; font-size: 1.1rem; color: #34D399;">{ind_str}</div>
+                            <div style="font-size: 0.62rem; color: #64748B; font-weight: 700; text-transform: uppercase;">{rk_str}</div>
                         </div>
                     </div>
-                    <div style="text-align: right;">
-                        <div style="font-weight: 800; font-size: 1.1rem; color: #34D399;">{ind_str}</div>
-                        <div style="font-size: 0.62rem; color: #64748B; font-weight: 700; text-transform: uppercase;">{rk_str}</div>
+                    <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.75rem; color: #CBD5E1; background: rgba(255,255,255,0.03); padding: 4px 8px; border-radius: 6px; margin-top: 6px;">
+                        <div>FM: <b style="color: #34D399;">{fm_str}</b></div>
+                        <div>PG: <b>{pg}</b></div>
+                        <div>Q: <b>{q_att}</b></div>
+                        <div>FVM: <b style="color: #F59E0B;">{fvm} FM</b></div>
                     </div>
+                    {f'<div style="display: flex; gap: 4px; margin-top: 6px;">{badges_html}</div>' if badges_html else ''}
                 </div>
-                <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.75rem; color: #CBD5E1; background: rgba(255,255,255,0.03); padding: 4px 8px; border-radius: 6px; margin-top: 2px;">
-                    <div>FM: <b style="color: #34D399;">{fm_str}</b></div>
-                    <div>PG: <b>{pg}</b></div>
-                    <div>Q: <b>{q_att}</b></div>
-                    <div>FVM: <b style="color: #F59E0B;">{fvm} FM</b></div>
-                </div>
-                {f'<div style="display: flex; gap: 4px; margin-top: 2px;">{badges_html}</div>' if badges_html else ''}
-            </div>
-            """
+                """
 
-            labels.append(lbl)
-            ids.append(int(pid))
+                st.markdown(card_html, unsafe_allow_html=True)
+                if st.button(f"Seleziona {n}", key=f"btn_{pid}", use_container_width=True):
+                    st.session_state["active_player_id"] = pid
+                    st.rerun()
 
-        label_to_id = dict(zip(labels, ids))
-        radio_key = "roster_radio"
-        prev_label = st.session_state.get(radio_key)
-        if prev_label not in labels:
-            default_idx = 0
-            if "active_player_id" in st.session_state and st.session_state["active_player_id"] in ids:
-                default_idx = ids.index(st.session_state["active_player_id"])
-            st.session_state[radio_key] = labels[default_idx]
-
-        # ==========================================
-        # ROSTER SCROLLABILE
-        # ==========================================
-        st.markdown('<div id="roster-anchor"></div>', unsafe_allow_html=True)
-
-        selected_label = st.radio(
-            "Giocatori",
-            options=labels,
-            key=radio_key,
-            label_visibility="collapsed"
-        )
-
-        selected_id = label_to_id.get(selected_label)
-
-        # Mantiene il giocatore selezionato tra i rerun
-        st.session_state["active_player_id"] = selected_id
+        selected_id = st.session_state.get("active_player_id")
 
 
 # ------------------------------------------
@@ -811,7 +581,6 @@ with col_dossier:
 
         nome_upper, squadra_upper = str(nome).upper().strip(), str(squadra).upper().strip()
         ranking_row = get_player_ranking(ranking_df, player_id)
-        rigor_info = rigoristi_df[(rigoristi_df["giocatore"] == nome_upper) & (rigoristi_df["squadra"] == squadra_upper)]
         titolare_info = titolari_df[(titolari_df["nome_giocatore"] == nome_upper) & (titolari_df["squadra"] == squadra_upper)]
 
         # --- GESTIONE TAG TITOLARITA E INFORTUNIO ---
@@ -841,7 +610,8 @@ with col_dossier:
         quota_val = current_quote.get("quotazione_attuale", 38) if current_quote is not None else 38
         fvm_val = current_quote.get("fvm", 320) if current_quote is not None else 320
 
-        st.markdown(f"""
+        # Rendering corretto e strutturato dell'Header Dettagli
+        header_html = f"""
         <div class="glass-panel">
             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                 <div>
@@ -860,4 +630,5 @@ with col_dossier:
                 </div>
             </div>
         </div>
-        """, unsafe_allow_html=True)
+        """
+        st.markdown(header_html, unsafe_allow_html=True)
