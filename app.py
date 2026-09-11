@@ -543,6 +543,16 @@ div[data-testid="stTabs"] button[aria-selected="true"] {
     border-left: 4px solid #10B981;
 }
 
+/* La prima intestazione ruolo parte compatta senza gap eccessivo sopra */
+div[data-testid="column"] .roster-role-header-compact:first-of-type {
+    margin-top: 4px !important;
+}
+
+/* Assicura che i blocchi verticali mantengano sempre flex-direction column per evitare sovrapposizioni */
+div[data-testid="stVerticalBlock"] {
+    flex-direction: column !important;
+}
+
 /* =========================================================
    V2: FIX OUTER SCOUT LAYOUT (ELIMINATE EMPTY GAP & FULL-WINDOW BORDER)
    ========================================================= */
@@ -564,8 +574,25 @@ div[data-testid="stHorizontalBlock"]:has(> div [data-testid="column"]:first-chil
 /* =========================================================
    V2: TABELLA ROSA SUPER COMPATTA + ALLINEAMENTO PERFETTO
    ========================================================= */
-div[data-testid="stHorizontalBlock"]:has(> [data-testid="column"] [class*="st-key-del_r_"]),
-div[data-testid="stHorizontalBlock"]:has(> div [class*="st-key-del_r_"]) {
+/* Forza l'allineamento in alto delle colonne della Tab 2 (Rosa & Formazione Consigliata) */
+div[data-testid="stHorizontalBlock"]:has(.pitch-container) {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    align-items: flex-start !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+div[data-testid="stHorizontalBlock"]:has(.pitch-container) > div[data-testid="column"] {
+    align-self: flex-start !important;
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+}
+
+/* Stile applicato ESCLUSIVAMENTE alla singola riga giocatore nella lista della rosa.
+   Usa :not(:has(div[data-testid="stHorizontalBlock"])) per NON matchare mai il container principale */
+div[data-testid="stHorizontalBlock"]:has([class*="st-key-del_r_"]):not(:has(div[data-testid="stHorizontalBlock"])) {
     display: flex !important;
     align-items: center !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
@@ -573,18 +600,25 @@ div[data-testid="stHorizontalBlock"]:has(> div [class*="st-key-del_r_"]) {
     min-height: 28px !important;
 }
 
-div[data-testid="stHorizontalBlock"]:has(> [data-testid="column"] [class*="st-key-del_r_"]) > div,
-div[data-testid="stHorizontalBlock"]:has(> div [class*="st-key-del_r_"]) > div {
+div[data-testid="stHorizontalBlock"]:has([class*="st-key-del_r_"]):not(:has(div[data-testid="stHorizontalBlock"])) > div[data-testid="column"] {
     display: flex !important;
     align-items: center !important;
     margin: 0 !important;
     padding: 0 !important;
 }
 
-div[data-testid="stHorizontalBlock"]:has(> [data-testid="column"] [class*="st-key-del_r_"]) [data-testid="stVerticalBlock"],
-div[data-testid="stHorizontalBlock"]:has(> div [class*="st-key-del_r_"]) [data-testid="stVerticalBlock"],
-div[data-testid="stHorizontalBlock"]:has(> [data-testid="column"] [class*="st-key-del_r_"]) [data-testid="element-container"],
-div[data-testid="stHorizontalBlock"]:has(> div [class*="st-key-del_r_"]) [data-testid="element-container"] {
+div[data-testid="stHorizontalBlock"]:has([class*="st-key-del_r_"]):not(:has(div[data-testid="stHorizontalBlock"])) [data-testid="stVerticalBlock"] {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: stretch !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    gap: 0 !important;
+}
+
+div[data-testid="stHorizontalBlock"]:has([class*="st-key-del_r_"]):not(:has(div[data-testid="stHorizontalBlock"])) [data-testid="element-container"] {
     display: flex !important;
     align-items: center !important;
     margin: 0 !important;
@@ -2232,7 +2266,7 @@ with tab_rosa:
     # -------------------------------------------------------------
     with col_campo:
         st.markdown('''
-        <div style="font-weight: 800; font-size: 1.08rem; color: #F8FAFC; margin-bottom: 6px;">
+        <div style="display: flex; align-items: center; font-weight: 800; font-size: 1.08rem; color: #F8FAFC; margin-bottom: 8px; min-height: 28px;">
             🏆 Formazione Titolare Consigliata
         </div>
         ''', unsafe_allow_html=True)
@@ -2249,7 +2283,7 @@ with tab_rosa:
             active_lineup = optimize_best_lineup(st.session_state.roster, forced_module=chosen_module)
         with opt_c2:
             st.markdown(f'''
-            <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 6px; padding: 5px 10px; display: flex; justify-content: space-between; align-items: center;">
+            <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 6px; padding: 5px 10px; display: flex; justify-content: space-between; align-items: center; min-height: 32px; height: 32px; box-sizing: border-box;">
                 <span style="font-size: 0.76rem; color: #94A3B8;">Modulo: <b style="color: #34D399;">{active_lineup['module']}</b></span>
                 <span style="font-size: 0.76rem; color: #F8FAFC;">Potenziale: <b style="color: #34D399;">{active_lineup['score']:.2f} FM</b></span>
             </div>
