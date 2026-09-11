@@ -562,31 +562,28 @@ div[data-testid="stHorizontalBlock"]:has(> div [data-testid="column"]:first-chil
 }
 
 /* =========================================================
-   V2: TABELLA ROSA SUPER COMPATTA + CESTINO SENZA BORDI
+   V2: TABELLA ROSA SUPER COMPATTA + ALLINEAMENTO PERFETTO
    ========================================================= */
 div[data-testid="stVerticalBlock"]:has(> div .del-btn) {
     gap: 0px !important;
 }
 
-div[data-testid="column"]:has(.del-btn) {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: flex-end !important;
-    min-height: 0 !important;
-    padding: 0 !important;
-}
-
+div[data-testid="column"]:has(.del-btn),
 div[data-testid="column"]:has(.roster-row-nom),
 div[data-testid="column"]:has(.roster-row-fm),
 div[data-testid="column"]:has(.roster-row-prz) {
-    min-height: 0 !important;
+    min-height: 28px !important;
     padding: 0 !important;
     display: flex !important;
     align-items: center !important;
 }
 
+div[data-testid="column"]:has(.del-btn) {
+    justify-content: flex-end !important;
+}
+
 .roster-row-nom {
-    font-size: 1.08rem;
+    font-size: 1.02rem;
     font-weight: 800;
     color: #F8FAFC;
     white-space: nowrap;
@@ -595,6 +592,8 @@ div[data-testid="column"]:has(.roster-row-prz) {
     padding: 4px 0;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     width: 100%;
+    display: flex;
+    align-items: center;
 }
 .roster-row-fm {
     font-size: 0.90rem;
@@ -604,6 +603,9 @@ div[data-testid="column"]:has(.roster-row-prz) {
     padding: 4px 0;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
 }
 .roster-row-prz {
     font-size: 0.94rem;
@@ -613,15 +615,19 @@ div[data-testid="column"]:has(.roster-row-prz) {
     padding: 4px 0;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
 }
 
 .del-btn {
     display: flex !important;
     align-items: center !important;
     justify-content: flex-end !important;
-    padding: 3px 0 !important;
+    padding: 4px 0 !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
     width: 100% !important;
+    height: 100% !important;
 }
 .del-btn div[data-testid="stButton"],
 div[class*="st-key-del_r_"] div[data-testid="stButton"],
@@ -638,24 +644,25 @@ div[class*="st-key-del_r_"] {
 .del-btn div[data-testid="stButton"] > button,
 .del-btn button,
 div[class*="st-key-del_r_"] button {
-    width: 24px !important;
-    height: 24px !important;
-    min-width: 24px !important;
-    min-height: 24px !important;
-    max-width: 24px !important;
-    max-height: 24px !important;
+    width: 17px !important;
+    height: 17px !important;
+    min-width: 17px !important;
+    min-height: 17px !important;
+    max-width: 17px !important;
+    max-height: 17px !important;
     padding: 0 !important;
     margin: 0 !important;
     background: #DC2626 !important;
     background-color: #DC2626 !important;
     border: 1px solid #B91C1C !important;
-    border-radius: 5px !important;
-    box-shadow: 0 1px 4px rgba(220, 38, 38, 0.35) !important;
+    border-radius: 3px !important;
+    box-shadow: 0 1px 3px rgba(220, 38, 38, 0.35) !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
     cursor: pointer !important;
     transition: all 0.15s ease !important;
+    line-height: 1 !important;
 }
 .del-btn div[data-testid="stButton"] > button:hover,
 .del-btn button:hover,
@@ -663,14 +670,14 @@ div[class*="st-key-del_r_"] button:hover {
     background: #EF4444 !important;
     background-color: #EF4444 !important;
     border-color: #F87171 !important;
-    box-shadow: 0 0 8px rgba(239, 68, 68, 0.6) !important;
-    transform: scale(1.08) !important;
+    box-shadow: 0 0 6px rgba(239, 68, 68, 0.6) !important;
+    transform: scale(1.1) !important;
 }
 .del-btn div[data-testid="stButton"] > button p,
 .del-btn button p,
 div[class*="st-key-del_r_"] button p {
     color: #FFFFFF !important;
-    font-size: 13px !important;
+    font-size: 9px !important;
     font-weight: 900 !important;
     margin: 0 !important;
     padding: 0 !important;
