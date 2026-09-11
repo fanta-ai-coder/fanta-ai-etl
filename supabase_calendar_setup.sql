@@ -1,4 +1,4 @@
-﻿-- ====================================================================
+-- ====================================================================
 -- TABELLA CALENDARIO SERIE A (2026-27) SU SUPABASE
 -- Esegui questo script nel SQL Editor del tuo progetto Supabase.
 -- ====================================================================
@@ -6,6 +6,7 @@
 CREATE TABLE IF NOT EXISTS public.serie_a_calendar (
     id BIGSERIAL PRIMARY KEY,
     giornata INT NOT NULL,
+    data_giornata TEXT,
     squadra_casa TEXT NOT NULL,
     squadra_trasferta TEXT NOT NULL,
     stagione TEXT DEFAULT '2026-27',

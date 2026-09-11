@@ -10,5 +10,6 @@ venv/
 Thumbs.db
 _staging_downloads/
 env.txt
-data/
+data/*
+!data/serie_a_calendar.json
 *.parquet
