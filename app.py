@@ -619,50 +619,65 @@ div[data-testid="column"]:has(.roster-row-prz) {
     display: flex !important;
     align-items: center !important;
     justify-content: flex-end !important;
-    padding: 4px 0 !important;
+    padding: 3px 0 !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
     width: 100% !important;
 }
-.del-btn div[data-testid="stButton"] {
+.del-btn div[data-testid="stButton"],
+div[class*="st-key-del_r_"] div[data-testid="stButton"],
+div[class*="st-key-del_r_"] {
     width: auto !important;
     height: auto !important;
     min-height: 0 !important;
     margin: 0 !important;
     padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
 }
-.del-btn div[data-testid="stButton"] > button {
-    width: auto !important;
-    height: auto !important;
-    min-height: 0 !important;
-    max-height: none !important;
-    min-width: 0 !important;
-    max-width: none !important;
-    padding: 0 4px !important;
+.del-btn div[data-testid="stButton"] > button,
+.del-btn button,
+div[class*="st-key-del_r_"] button {
+    width: 24px !important;
+    height: 24px !important;
+    min-width: 24px !important;
+    min-height: 24px !important;
+    max-width: 24px !important;
+    max-height: 24px !important;
+    padding: 0 !important;
     margin: 0 !important;
-    background: transparent !important;
-    background-color: transparent !important;
-    border: none !important;
-    border-color: transparent !important;
-    box-shadow: none !important;
-    outline: none !important;
+    background: #DC2626 !important;
+    background-color: #DC2626 !important;
+    border: 1px solid #B91C1C !important;
+    border-radius: 5px !important;
+    box-shadow: 0 1px 4px rgba(220, 38, 38, 0.35) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
     cursor: pointer !important;
-    transition: transform 0.15s ease, opacity 0.15s ease !important;
-    opacity: 0.75 !important;
+    transition: all 0.15s ease !important;
 }
-.del-btn div[data-testid="stButton"] > button:hover {
-    background: transparent !important;
-    background-color: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-    transform: scale(1.3) !important;
-    opacity: 1 !important;
+.del-btn div[data-testid="stButton"] > button:hover,
+.del-btn button:hover,
+div[class*="st-key-del_r_"] button:hover {
+    background: #EF4444 !important;
+    background-color: #EF4444 !important;
+    border-color: #F87171 !important;
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.6) !important;
+    transform: scale(1.08) !important;
 }
-.del-btn div[data-testid="stButton"] > button p {
-    font-size: 16px !important;
+.del-btn div[data-testid="stButton"] > button p,
+.del-btn button p,
+div[class*="st-key-del_r_"] button p {
+    color: #FFFFFF !important;
+    font-size: 13px !important;
+    font-weight: 900 !important;
     margin: 0 !important;
     padding: 0 !important;
     line-height: 1 !important;
-    display: inline-block !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
 }
 
 .top-header {
@@ -2099,7 +2114,7 @@ with tab_rosa:
 
     # Barra di avanzamento slot orizzontale compatta
     st.markdown(f'''
-    <div style="background: #111827; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 6px 14px; display: flex; justify-content: space-between; align-items: center; margin: 8px 0 14px 0; font-size: 0.78rem;">
+    <div style="background: #111827; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 6px 14px; display: flex; justify-content: space-between; align-items: center; margin: 8px 0 24px 0; font-size: 0.78rem;">
         <div><span class="badge-role-P" style="padding:1px 5px; border-radius:3px; font-weight:800;">P</span> Portieri: <b style="color:#F8FAFC;">{role_counts['P']}/3</b></div>
         <div><span class="badge-role-D" style="padding:1px 5px; border-radius:3px; font-weight:800;">D</span> Difensori: <b style="color:#F8FAFC;">{role_counts['D']}/8</b></div>
         <div><span class="badge-role-C" style="padding:1px 5px; border-radius:3px; font-weight:800;">C</span> Centrocampisti: <b style="color:#F8FAFC;">{role_counts['C']}/8</b></div>
@@ -2116,7 +2131,7 @@ with tab_rosa:
     # -------------------------------------------------------------
     with col_tabella:
         st.markdown('''
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; margin-bottom: 12px;">
             <div style="font-weight: 800; font-size: 1.12rem; color: #F8FAFC;">
                 📋 La Mia Rosa ({num_rosa}/25)
             </div>
@@ -2169,7 +2184,7 @@ with tab_rosa:
                             st.markdown(f"<div class='roster-row-prz'>{prezzo_m} FMV</div>", unsafe_allow_html=True)
                         with c_del:
                             st.markdown('<div class="del-btn">', unsafe_allow_html=True)
-                            if st.button("🗑️", key=f"del_r_{pid}", help=f"Rimuovi {p['nome']} e rimborsa {prezzo_m} crediti"):
+                            if st.button("✕", key=f"del_r_{pid}", help=f"Rimuovi {p['nome']} e rimborsa {prezzo_m} crediti"):
                                 st.session_state.roster = [x for x in st.session_state.roster if x["player_id"] != pid]
                                 save_roster_to_disk()
                                 st.toast(f"🗑️ {p['nome']} rimosso!", icon="ℹ️")
