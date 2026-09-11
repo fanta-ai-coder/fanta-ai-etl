@@ -5,6 +5,7 @@ import pandas as pd
 import streamlit as st
 import plotly.graph_objects as go
 from supabase import create_client
+import serie_a_calendar
 
 
 # ==========================================
@@ -2350,4 +2351,145 @@ with tab_rosa:
                     )
                     bench_pills.append(pill)
             st.markdown("".join(bench_pills), unsafe_allow_html=True)
+
+        # -------------------------------------------------------------
+        # 3. PROIEZIONE STAGIONALE MONTE CARLO (38 GIORNATE)
+        # -------------------------------------------------------------
+        st.markdown("<div style='height: 18px;'></div>", unsafe_allow_html=True)
+        render_clean_html("""
+        <div style="font-weight: 800; font-size: 1.05rem; color: #F8FAFC; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+            📈 Proiezione Stagionale Rosa (Monte Carlo 38 Giornate)
+        </div>
+        """)
+
+        _, sched_by_team = serie_a_calendar.load_or_create_calendar(supabase)
+        sim_res = serie_a_calendar.run_monte_carlo_simulation(
+            st.session_state.roster,
+            sched_by_team,
+            forced_module=chosen_module,
+            n_simulations=1000
+        )
+
+        if sim_res is not None:
+            # 4 KPI Compatti Monte Carlo
+            mc_k1, mc_k2, mc_k3, mc_k4 = st.columns(4, gap="small")
+            with mc_k1:
+                render_clean_html(f"""
+                <div class="kpi-card-compact">
+                    <div class="kpi-label">Punti Finali Attesi (P50)</div>
+                    <div class="kpi-value" style="color: #34D399; font-size: 1.25rem;">{sim_res['final_p50']:.0f} <span style="font-size:0.75rem; color:#94A3B8;">FM</span></div>
+                    <div class="kpi-sub">Range: {sim_res['final_p10']:.0f} – {sim_res['final_p90']:.0f} FM</div>
+                </div>
+                """)
+            with mc_k2:
+                render_clean_html(f"""
+                <div class="kpi-card-compact">
+                    <div class="kpi-label">Media / Giornata</div>
+                    <div class="kpi-value" style="color: #38BDF8; font-size: 1.25rem;">{sim_res['avg_per_matchday']:.1f} <span style="font-size:0.75rem; color:#94A3B8;">FM</span></div>
+                    <div class="kpi-sub">Su 38 matchday</div>
+                </div>
+                """)
+            with mc_k3:
+                p_color = "#34D399" if sim_res['podium_prob'] >= 60 else ("#FBBF24" if sim_res['podium_prob'] >= 30 else "#F87171")
+                render_clean_html(f"""
+                <div class="kpi-card-compact">
+                    <div class="kpi-label">Probabilità Podio (≥2660)</div>
+                    <div class="kpi-value" style="color: {p_color}; font-size: 1.25rem;">{sim_res['podium_prob']:.0f}%</div>
+                    <div class="kpi-sub">Ritmo 70 FM/G</div>
+                </div>
+                """)
+            with mc_k4:
+                render_clean_html(f"""
+                <div class="kpi-card-compact">
+                    <div class="kpi-label">Miglior Turno Stimato</div>
+                    <div class="kpi-value" style="color: #A78BFA; font-size: 1.25rem;">G{sim_res['best_giornata']['giornata']} <span style="font-size:0.75rem; color:#94A3B8;">({sim_res['best_giornata']['score']} FM)</span></div>
+                    <div class="kpi-sub">Flop: G{sim_res['worst_giornata']['giornata']} ({sim_res['worst_giornata']['score']} FM)</div>
+                </div>
+                """)
+
+            # Grafico Plotly Cumulativo Monte Carlo
+            x_giornate = list(range(1, 39))
+            fig_sim = go.Figure()
+
+            # Traccia P90 (Scenario Ottimista)
+            fig_sim.add_trace(go.Scatter(
+                x=x_giornate,
+                y=sim_res["p90"],
+                mode="lines",
+                line=dict(color="rgba(16, 185, 129, 0.0)", width=0),
+                hoverinfo="skip",
+                showlegend=False,
+                name="P90"
+            ))
+
+            # Traccia P10 (Scenario Prudente - riempimento tonexty verso P90)
+            fig_sim.add_trace(go.Scatter(
+                x=x_giornate,
+                y=sim_res["p10"],
+                mode="lines",
+                line=dict(color="rgba(16, 185, 129, 0.0)", width=0),
+                fill="tonexty",
+                fillcolor="rgba(16, 185, 129, 0.12)",
+                hoverinfo="skip",
+                name="Fascia Confidenza 80% (P10-P90)"
+            ))
+
+            # Traccia P50 (Mediana / Proiezione Attesa)
+            fig_sim.add_trace(go.Scatter(
+                x=x_giornate,
+                y=sim_res["p50"],
+                mode="lines+markers",
+                marker=dict(size=4, color="#34D399"),
+                name="Proiezione Attesa (P50)",
+                line=dict(color="#10B981", width=3, shape="spline"),
+                customdata=sim_res["daily_expected"],
+                hovertemplate="<b>Giornata %{x}</b><br>Totale Cumulativo: <b>%{y:.1f} FM</b><br>Stima Giornata: <b>%{customdata:.1f} FM</b><extra></extra>"
+            ))
+
+            # Linea di riferimento ritmo podio lega (70 FM/G)
+            podium_target = [round(70.0 * g, 1) for g in x_giornate]
+            fig_sim.add_trace(go.Scatter(
+                x=x_giornate,
+                y=podium_target,
+                mode="lines",
+                name="Ritmo Podio Lega (70 FM/G)",
+                line=dict(color="rgba(251, 191, 36, 0.55)", width=1.5, dash="dash"),
+                hovertemplate="<b>Giornata %{x}</b><br>Soglia Podio: <b>%{y:.1f} FM</b><extra></extra>"
+            ))
+
+            fig_sim.update_layout(
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(17, 24, 39, 0.7)",
+                font=dict(family="Plus Jakarta Sans", color="#94A3B8"),
+                hovermode="x unified",
+                height=350,
+                margin=dict(l=10, r=10, t=25, b=10),
+                legend=dict(
+                    orientation="h",
+                    yanchor="bottom",
+                    y=1.02,
+                    xanchor="right",
+                    x=1.0,
+                    bgcolor="rgba(0,0,0,0)",
+                    font=dict(size=10)
+                ),
+                xaxis=dict(
+                    title="Giornata di Campionato",
+                    gridcolor="rgba(255,255,255,0.05)",
+                    showgrid=True,
+                    tickmode="linear",
+                    tick0=1,
+                    dtick=3,
+                    range=[0.8, 38.2]
+                ),
+                yaxis=dict(
+                    title="Punti Fantavoto Cumulativi",
+                    gridcolor="rgba(255,255,255,0.05)",
+                    showgrid=True
+                ),
+            )
+            st.plotly_chart(fig_sim, use_container_width=True, config={"displayModeBar": False})
+        else:
+            st.info("💡 Aggiungi calciatori alla tua rosa per sbloccare la proiezione Monte Carlo stagionale!")
+
 
