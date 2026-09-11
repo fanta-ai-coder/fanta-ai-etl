@@ -564,89 +564,88 @@ div[data-testid="stHorizontalBlock"]:has(> div [data-testid="column"]:first-chil
 /* =========================================================
    V2: TABELLA ROSA SUPER COMPATTA + ALLINEAMENTO PERFETTO
    ========================================================= */
-div[data-testid="stVerticalBlock"]:has(> div .del-btn) {
-    gap: 0px !important;
-}
-
-div[data-testid="column"]:has(.del-btn),
-div[data-testid="column"]:has(.roster-row-nom),
-div[data-testid="column"]:has(.roster-row-fm),
-div[data-testid="column"]:has(.roster-row-prz) {
-    min-height: 28px !important;
-    height: 28px !important;
-    padding: 0 !important;
+div[data-testid="stHorizontalBlock"]:has(div[class*="st-key-del_r_"]) {
     display: flex !important;
     align-items: center !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+    padding: 3px 0 !important;
+    min-height: 28px !important;
 }
 
-div[data-testid="column"]:has(.del-btn) {
-    justify-content: flex-end !important;
+div[data-testid="stHorizontalBlock"]:has(div[class*="st-key-del_r_"]) > div[data-testid="column"] {
+    display: flex !important;
+    align-items: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+div[data-testid="stHorizontalBlock"]:has(div[class*="st-key-del_r_"]) [data-testid="stVerticalBlock"],
+div[data-testid="stHorizontalBlock"]:has(div[class*="st-key-del_r_"]) [data-testid="element-container"] {
+    display: flex !important;
+    align-items: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    gap: 0 !important;
 }
 
 .roster-row-nom {
-    font-size: 1.02rem;
+    font-size: 0.98rem;
     font-weight: 800;
     color: #F8FAFC;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    padding: 0 !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    width: 100%;
-    height: 28px;
     display: flex;
     align-items: center;
+    margin: 0;
+    padding: 0;
+    width: 100%;
 }
 .roster-row-fm {
     font-size: 0.90rem;
     color: #34D399;
     font-weight: 700;
     text-align: right;
-    padding: 0 !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    width: 100%;
-    height: 28px;
     display: flex;
     align-items: center;
     justify-content: flex-end;
+    margin: 0;
+    padding: 0;
+    width: 100%;
 }
 .roster-row-prz {
     font-size: 0.94rem;
     color: #F59E0B;
     font-weight: 800;
     text-align: right;
-    padding: 0 !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    width: 100%;
-    height: 28px;
     display: flex;
     align-items: center;
     justify-content: flex-end;
+    margin: 0;
+    padding: 0;
+    width: 100%;
 }
 
-.del-btn {
+div[class*="st-key-del_r_"] {
     display: flex !important;
     align-items: center !important;
     justify-content: flex-end !important;
-    padding: 0 !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
-    width: 100% !important;
-    height: 28px !important;
-}
-.del-btn div[data-testid="stButton"],
-div[class*="st-key-del_r_"] div[data-testid="stButton"],
-div[class*="st-key-del_r_"] {
-    width: auto !important;
-    height: 28px !important;
-    min-height: 28px !important;
     margin: 0 !important;
     padding: 0 !important;
+    width: 100% !important;
+}
+
+div[class*="st-key-del_r_"] div[data-testid="stButton"] {
     display: flex !important;
     align-items: center !important;
     justify-content: flex-end !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: auto !important;
+    height: auto !important;
 }
-.del-btn div[data-testid="stButton"] > button,
-.del-btn button,
+
 div[class*="st-key-del_r_"] button {
     width: 17px !important;
     height: 17px !important;
@@ -656,7 +655,6 @@ div[class*="st-key-del_r_"] button {
     max-height: 17px !important;
     padding: 0 !important;
     margin: 0 !important;
-    margin-top: 5px !important;
     background: #DC2626 !important;
     background-color: #DC2626 !important;
     border: 1px solid #B91C1C !important;
@@ -669,8 +667,7 @@ div[class*="st-key-del_r_"] button {
     transition: all 0.15s ease !important;
     line-height: 1 !important;
 }
-.del-btn div[data-testid="stButton"] > button:hover,
-.del-btn button:hover,
+
 div[class*="st-key-del_r_"] button:hover {
     background: #EF4444 !important;
     background-color: #EF4444 !important;
@@ -678,8 +675,7 @@ div[class*="st-key-del_r_"] button:hover {
     box-shadow: 0 0 6px rgba(239, 68, 68, 0.6) !important;
     transform: scale(1.1) !important;
 }
-.del-btn div[data-testid="stButton"] > button p,
-.del-btn button p,
+
 div[class*="st-key-del_r_"] button p {
     color: #FFFFFF !important;
     font-size: 9px !important;
@@ -2195,13 +2191,11 @@ with tab_rosa:
                         with c_prz:
                             st.markdown(f"<div class='roster-row-prz'>{prezzo_m} FMV</div>", unsafe_allow_html=True)
                         with c_del:
-                            st.markdown('<div class="del-btn">', unsafe_allow_html=True)
                             if st.button("✕", key=f"del_r_{pid}", help=f"Rimuovi {p['nome']} e rimborsa {prezzo_m} crediti"):
                                 st.session_state.roster = [x for x in st.session_state.roster if x["player_id"] != pid]
                                 save_roster_to_disk()
                                 st.toast(f"🗑️ {p['nome']} rimosso!", icon="ℹ️")
                                 st.rerun()
-                            st.markdown('</div>', unsafe_allow_html=True)
 
         # Azioni Esportazione compatte
         st.markdown("<div style='height: 32px;'></div>", unsafe_allow_html=True)
