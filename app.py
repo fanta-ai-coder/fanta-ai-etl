@@ -150,16 +150,21 @@ div[data-testid="column"]:first-child [data-testid="stVerticalBlock"] {
 }
 
 /* ─────────────────────────────────────────────────────────────
-   2. ROSTER LISTA GIOCATORI (Card a Larghezza Intera 100%)
+   2. ROSTER LISTA GIOCATORI (Eliminazione Totale Pallino & Card 100%)
 ───────────────────────────────────────────────────────────── */
 
-/* 2.1 Nascondi solo i pallini / cerchi radio nativi e BaseWeb */
+/* 2.1 Eliminazione totale di qualsiasi cerchio / pallino / indicator radio */
 div[data-testid="stRadio"] input[type="radio"],
 div[data-testid="stRadio"] [data-testid="stWidgetSelectionIndicator"],
-div[data-testid="stRadio"] [data-baseweb="radio"] [aria-hidden="true"],
-div[data-testid="stRadio"] label [aria-hidden="true"],
+div[data-testid="stRadio"] label [data-testid="stWidgetSelectionIndicator"],
+div[data-testid="stRadio"] label > div:first-child:not([data-testid="stRadioOptionLabel"]):not([data-testid="stMarkdownContainer"]),
+div[data-testid="stRadio"] label > span:first-child,
+div[data-testid="stRadio"] [data-baseweb="radio"] > div:first-child:not([data-testid="stRadioOptionLabel"]),
+div[data-testid="stRadio"] [data-baseweb="radio"] span,
 div[data-testid="stRadio"] [data-baseweb="radio"] svg,
-div[data-testid="stRadio"] label svg {
+div[data-testid="stRadio"] label svg,
+div[data-testid="stRadio"] label [aria-hidden="true"],
+div[data-testid="stRadio"] [data-baseweb="radio"] [aria-hidden="true"] {
     display: none !important;
     width: 0px !important;
     height: 0px !important;
@@ -167,15 +172,22 @@ div[data-testid="stRadio"] label svg {
     max-height: 0px !important;
     min-width: 0px !important;
     min-height: 0px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
     opacity: 0 !important;
     visibility: hidden !important;
     pointer-events: none !important;
     position: absolute !important;
-    margin: 0 !important;
-    padding: 0 !important;
 }
 
-/* 2.2 Forzatura larghezza 100% dal container fino a ogni singola card */
+div[data-testid="stRadio"] label::before,
+div[data-testid="stRadio"] label::after {
+    display: none !important;
+    content: none !important;
+}
+
+/* 2.2 Forzatura larghezza 100% dal container fino a ogni singola card nello scroll */
 div[data-testid="column"]:first-child,
 div[data-testid="column"]:first-child > div,
 div[data-testid="column"]:first-child div[data-testid="stVerticalBlockBorderWrapper"],
@@ -225,9 +237,11 @@ div[data-testid="stRadio"] label:hover {
     border-color: rgba(16, 185, 129, 0.4) !important;
 }
 
-div[data-testid="stRadio"] label:has(input:checked) {
+div[data-testid="stRadio"] label:has(input:checked),
+div[data-testid="stRadio"] label[aria-checked="true"] {
     background: rgba(16, 185, 129, 0.14) !important;
     border: 1.5px solid #10B981 !important;
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.25) !important;
 }
 
 /* 2.3 Contenuto e testo sempre visibili e a tutta larghezza */
@@ -256,6 +270,42 @@ div[data-testid="stRadio"] [data-testid="stMarkdownContainer"] p {
     font-weight: 600 !important;
     margin: 0 !important;
     width: 100% !important;
+}
+
+/* 2.4 Pulsante Aggiungi alla Rosa (+) Verde Smeraldo */
+div[class*="st-key-btn_roster_"] button[kind="primary"],
+div[class*="st-key-btn_roster_"] button[data-testid="stBaseButton-primary"],
+div[class*="st-key-btn_roster_"] button.st-emotion-cache-1280hey,
+div[class*="st-key-btn_roster_"] button:not([kind="secondary"]):not([disabled]) {
+    background: #10B981 !important;
+    background-color: #10B981 !important;
+    border: 1px solid #059669 !important;
+    color: #FFFFFF !important;
+    font-weight: 800 !important;
+    font-size: 1.25rem !important;
+    line-height: 1 !important;
+    border-radius: 8px !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25) !important;
+}
+
+div[class*="st-key-btn_roster_"] button[kind="primary"]:hover,
+div[class*="st-key-btn_roster_"] button[data-testid="stBaseButton-primary"]:hover,
+div[class*="st-key-btn_roster_"] button:not([kind="secondary"]):not([disabled]):hover {
+    background: #059669 !important;
+    background-color: #059669 !important;
+    border-color: #34D399 !important;
+    box-shadow: 0 0 16px rgba(16, 185, 129, 0.45) !important;
+    transform: translateY(-1px) !important;
+}
+
+div[class*="st-key-btn_roster_"] button[kind="primary"] p,
+div[class*="st-key-btn_roster_"] button[data-testid="stBaseButton-primary"] p,
+div[class*="st-key-btn_roster_"] button:not([kind="secondary"]):not([disabled]) p {
+    color: #FFFFFF !important;
+    font-weight: 800 !important;
+    font-size: 1.25rem !important;
+    margin: 0 !important;
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -1460,7 +1510,7 @@ tab_scout, tab_rosa = st.tabs([
 ])
 
 with tab_scout:
-    col_roster, col_dossier = st.columns([0.40, 0.60], gap="medium")
+    col_roster, col_dossier = st.columns([0.43, 0.57], gap="medium")
     
     
     # ------------------------------------------
@@ -1745,7 +1795,7 @@ with tab_scout:
                 elif crediti_residui <= 0:
                     st.button("⛔ Crediti Esauriti (0 FMV)", key=f"btn_roster_{player_id}", disabled=True, use_container_width=True)
                 else:
-                    if st.button(f"➕ Aggiungi {nome} alla Rosa", key=f"btn_roster_{player_id}", type="primary", use_container_width=True):
+                    if st.button("➕", key=f"btn_roster_{player_id}", type="primary", use_container_width=True, help=f"Aggiungi {nome} alla rosa"):
                         modal_aggiungi_giocatore(player_row, stima_val, crediti_residui)
             with act_col2:
                 st.markdown(f"<div style='text-align: right; padding-top: 6px; font-size: 0.8rem; color: #94A3B8;'>Crediti residui: <b style='color: #34D399;'>{crediti_residui} FMV</b></div>", unsafe_allow_html=True)
