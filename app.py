@@ -1296,28 +1296,13 @@ def compute_player_summaries(stats_df, quot_df, ranking_df, titolari_df):
 # 3.5 ROSTER STATE & BEST 11 OPTIMIZER
 # ==========================================
 
-ROSTER_SAVE_FILE = Path(__file__).parent / "data" / "mia_rosa_session.json"
-
+# In modalità sessione pura in memoria, ogni utente/dispositivo opera nel proprio st.session_state
 def load_saved_roster():
-    if ROSTER_SAVE_FILE.exists():
-        try:
-            with open(ROSTER_SAVE_FILE, "r", encoding="utf-8") as f:
-                data = json.load(f)
-                return data.get("roster", []), data.get("budget_totale", 1000)
-        except Exception:
-            pass
     return [], 1000
 
 def save_roster_to_disk():
-    try:
-        ROSTER_SAVE_FILE.parent.mkdir(parents=True, exist_ok=True)
-        with open(ROSTER_SAVE_FILE, "w", encoding="utf-8") as f:
-            json.dump({
-                "roster": st.session_state.get("roster", []),
-                "budget_totale": st.session_state.get("budget_totale", 1000)
-            }, f, ensure_ascii=False, indent=2)
-    except Exception as e:
-        print(f"Errore nel salvataggio rosa: {e}")
+    # Sessione pura in memoria: nessuna scrittura su disco condiviso
+    pass
 
 def optimize_best_lineup(roster, forced_module="Auto"):
     modules = {
@@ -1504,11 +1489,9 @@ def modal_reset_roster():
 # 4. APP TOP BARS & SESSION STATE
 # ==========================================
 
-# Inizializzazione Stato Rosa
+# Inizializzazione Stato Rosa (Sessione in memoria isolata per ciascun utente)
 if "roster" not in st.session_state:
-    saved_r, saved_b = load_saved_roster()
-    st.session_state.roster = saved_r
-    st.session_state.budget_totale = saved_b
+    st.session_state.roster = []
 
 if "budget_totale" not in st.session_state:
     st.session_state.budget_totale = 1000
