@@ -573,6 +573,7 @@ div[data-testid="column"]:has(.roster-row-nom),
 div[data-testid="column"]:has(.roster-row-fm),
 div[data-testid="column"]:has(.roster-row-prz) {
     min-height: 28px !important;
+    height: 28px !important;
     padding: 0 !important;
     display: flex !important;
     align-items: center !important;
@@ -589,9 +590,10 @@ div[data-testid="column"]:has(.del-btn) {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    padding: 4px 0;
+    padding: 0 !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     width: 100%;
+    height: 28px;
     display: flex;
     align-items: center;
 }
@@ -600,9 +602,10 @@ div[data-testid="column"]:has(.del-btn) {
     color: #34D399;
     font-weight: 700;
     text-align: right;
-    padding: 4px 0;
+    padding: 0 !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     width: 100%;
+    height: 28px;
     display: flex;
     align-items: center;
     justify-content: flex-end;
@@ -612,9 +615,10 @@ div[data-testid="column"]:has(.del-btn) {
     color: #F59E0B;
     font-weight: 800;
     text-align: right;
-    padding: 4px 0;
+    padding: 0 !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     width: 100%;
+    height: 28px;
     display: flex;
     align-items: center;
     justify-content: flex-end;
@@ -624,17 +628,17 @@ div[data-testid="column"]:has(.del-btn) {
     display: flex !important;
     align-items: center !important;
     justify-content: flex-end !important;
-    padding: 4px 0 !important;
+    padding: 0 !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
     width: 100% !important;
-    height: 100% !important;
+    height: 28px !important;
 }
 .del-btn div[data-testid="stButton"],
 div[class*="st-key-del_r_"] div[data-testid="stButton"],
 div[class*="st-key-del_r_"] {
     width: auto !important;
-    height: auto !important;
-    min-height: 0 !important;
+    height: 28px !important;
+    min-height: 28px !important;
     margin: 0 !important;
     padding: 0 !important;
     display: flex !important;
@@ -652,6 +656,7 @@ div[class*="st-key-del_r_"] button {
     max-height: 17px !important;
     padding: 0 !important;
     margin: 0 !important;
+    margin-top: 5px !important;
     background: #DC2626 !important;
     background-color: #DC2626 !important;
     border: 1px solid #B91C1C !important;
