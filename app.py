@@ -1529,7 +1529,7 @@ summary_df = normalize_dataframe(summary_df)
 
 tab_scout, tab_rosa = st.tabs([
     "📊 1. Esplora & Analytics",
-    f"📋 2. La Mia Rosa & Asta Live ({num_rosa}/25)"
+    "📋 2. La Mia Rosa & Asta Live"
 ])
 
 with tab_scout:
