@@ -564,7 +564,8 @@ div[data-testid="stHorizontalBlock"]:has(> div [data-testid="column"]:first-chil
 /* =========================================================
    V2: TABELLA ROSA SUPER COMPATTA + ALLINEAMENTO PERFETTO
    ========================================================= */
-div[data-testid="stHorizontalBlock"]:has(div[class*="st-key-del_r_"]) {
+div[data-testid="stHorizontalBlock"]:has(> [data-testid="column"] [class*="st-key-del_r_"]),
+div[data-testid="stHorizontalBlock"]:has(> div [class*="st-key-del_r_"]) {
     display: flex !important;
     align-items: center !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
@@ -572,15 +573,18 @@ div[data-testid="stHorizontalBlock"]:has(div[class*="st-key-del_r_"]) {
     min-height: 28px !important;
 }
 
-div[data-testid="stHorizontalBlock"]:has(div[class*="st-key-del_r_"]) > div[data-testid="column"] {
+div[data-testid="stHorizontalBlock"]:has(> [data-testid="column"] [class*="st-key-del_r_"]) > div,
+div[data-testid="stHorizontalBlock"]:has(> div [class*="st-key-del_r_"]) > div {
     display: flex !important;
     align-items: center !important;
     margin: 0 !important;
     padding: 0 !important;
 }
 
-div[data-testid="stHorizontalBlock"]:has(div[class*="st-key-del_r_"]) [data-testid="stVerticalBlock"],
-div[data-testid="stHorizontalBlock"]:has(div[class*="st-key-del_r_"]) [data-testid="element-container"] {
+div[data-testid="stHorizontalBlock"]:has(> [data-testid="column"] [class*="st-key-del_r_"]) [data-testid="stVerticalBlock"],
+div[data-testid="stHorizontalBlock"]:has(> div [class*="st-key-del_r_"]) [data-testid="stVerticalBlock"],
+div[data-testid="stHorizontalBlock"]:has(> [data-testid="column"] [class*="st-key-del_r_"]) [data-testid="element-container"],
+div[data-testid="stHorizontalBlock"]:has(> div [class*="st-key-del_r_"]) [data-testid="element-container"] {
     display: flex !important;
     align-items: center !important;
     margin: 0 !important;
@@ -2122,7 +2126,7 @@ with tab_rosa:
 
     # Barra di avanzamento slot orizzontale compatta
     st.markdown(f'''
-    <div style="background: #111827; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 6px 14px; display: flex; justify-content: space-between; align-items: center; margin: 8px 0 24px 0; font-size: 0.78rem;">
+    <div style="background: #111827; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 6px 14px; display: flex; justify-content: space-between; align-items: center; margin: 8px 0 16px 0; font-size: 0.78rem;">
         <div><span class="badge-role-P" style="padding:1px 5px; border-radius:3px; font-weight:800;">P</span> Portieri: <b style="color:#F8FAFC;">{role_counts['P']}/3</b></div>
         <div><span class="badge-role-D" style="padding:1px 5px; border-radius:3px; font-weight:800;">D</span> Difensori: <b style="color:#F8FAFC;">{role_counts['D']}/8</b></div>
         <div><span class="badge-role-C" style="padding:1px 5px; border-radius:3px; font-weight:800;">C</span> Centrocampisti: <b style="color:#F8FAFC;">{role_counts['C']}/8</b></div>
@@ -2139,8 +2143,8 @@ with tab_rosa:
     # -------------------------------------------------------------
     with col_tabella:
         st.markdown('''
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; margin-bottom: 12px;">
-            <div style="font-weight: 800; font-size: 1.12rem; color: #F8FAFC;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; min-height: 28px;">
+            <div style="font-weight: 800; font-size: 1.08rem; color: #F8FAFC;">
                 📋 La Mia Rosa ({num_rosa}/25)
             </div>
             <div style="font-size: 0.82rem; color: #94A3B8;">
