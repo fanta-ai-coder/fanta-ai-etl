@@ -738,6 +738,12 @@ div[class*="st-key-del_r_"] button p {
 st.markdown(_CUSTOM_CSS, unsafe_allow_html=True)
 
 
+def render_clean_html(html_str: str):
+    """Esegue il rendering di blocchi HTML complessi senza che l'indentazione o le righe vuote vengano interpretate dal parser markdown come codice grezzo (<pre><code>)."""
+    clean = "\n".join(line.strip() for line in html_str.splitlines() if line.strip())
+    st.markdown(clean, unsafe_allow_html=True)
+
+
 # ==========================================
 # 2. SUPABASE & DATA FETCHING
 # ==========================================
@@ -1388,7 +1394,7 @@ def modal_aggiungi_giocatore(p_row, stima_ml_val, crediti_disp):
     crediti_altri = sum(int(p.get("prezzo", 0)) for p in st.session_state.roster if p["player_id"] != pid)
     crediti_disponibili = max(0, st.session_state.budget_totale - crediti_altri)
     
-    st.markdown(f"""
+    render_clean_html(f"""
     <div style="background: #1E293B; padding: 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 14px;">
         <div style="font-size: 1.2rem; font-weight: 800; color: #F8FAFC;">
             <span class="badge-role-{ruolo}" style="padding: 2px 8px; border-radius: 6px; font-size: 0.8rem; margin-right: 6px;">{ruolo}</span>
@@ -1403,7 +1409,7 @@ def modal_aggiungi_giocatore(p_row, stima_ml_val, crediti_disp):
             Slot {ruolo} occupati: <b>{current_count_role} / {max_slots}</b> {'⛔ (Reparto al completo!)' if is_role_full else ''}
         </div>
     </div>
-    """, unsafe_allow_html=True)
+    """)
 
     if is_role_full:
         st.error(f"⛔ **Reparto {ruolo} al completo ({current_count_role}/{max_slots})!** Non è consentito aggiungere altri calciatori in questo reparto a meno di non rimuoverne uno.")
@@ -1504,7 +1510,7 @@ role_counts = {r: sum(1 for p in st.session_state.roster if p.get("ruolo") == r)
 roster_pids = set(int(p.get("player_id")) for p in st.session_state.roster if "player_id" in p)
 
 # Top Application Header con contatori live
-st.markdown(f"""
+render_clean_html(f"""
 <div class="top-header" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
     <div style="display: flex; align-items: center; gap: 12px;">
         <div style="background: #10B981; color: #0B0F19; border-radius: 8px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.2rem;">
@@ -1528,7 +1534,7 @@ st.markdown(f"""
         </div>
     </div>
 </div>
-""", unsafe_allow_html=True)
+""")
 
 
 # ==========================================
@@ -1779,7 +1785,7 @@ with tab_scout:
             rigor_pos = player_row.get("rigorista_pos")
             rigor_str = f"Sì (#{int(rigor_pos)})" if pd.notna(rigor_pos) and int(rigor_pos) > 0 else "No"
     
-            st.markdown(f"""
+            render_clean_html(f"""
             <div class="glass-panel" style="margin-bottom: 20px;">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
                     <div style="display: flex; gap: 16px; align-items: center;">
@@ -1821,7 +1827,7 @@ with tab_scout:
                     </div>
                 </div>
             </div>
-            """, unsafe_allow_html=True)
+            """)
     
             # --- TASTO RAPIDO AGGIUNGI ALLA ROSA / STATO IN ROSA (V2) ---
             act_col1, act_col2 = st.columns([0.68, 0.32], gap="small")
@@ -1868,37 +1874,37 @@ with tab_scout:
             with k1:
                 diff_suff = fantamedia - 6.0
                 suff_sign = f"+{diff_suff:.2f}" if diff_suff >= 0 else f"{diff_suff:.2f}"
-                st.markdown(f"""
+                render_clean_html(f"""
                 <div class="kpi-card">
                     <div class="kpi-label">Fantamedia Pesata</div>
                     <div class="kpi-value" style="color: #34D399;">{fantamedia:.2f}</div>
                     <div class="kpi-sub">Sufficienza {suff_sign}</div>
                 </div>
-                """, unsafe_allow_html=True)
+                """)
             with k2:
-                st.markdown(f"""
+                render_clean_html(f"""
                 <div class="kpi-card">
                     <div class="kpi-label">Media Voto Pura</div>
                     <div class="kpi-value">{media_voto:.2f}</div>
                     <div class="kpi-sub">Stabilità Redazionale</div>
                 </div>
-                """, unsafe_allow_html=True)
+                """)
             with k3:
-                st.markdown(f"""
+                render_clean_html(f"""
                 <div class="kpi-card">
                     <div class="kpi-label">{freq_label}</div>
                     <div class="kpi-value" style="color: #38BDF8; font-size: 1.22rem; line-height: 1.25; white-space: normal;">{freq_val}</div>
                     <div class="kpi-sub">{freq_sub}</div>
                 </div>
-                """, unsafe_allow_html=True)
+                """)
             with k4:
-                st.markdown(f"""
+                render_clean_html(f"""
                 <div class="kpi-card">
                     <div class="kpi-label">% Presenze Titolare</div>
                     <div class="kpi-value" style="color: #A78BFA;">{presenza_pct:.1f}%</div>
                     <div class="kpi-sub">{presenze_medie:.1f} Partite/Stagione</div>
                 </div>
-                """, unsafe_allow_html=True)
+                """)
     
             st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
     
@@ -1957,7 +1963,7 @@ with tab_scout:
                 """, unsafe_allow_html=True)
                 m1, m2 = st.columns(2)
                 with m1:
-                    st.markdown(f"""
+                    render_clean_html(f"""
                     <div class="sub-card" style="margin-bottom: 10px;">
                         <div class="sub-label">Varianza Voto</div>
                         <div class="sub-value">{format_number(varianza_v)}</div>
@@ -1968,10 +1974,10 @@ with tab_scout:
                         <div class="sub-value" style="color: #FBBF24;">{ammonizioni:.1f} <span style="font-size: 0.8rem; color: #94A3B8;">Amm</span> | {espulsioni:.1f} <span style="font-size: 0.8rem; color: #94A3B8;">Esp</span></div>
                         <div class="sub-desc">Malus medio annuo</div>
                     </div>
-                    """, unsafe_allow_html=True)
+                    """)
                 with m2:
                     if is_goalkeeper:
-                        st.markdown(f"""
+                        render_clean_html(f"""
                         <div class="sub-card" style="margin-bottom: 10px;">
                             <div class="sub-label">Rendimento Portiere</div>
                             <div class="sub-value" style="color: #38BDF8;">{gs_stagione:.1f} <span style="font-size: 0.8rem; color: #94A3B8;">GS</span> | {rigori_parati:.1f} <span style="font-size: 0.8rem; color: #94A3B8;">RP</span></div>
@@ -1982,9 +1988,9 @@ with tab_scout:
                             <div class="sub-value" style="color: #38BDF8;">{score_affidabilita:.0f}%</div>
                             <div class="sub-desc">{aff_desc}</div>
                         </div>
-                        """, unsafe_allow_html=True)
+                        """)
                     else:
-                        st.markdown(f"""
+                        render_clean_html(f"""
                         <div class="sub-card" style="margin-bottom: 10px;">
                             <div class="sub-label">Gol & Assist Medi</div>
                             <div class="sub-value" style="color: #34D399;">{gol_stagione:.1f} <span style="font-size: 0.8rem; color: #94A3B8;">Gol</span> | {assist_stagione:.1f} <span style="font-size: 0.8rem; color: #94A3B8;">Assist</span></div>
@@ -1995,7 +2001,7 @@ with tab_scout:
                             <div class="sub-value" style="color: #38BDF8;">{score_affidabilita:.0f}%</div>
                             <div class="sub-desc">{aff_desc}</div>
                         </div>
-                        """, unsafe_allow_html=True)
+                        """)
     
             with sec_col_right:
                 st.markdown("""
@@ -2100,49 +2106,49 @@ with tab_rosa:
 
     k1, k2, k3, k4, k5 = st.columns(5, gap="small")
     with k1:
-        st.markdown(f'''
+        render_clean_html(f'''
         <div class="kpi-card-compact">
             <div class="kpi-label">Crediti Residui</div>
             <div class="kpi-value" style="color: #34D399;">{crediti_residui} <span style="font-size:0.75rem; color:#94A3B8;">FMV</span></div>
             <div class="kpi-sub">Spesi {crediti_spesi} ({pct_spesi:.0f}%)</div>
         </div>
-        ''', unsafe_allow_html=True)
+        ''')
     with k2:
         val_s = f"{costo_medio_slot:.0f} FMV" if slot_mancanti > 0 else "Completa! 🎉"
-        st.markdown(f'''
+        render_clean_html(f'''
         <div class="kpi-card-compact">
             <div class="kpi-label">Media / Slot Libero</div>
             <div class="kpi-value" style="color: #38BDF8;">{val_s}</div>
             <div class="kpi-sub">{slot_mancanti} slot mancanti</div>
         </div>
-        ''', unsafe_allow_html=True)
+        ''')
     with k3:
-        st.markdown(f'''
+        render_clean_html(f'''
         <div class="kpi-card-compact">
             <div class="kpi-label">Fantamedia Rosa</div>
             <div class="kpi-value" style="color: #FBBF24;">{avg_fm_rosa:.2f} ⭐</div>
             <div class="kpi-sub">Media complessiva</div>
         </div>
-        ''', unsafe_allow_html=True)
+        ''')
     with k4:
-        st.markdown(f'''
+        render_clean_html(f'''
         <div class="kpi-card-compact">
             <div class="kpi-label">Potenziale 11 Titolare</div>
             <div class="kpi-value" style="color: #A78BFA;">{best_res['score']:.2f}</div>
             <div class="kpi-sub">Modulo: {best_res['module']}</div>
         </div>
-        ''', unsafe_allow_html=True)
+        ''')
     with k5:
-        st.markdown(f'''
+        render_clean_html(f'''
         <div class="kpi-card-compact">
             <div class="kpi-label">Bilancio Modello ML</div>
             <div class="kpi-value" style="color: {delta_color};">{delta_sign} <span style="font-size:0.75rem; color:#94A3B8;">FMV</span></div>
             <div class="kpi-sub">{"Risparmio asta" if delta_ml >= 0 else "Spesa sopra stima"}</div>
         </div>
-        ''', unsafe_allow_html=True)
+        ''')
 
     # Barra di avanzamento slot orizzontale compatta
-    st.markdown(f'''
+    render_clean_html(f'''
     <div style="background: #111827; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 6px 14px; display: flex; justify-content: space-between; align-items: center; margin: 8px 0 16px 0; font-size: 0.78rem;">
         <div><span class="badge-role-P" style="padding:1px 5px; border-radius:3px; font-weight:800;">P</span> Portieri: <b style="color:#F8FAFC;">{role_counts['P']}/3</b></div>
         <div><span class="badge-role-D" style="padding:1px 5px; border-radius:3px; font-weight:800;">D</span> Difensori: <b style="color:#F8FAFC;">{role_counts['D']}/8</b></div>
@@ -2150,7 +2156,7 @@ with tab_rosa:
         <div><span class="badge-role-A" style="padding:1px 5px; border-radius:3px; font-weight:800;">A</span> Attaccanti: <b style="color:#F8FAFC;">{role_counts['A']}/6</b></div>
         <div style="color:#34D399; font-weight:700;">Totale Rosa: {num_rosa} / 25</div>
     </div>
-    ''', unsafe_allow_html=True)
+    ''')
 
     # 2. LAYOUT DUE COLONNE AFFIANCATE: TABELLA A SINISTRA (STRETTA), FORMAZIONE A DESTRA (ALLARGATA)
     col_tabella, col_campo = st.columns([0.45, 0.55], gap="large")
