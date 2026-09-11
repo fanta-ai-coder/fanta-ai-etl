@@ -2192,7 +2192,7 @@ with tab_rosa:
                             st.markdown('</div>', unsafe_allow_html=True)
 
         # Azioni Esportazione compatte
-        st.markdown("<div style='height: 14px;'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='height: 32px;'></div>", unsafe_allow_html=True)
         act_b1, act_b2 = st.columns(2, gap="small")
         with act_b1:
             if st.session_state.roster:
